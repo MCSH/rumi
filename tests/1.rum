@@ -1,0 +1,7 @@
+// Rumi should ignore comments
+
+/*
+And multi line comments
+*/
+
+/* And /* nested */ multi line comments*/
