@@ -1,6 +1,7 @@
 
-TESTCOUNT = 1
+NUMTESTS = 2
 OBJS = lex.o parse.o compiler.o
+BASE_HEADS = node.h type.h
 CODE_GEN = lex.cpp parse.cpp parse.hpp
 CC = clang++
 COMPILER_BASE_FLAGS = -w -g
@@ -12,19 +13,16 @@ COMPILER_EXEC_LLVM_FLAGS = $(COMPILER_EXEC_FLAGS) $(COMPILER_LLVM_FLAGS)
 
 all:	rum rumi
 
-rum:	compiler rum.cpp
+rum:	$(OBJS) rum.cpp
 	$(CC) $(COMPILER_EXEC_FLAGS) $(OBJS) rum.cpp -o rum
 
-rumi:	compiler rumi.cpp
+rumi:	$(OBJS) rumi.cpp
 	$(CC) $(COMPILER_EXEC_FLAGS) $(OBJS) rumi.cpp -o rumi
 
-compiler: $(OBJS)
-	true
-
-compiler.o:	compiler.cpp compiler.h
+compiler.o:	compiler.cpp compiler.h $(BASE_HEADS)
 	$(CC) $(COMPILER_OBJECT_FLAGS) compiler.cpp
 
-lex.o:	lex.cpp
+lex.o:	lex.cpp parse.hpp
 	$(CC) $(COMPILER_OBJECT_FLAGS) lex.cpp
 
 lex.cpp:	lex.l
@@ -33,11 +31,13 @@ lex.cpp:	lex.l
 parse.o: parse.cpp
 	$(CC) $(COMPILER_OBJECT_FLAGS) parse.cpp
 
-parse.cpp:	parse.y
+parse.hpp: parse.cpp parse.o
+
+parse.cpp:	parse.y $(BASE_HEADS)
 	bison -d -l -o parse.cpp parse.y
 
 tests:	rum
-	number=1 ; while [[ $$number -le $(TESTCOUNT) ]] ; do \
+	number=1 ; while [[ $$number -le $(NUMTESTS) ]] ; do \
 		./rum tests/$$number.rum ; \
 		((number = number + 1)) ; \
 	done # TODO change this to actually run tests

@@ -1,0 +1,6 @@
+
+
+// Simple main function
+main := () -> int {
+  return 1;
+}
