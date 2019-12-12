@@ -1,6 +1,6 @@
 
 NUMTESTS = 2
-OBJS = lex.o parse.o compiler.o codegen.o
+OBJS = lex.o parse.o compiler.o
 BASE_HEADS = node.h type.h
 CODE_GEN = lex.cpp parse.cpp parse.hpp
 CC = clang++
@@ -13,8 +13,8 @@ COMPILER_EXEC_LLVM_FLAGS = $(COMPILER_EXEC_FLAGS) $(COMPILER_LLVM_FLAGS)
 
 all:	rum rumi
 
-rum:	$(OBJS) rum.cpp
-	$(CC) $(COMPILER_EXEC_FLAGS) $(OBJS) rum.cpp -o rum
+rum:	$(OBJS) rum.cpp codegen.o
+	$(CC) $(COMPILER_EXEC_LLVM_FLAGS) $(OBJS) codegen.o rum.cpp -o rum
 
 rumi:	$(OBJS) rumi.cpp
 	$(CC) $(COMPILER_EXEC_FLAGS) $(OBJS) rumi.cpp -o rumi
@@ -46,4 +46,4 @@ tests:	rum
 	done
 
 clean:
-	rm -f rum rumi $(OBJS) $(CODE_GEN) || true
+	rm -f rum rumi $(OBJS) $(CODE_GEN) codegen.o || true

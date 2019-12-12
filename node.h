@@ -19,8 +19,8 @@ class Statement: public Node{
 };
 
 class IntValue: public Expression{
-  std::string *val;
 public:
+  std::string *val;
   IntValue(std::string *val): val(val){
     // TODO 
   }
@@ -31,8 +31,8 @@ public:
 };
 
 class ReturnStatement: public Statement{
-  Expression *exp;
 public:
+  Expression *exp;
   ReturnStatement(Expression *e): exp(e){
     // TODO
   }
@@ -42,23 +42,23 @@ public:
   }
 };
 
-class FunctionDecl: public Statement{
+class FunctionSignature: public Statement{
+public:
   std::string *name;
   Type *returnT;
-public:
-  FunctionDecl(std::string *val, Type *t): name(val), returnT(t){
+  FunctionSignature(std::string *val, Type *t): name(val), returnT(t){
     // TODO
   }
 
-  virtual ~FunctionDecl(){
+  virtual ~FunctionSignature(){
     delete name;
     delete returnT;
   }
 };
 
 class FunctionBody: public Statement{
-  std::vector<Statement *> *stmts;
 public:
+  std::vector<Statement *> *stmts;
   FunctionBody(std::vector<Statement*> *s): stmts(s){
     // TODO
   }
@@ -73,15 +73,15 @@ public:
 };
 
 class FunctionDefine: public Statement{
-  FunctionDecl *decl;
-  FunctionBody *body;
 public:
-  FunctionDefine(FunctionDecl *d, FunctionBody *b): decl(d), body(b){
+  FunctionSignature *sign;
+  FunctionBody *body;
+  FunctionDefine(FunctionSignature *d, FunctionBody *b): sign(d), body(b){
     // TODO
   }
 
   virtual ~FunctionDefine(){
-    delete decl;
+    delete sign;
     delete body;
   }
 };

@@ -17,7 +17,7 @@ std::vector<Statement *> *mainProgramNode;
     Type *type;
     Expression *exp;
     Statement *stmt;
-    FunctionDecl *functionDecl;
+    FunctionSignature *functionSignature;
     FunctionBody *functionBody;
     std::vector<Statement *> *arr;
 }
@@ -37,7 +37,7 @@ std::vector<Statement *> *mainProgramNode;
 %type <stmt> return_stmt stmt
 %type <stmt> top_level function_define
 
-%type <functionDecl> function_head 
+%type <functionSignature> function_head 
 %type <functionBody> function_body 
 
 %type <arr> program top_levels stmts
@@ -66,7 +66,7 @@ function_define
 ;
 
 function_head
-: ID DEFINE_AND_ASSIGN '(' /*TODO*/ ')' ARROW type {$$=new FunctionDecl($1,$6);}
+: ID DEFINE_AND_ASSIGN '(' /*TODO*/ ')' ARROW type {$$=new FunctionSignature($1,$6);}
 ;
 
 function_body
