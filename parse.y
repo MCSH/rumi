@@ -28,13 +28,15 @@ std::vector<Statement *> *mainProgramNode;
 %token DEFINE_AND_ASSIGN
 %token ARROW
 %token RETURN
-%token <type> INT
+%token INT
 
 %type <type> type
 
-%type <exp> value expr
+%type <exp> value expr variable
 
-%type <stmt> return_stmt stmt
+// TODO reorder these
+
+%type <stmt> return_stmt stmt variable_decl variable_assign
 %type <stmt> top_level function_define
 
 %type <functionSignature> function_head 
@@ -53,7 +55,7 @@ program
 ;
 
 top_levels
-: top_level top_levels {$$=$2; $$->push_back($1);}
+: top_levels top_level {$$=$1; $$->push_back($2);}
 | {$$=new std::vector<Statement *>();}
 ;
 
@@ -74,20 +76,35 @@ function_body
 ;
 
 stmts
-: stmt stmts {$$=$2; $$->push_back($1);}
+: stmts stmt {$$=$1; $$->push_back($2);}
 | {$$=new std::vector<Statement *>();}
 ;
 
 stmt
 : return_stmt {$$=$1;}
+| variable_decl {$$=$1;}
+| variable_assign {$$=$1;}
+;
+
+variable_decl
+: ID ':' type ';' {$$=new VariableDecl($1, $3);}
+;
+
+variable_assign
+: ID '=' expr ';' {$$=new VariableAssign($1, $3);}
 ;
 
 return_stmt
 : RETURN expr ';' {$$=new ReturnStatement($2);}
 ;
 
+variable
+: ID {$$=new VariableExpr($1);}
+;
+
 expr
 : value {$$=$1;}
+| variable {$$=$1;}
 ;
 
 value

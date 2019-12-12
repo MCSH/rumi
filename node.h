@@ -85,3 +85,41 @@ public:
     delete body;
   }
 };
+
+class VariableExpr: public Expression{
+public:
+  std::string *name;
+  VariableExpr(std::string *n): name(n){
+    
+  }
+
+  virtual ~VariableExpr(){
+    delete name;
+  }
+};
+
+class VariableAssign: public Statement{
+public:
+  std::string *name;
+  Expression *exp;
+  VariableAssign(std::string *n, Expression *exp): name(n), exp(exp){
+  }
+
+  virtual ~VariableAssign(){
+    delete name;
+    delete exp;
+  }
+};
+
+
+class VariableDecl: public Statement{
+public:
+  std::string *name;
+  Type *t;
+  VariableDecl(std::string *n, Type *t): name(n), t(t){
+  }
+
+  virtual ~VariableDecl(){
+    delete name;
+  }
+};

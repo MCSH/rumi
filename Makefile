@@ -1,5 +1,5 @@
 
-NUMTESTS = 2
+NUMTESTS = 3
 OBJS = lex.o parse.o compiler.o
 BASE_HEADS = node.h type.h
 CODE_GEN = lex.cpp parse.cpp parse.hpp
@@ -39,11 +39,14 @@ parse.hpp: parse.cpp parse.o
 parse.cpp:	parse.y $(BASE_HEADS)
 	bison -d -l -o parse.cpp parse.y
 
+.PHONY: tests
 tests:	rum
 	number=1 ; while [[ $$number -le $(NUMTESTS) ]] ; do \
+		echo "==============" ; \
+		cat tests/$$number.rum ; \
 		./rum tests/$$number.rum ; \
 		((number = number + 1)) ; \
 	done
 
 clean:
-	rm -f rum rumi $(OBJS) $(CODE_GEN) codegen.o || true
+	rm -f rum rumi $(OBJS) $(CODE_GEN) codegen.o tests/*.o || true

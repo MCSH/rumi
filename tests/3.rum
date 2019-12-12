@@ -1,0 +1,6 @@
+// Handle variables
+main := () -> int{  
+     ans : int;
+     ans = 2;
+     return ans;
+}

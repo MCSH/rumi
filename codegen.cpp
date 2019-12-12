@@ -1,5 +1,6 @@
 #include "codegen.h"
 #include "node.h"
+#include "type.h"
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/IR/PassManager.h>
 #include <llvm/IR/Verifier.h>
@@ -11,6 +12,7 @@ typedef CompileContext CC;
 CC* init_context();
 void codegen(Statement* stmt, CC *context);
 llvm::Value* exprGen(Expression *exp, CC *cc);
+llvm::Type* typeGen(Type*t, CC *cc);
 
 CC* codegen(std::vector<Statement *> *statements, std::string outfile){
   // TODO use this!
@@ -93,16 +95,57 @@ llvm::Value* intValueGen(IntValue* i, CC *cc){
   return llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), value, true);
 }
 
+void variableDeclGen(VariableDecl *vd, CC *cc){
+  // TODO maybe we need the block first for allocation?
+
+  auto t = typeGen(vd->t, cc);
+  llvm::AllocaInst *alloc = cc->builder->CreateAlloca(t, 0, vd->name->c_str());
+  cc->setVariable(vd->name, alloc);
+}
+
+void variableAssignGen(VariableAssign *va, CC *cc){
+  // TODO
+  llvm::AllocaInst *alloc = cc->getVariable(va->name);
+  if(!alloc){
+    // TODO user error
+    printf("Unknown variable %s\n", va->name->c_str());
+    exit(1);
+  }
+  auto e = exprGen(va->exp, cc);
+  cc->builder->CreateStore(e, alloc);
+}
+
+llvm::Value* variableExprGen(VariableExpr *ve, CC *cc){
+  // TODO
+  llvm::AllocaInst *alloc = cc->getVariable(ve->name);
+  if(!alloc){
+    // TODO user error
+    printf("Unknown variable %s\n", ve->name->c_str());
+    exit(1);
+  }
+
+  auto load = cc->builder->CreateLoad(alloc, "readtmp");
+
+  return load;
+}
+
 void codegen(Statement* stmt, CC *cc){
   auto t = typeid(*stmt).hash_code();
 
   if(t == typeid(FunctionDefine).hash_code())
     return funcGen((FunctionDefine*)stmt, cc);
-  else if (t == typeid(ReturnStatement).hash_code())
+
+  if(t == typeid(ReturnStatement).hash_code())
     return retGen((ReturnStatement*)stmt, cc);
-   else {
-    printf("Unknown codegen for class of type %s\n", typeid(*stmt).name());
-  }
+
+  if(t == typeid(VariableAssign).hash_code())
+    return variableAssignGen((VariableAssign*) stmt, cc);
+
+  if(t == typeid(VariableDecl).hash_code())
+    return variableDeclGen((VariableDecl *) stmt, cc);
+
+  printf("Unknown codegen for class of type %s\n", typeid(*stmt).name());
+  exit(1);
 }
 
 llvm::Value* exprGen(Expression *exp, CC *cc){
@@ -110,7 +153,34 @@ llvm::Value* exprGen(Expression *exp, CC *cc){
 
   if(t == typeid(IntValue).hash_code())
     return intValueGen((IntValue*) exp, cc);
+  if(t == typeid(VariableExpr).hash_code())
+    return variableExprGen((VariableExpr*)exp, cc);
 
   printf("Unknown exprgen for class of type %s\n", typeid(*exp).name());
+  exit(1);
   return NULL;
+}
+
+llvm::Type* typeGen(Type *type, CC *cc){
+  auto t = typeid(*type).hash_code();
+
+  if(t == typeid(IntType).hash_code())
+    return llvm::Type::getInt64Ty(cc->context);
+
+  printf("Unknown typeGen for a class of type %s\n", typeid(*type).name());
+  exit(1);
+  return NULL;
+}
+
+llvm::AllocaInst *CompileContext::getVariable(std::string *name){
+  BlockContext *b = this->currentBlock();
+
+  // TODO recursive and global search?
+
+  return b->variables[*name];
+}
+
+void CompileContext::setVariable(std::string *name, llvm::AllocaInst *var){
+  BlockContext *b = this->currentBlock();
+  b->variables[*name] = var;
 }

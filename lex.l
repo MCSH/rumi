@@ -24,6 +24,8 @@ int comment_nesting = 0;
 "{" {return '{';}
 "}" {return '}';}
 ";" {return ';';}
+":" {return ':';}
+"=" {return '=';}
 
   /* Keywords */
 "int" {return INT;}

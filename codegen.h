@@ -16,11 +16,32 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/MemoryBuffer.h"
 
+class BlockContext{
+public:
+  std::map<std::string, llvm::AllocaInst *> variables;
+  llvm::BasicBlock *bblock;
+
+  BlockContext(llvm::BasicBlock *bb):bblock(bb){}
+  BlockContext(){}
+};
+
 class CompileContext{
+  BlockContext *currentBlock(){
+    if(block.size()!=0)
+      return block.back();
+    return &global;
+  }
  public:
   llvm::LLVMContext context;
   std::unique_ptr<llvm::Module> module;
   llvm::IRBuilder<> *builder;
+  BlockContext global;
+  std::vector<BlockContext *> block;
+
+  llvm::AllocaInst *getVariable(std::string *name);
+  void setVariable(std::string *name, llvm::AllocaInst *var);
+
+  CompileContext(){}
 };
 
 CompileContext* codegen(std::vector<Statement *> *statements, std::string outfile);
