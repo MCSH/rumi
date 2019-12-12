@@ -1,5 +1,9 @@
 #include "codegen.h"
 #include "node.h"
+#include <llvm/Bitcode/BitcodeWriter.h>
+#include <llvm/IR/PassManager.h>
+#include <llvm/IR/Verifier.h>
+#include <llvm/Support/raw_ostream.h>
 #include <string>
 
 typedef CompileContext CC;
@@ -8,7 +12,7 @@ CC* init_context();
 void codegen(Statement* stmt, CC *context);
 llvm::Value* exprGen(Expression *exp, CC *cc);
 
-CC* codegen(std::vector<Statement *> *statements){
+CC* codegen(std::vector<Statement *> *statements, std::string outfile){
   // TODO use this!
   typeid(statements).hash_code();
 
@@ -18,7 +22,22 @@ CC* codegen(std::vector<Statement *> *statements){
     codegen(stmt, context);
   }
 
+  // ostream, assebly annotation writer, preserve order, is for debug
   context->module->print(llvm::outs(), nullptr);
+
+  llvm::verifyModule(*context->module.get());
+
+  std::error_code ec;
+  llvm::raw_fd_ostream buffer(outfile, ec);
+
+  if(ec){
+    // TODO
+    printf("this shouldn't happen %s \n", ec.message().c_str());
+  }
+
+  auto module = context->module.get();
+
+  llvm::WriteBitcodeToFile(*module, buffer);
 
   return context;
 }

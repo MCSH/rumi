@@ -7,3 +7,4 @@ compiler.o
 rum
 rumi
 codegen.o
+tests/*.o
