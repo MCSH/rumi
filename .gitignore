@@ -6,3 +6,4 @@ parse.hpp
 compiler.o
 rum
 rumi
+codegen.o

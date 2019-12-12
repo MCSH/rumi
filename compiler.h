@@ -1,4 +1,5 @@
 #pragma once
 #include <fstream>
+#include "node.h"
 
-void compile(char *fileName);
+std::vector<Statement *>* compile(char *fileName);

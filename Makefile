@@ -1,6 +1,6 @@
 
 NUMTESTS = 2
-OBJS = lex.o parse.o compiler.o
+OBJS = lex.o parse.o compiler.o codegen.o
 BASE_HEADS = node.h type.h
 CODE_GEN = lex.cpp parse.cpp parse.hpp
 CC = clang++
@@ -25,6 +25,9 @@ compiler.o:	compiler.cpp compiler.h $(BASE_HEADS)
 lex.o:	lex.cpp parse.hpp
 	$(CC) $(COMPILER_OBJECT_FLAGS) lex.cpp
 
+codegen.o:	codegen.cpp codegen.h $(BASE_HEADS)
+	$(CC) $(COMPILER_OBJECT_LLVM_FLAGS) codegen.cpp
+
 lex.cpp:	lex.l
 	flex -o lex.cpp lex.l
 
@@ -40,7 +43,7 @@ tests:	rum
 	number=1 ; while [[ $$number -le $(NUMTESTS) ]] ; do \
 		./rum tests/$$number.rum ; \
 		((number = number + 1)) ; \
-	done # TODO change this to actually run tests
+	done
 
 clean:
 	rm -f rum rumi $(OBJS) $(CODE_GEN) || true
