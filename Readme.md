@@ -31,12 +31,12 @@ Run `gdb rum` followed by `run test.rum`. You can try the following commands:
 
 # Current Language Features:
 
-
-# Top Priority Language TODO list
-
 * Variables
 * Functions
 * Expressions
+
+# Top Priority Language TODO list
+
 * Varargs
 * String literals
 * if else
