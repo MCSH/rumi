@@ -35,6 +35,8 @@ int comment_nesting = 0;
 "*" {return '/';}
 "%" {return '%';}
 
+"..." {return TRIPLE_DOTS;}
+
   /* Keywords */
 "int" {return INT;}
 "return" {return RETURN;}
@@ -43,6 +45,7 @@ int comment_nesting = 0;
 {WHITESPACE}+ {/*Discard */}
 {ALPHA}{ALPHANUMERIC}*  {yylval.string = new std::string(yytext); return ID;}
 {NONZERODIGIT}{DIGIT}* {yylval.string = new std::string(yytext); return DEC;}
+"0" {yylval.string = new std::string(yytext); return DEC;} // TODO remove after adding OCT
 
 "/*"    {BEGIN(COMMENT);}
 <COMMENT>{

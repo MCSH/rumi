@@ -61,7 +61,8 @@ class ArgDecl: public VariableDecl{
 public:
   std::string *name;
   Type *t;
-  ArgDecl(std::string *n, Type *t): name(n), t(t){
+  bool vardiac;
+  ArgDecl(std::string *n, Type *t, bool v=false): name(n), t(t), vardiac(v){
   }
 
   virtual ~ArgDecl(){

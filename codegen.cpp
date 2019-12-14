@@ -60,11 +60,12 @@ void funcGen(FunctionDefine *fd, CC *cc){
   auto _ft = fd->sign;
   auto fargs = fd->sign->args;
   std::vector<llvm::Type *> args;
+  bool has_varargs = false;
   for(auto arg: *fargs){
     args.push_back(typeGen(arg->t, cc));
+    has_varargs = arg->vardiac; // Only the last one matters.
   }
   // TODO vargs, somehow
-  bool has_varargs = false;
 
   auto type = typeGen(fd->sign->returnT, cc);
 

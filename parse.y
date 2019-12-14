@@ -21,7 +21,6 @@ std::vector<Statement *> *mainProgramNode;
     FunctionBody *functionBody;
     std::vector<Statement *> *arr;
     std::vector<Expression *> *arrE;
-    Operation op;
 }
 
 %token <string> ID
@@ -31,6 +30,7 @@ std::vector<Statement *> *mainProgramNode;
 %token ARROW
 %token RETURN
 %token INT
+%token TRIPLE_DOTS
 
 %type <type> type
 
@@ -39,7 +39,7 @@ std::vector<Statement *> *mainProgramNode;
 // TODO reorder these
 
 %type <stmt> return_stmt stmt variable_decl variable_assign
-%type <stmt> top_level function_define arg_decl
+%type <stmt> top_level function_define arg_decl vararg_decl
 
 %type <functionSignature> function_signature 
 %type <functionBody> function_body 
@@ -47,10 +47,8 @@ std::vector<Statement *> *mainProgramNode;
 %type <arr> program top_levels stmts args_decl args_decl_list
 %type <arrE> args args_list
 
-%type <op> bop
-
 %left '+' '-'
-%left '*' '/'
+%left '*' '/' '%'
 
 %start program
 
@@ -89,6 +87,11 @@ empty:;
 args_decl
 : args_decl ',' arg_decl {$$=$1; $1->push_back($3);}
 | arg_decl {$$=new std::vector<Statement *>(); $$->push_back($1);}
+| vararg_decl {$$=new std::vector<Statement *>(); $$->push_back($1);}
+;
+
+vararg_decl
+: ID ':' TRIPLE_DOTS type {$$=new ArgDecl($1, $4, true);}
 ;
 
 arg_decl
@@ -137,15 +140,11 @@ expr
 ;
 
 binary_operation
-: expr bop expr {$$=new BinaryOperation($1, $2, $3);}
-;
-
-bop
-: '+' {$$=Operation::PLUS;}
-| '-' {$$=Operation::SUB;}
-| '*' {$$=Operation::MULT;}
-| '/' {$$=Operation::DIV;}
-| '%' {$$=Operation::MOD;}
+: expr '+' expr {$$=new BinaryOperation($1, Operation::PLUS, $3);}
+| expr '-' expr {$$=new BinaryOperation($1, Operation::SUB, $3);}
+| expr '*' expr {$$=new BinaryOperation($1, Operation::MULT, $3);}
+| expr '/' expr {$$=new BinaryOperation($1, Operation::DIV, $3);}
+| expr '%' expr {$$=new BinaryOperation($1, Operation::MOD, $3);}
 ;
 
 function_call
