@@ -5,14 +5,16 @@
 
 class Node{
 public:
-  Type *t;
-
   virtual ~Node(){
-    delete t;
   }
 };
 
 class Expression: public Node{
+public:
+  virtual Type *resolveType(){
+    printf("Unimplemented resolveType for an expression, %s\n", typeid(*this).name());
+    exit(1);
+  };
 };
 
 class Statement: public Node{
@@ -28,6 +30,10 @@ public:
   virtual ~IntValue(){
     delete val;
   }
+
+  virtual Type *resolveType(){
+    return new IntType();
+  };
 };
 
 class ReturnStatement: public Statement{
@@ -116,8 +122,8 @@ class VariableDecl: public Statement{
 public:
   std::string *name;
   Type *t;
-  VariableDecl(std::string *n, Type *t): name(n), t(t){
-  }
+  Expression *exp;
+  VariableDecl(std::string *n, Type *t, Expression *e=nullptr): name(n), t(t), exp(e){}
 
   virtual ~VariableDecl(){
     delete name;

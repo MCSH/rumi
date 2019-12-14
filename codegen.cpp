@@ -98,9 +98,30 @@ llvm::Value* intValueGen(IntValue* i, CC *cc){
 void variableDeclGen(VariableDecl *vd, CC *cc){
   // TODO maybe we need the block first for allocation?
 
+  if(vd->exp){
+    // set the type
+    auto etype = vd->exp->resolveType();
+    if(vd->t && !vd->t->compatible(etype)){
+      // The var type and expr type are incompatible, throw
+      // TODO
+    }
+
+    if(!vd->t){
+      vd->t = etype;
+    } else {
+      delete etype;
+    }
+  }
+
   auto t = typeGen(vd->t, cc);
   llvm::AllocaInst *alloc = cc->builder->CreateAlloca(t, 0, vd->name->c_str());
   cc->setVariable(vd->name, alloc);
+
+  if(vd->exp){
+    // set variable to expr
+    auto exp = exprGen(vd->exp, cc);
+    cc->builder->CreateStore(exp, alloc);
+  }
 }
 
 void variableAssignGen(VariableAssign *va, CC *cc){

@@ -60,7 +60,7 @@ top_levels
 ;
 
 top_level
-: function_define {$$=$1;}
+: function_define
 ;
 
 function_define
@@ -87,7 +87,8 @@ stmt
 ;
 
 variable_decl
-: ID ':' type ';' {$$=new VariableDecl($1, $3);}
+: ID DEFINE_AND_ASSIGN expr ';' {$$=new VariableDecl($1, NULL, $3);}
+| ID ':' type ';' {$$=new VariableDecl($1, $3);}
 ;
 
 variable_assign
