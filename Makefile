@@ -44,7 +44,7 @@ tests:	rum
 	number=1 ; while [[ $$number -le $(NUMTESTS) ]] ; do \
 		echo "==============" ; \
 		echo tests/$$number.rum ; \
-		cat tests/$$number.rum ; \
+		cat -n tests/$$number.rum ; \
 		./rum tests/$$number.rum ; \
 		((number = number + 1)) ; \
 	done

@@ -9,11 +9,11 @@ public:
   }
 };
 
-class Expression: public Node{
-public:
+class Statement: public Node{
 };
 
-class Statement: public Node{
+class Expression: public Statement{
+public:
 };
 
 class IntValue: public Expression{
@@ -25,9 +25,18 @@ public:
   virtual ~IntValue(){
     delete val;
   }
-
 };
 
+class StringValue: public Expression{
+public:
+  std::string *val;
+  StringValue(std::string *val): val(val){
+  }
+
+  virtual ~StringValue(){
+    delete val;
+  }
+};
 
 class ReturnStatement: public Statement{
 public:

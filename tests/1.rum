@@ -8,7 +8,10 @@ And multi line comments
 
 c_func := (a: int) -> int;
 
+printf := (t: string, c: ...any)->int;
+
 vardtest := (v: ...int) -> int{
+  printf("Inside the %s function\n", "verdtest");
   return 1;
 }
 

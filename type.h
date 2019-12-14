@@ -35,3 +35,25 @@ class IntType: public Type{
     return new IntType(*this);
   }
 };
+
+class AnyType: public Type{
+  virtual bool compatible(Type *t){
+    return true;
+  }
+
+  virtual AnyType* clone(){
+    return new AnyType(*this);
+  }
+};
+
+class StringType: public Type{
+  virtual bool compatible(Type *t){
+    if(typeid(*t).hash_code() == typeid(StringType).hash_code())
+      return true;
+    return false;
+  }
+
+  virtual StringType* clone(){
+    return new StringType(*this);
+  }
+};

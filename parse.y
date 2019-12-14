@@ -24,12 +24,12 @@ std::vector<Statement *> *mainProgramNode;
 }
 
 %token <string> ID
-%token <string> DEC
+%token <string> DEC SSTRING 
                         
 %token DEFINE_AND_ASSIGN
 %token ARROW
 %token RETURN
-%token INT
+%token INT ANY STRING
 %token TRIPLE_DOTS
 
 %type <type> type
@@ -87,6 +87,7 @@ empty:;
 
 args_decl
 : args_decl ',' arg_decl {$$=$1; $1->push_back($3);}
+| args_decl ',' vararg_decl {$$=$1; $1->push_back($3);}
 | arg_decl {$$=new std::vector<Statement *>(); $$->push_back($1);}
 | vararg_decl {$$=new std::vector<Statement *>(); $$->push_back($1);}
 ;
@@ -112,6 +113,7 @@ stmt
 : return_stmt
 | variable_decl
 | variable_assign
+| function_call ';' {$$=(Statement *)$1;}
 ;
 
 variable_decl
@@ -164,10 +166,13 @@ args
 
 value
 : DEC {$$=new IntValue($1);}
+| SSTRING {$$=new StringValue($1);}
 ;
 
 type
 : INT {$$=new IntType();}
+| STRING {$$=new StringType();}
+| ANY {$$=new AnyType();}
 ;
 
 %%
@@ -176,7 +181,7 @@ void yyerror(const char *s){
     extern int yylineno;	// defined and maintained in lex.c
     extern char *yytext;	// defined and maintained in lex.c
   
-    printf("ERROR: %s at symbol %s on line %d\n", s, yytext, yylineno+1);
+    printf("ERROR: %s at symbol %s on line %d\n", s, yytext, yylineno);
 
     exit(1);
 }

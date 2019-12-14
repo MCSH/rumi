@@ -39,6 +39,8 @@ int comment_nesting = 0;
 
   /* Keywords */
 "int" {return INT;}
+"string" {return STRING;}
+"any" {return ANY;}
 "return" {return RETURN;}
 
   /* Comments */
@@ -46,6 +48,10 @@ int comment_nesting = 0;
 {ALPHA}{ALPHANUMERIC}*  {yylval.string = new std::string(yytext); return ID;}
 {NONZERODIGIT}{DIGIT}* {yylval.string = new std::string(yytext); return DEC;}
 "0" {yylval.string = new std::string(yytext); return DEC;} // TODO remove after adding OCT
+
+\"(\\.|[^"\\])*\" {yylval.string = new std::string(yytext); return SSTRING;}
+
+  /* //" this line is here because my editor is stupid. */
 
 "/*"    {BEGIN(COMMENT);}
 <COMMENT>{

@@ -3,6 +3,7 @@
 #include "type.h"
 #include <cstdio>
 #include <llvm/Bitcode/BitcodeWriter.h>
+#include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/PassManager.h>
@@ -61,8 +62,11 @@ llvm::Function* funcSignGen(FunctionSignature *fs, CC *cc){
   std::vector<llvm::Type *> args;
   bool has_varargs = false;
   for(auto arg: *fargs){
+    if(arg->vardiac){
+      has_varargs = arg->vardiac; // Only the last one matters.
+      break;
+    }
     args.push_back(typeGen(arg->t, cc));
-    has_varargs = arg->vardiac; // Only the last one matters.
   }
   // TODO vargs, somehow
 
@@ -83,6 +87,8 @@ void funcGen(FunctionDefine *fd, CC *cc){
 
   unsigned idx = 0;
   for(auto &arg: f->args()){
+    if((*fargs)[idx]->vardiac)
+      break;
     arg.setName(*(*fargs)[idx++]->name);
   }
 
@@ -235,6 +241,10 @@ Type* binaryOpExprType(BinaryOperation *bo, CC * cc){
   return resolveType(bo->lhs, cc);
 }
 
+llvm::Value* stringvalueGen(StringValue *sv, CC *cc){
+  return cc->builder->CreateGlobalStringPtr(*sv->val);
+}
+
 void codegen(Statement* stmt, CC *cc){
   auto t = typeid(*stmt).hash_code();
 
@@ -243,6 +253,11 @@ void codegen(Statement* stmt, CC *cc){
 
   if(t == typeid(FunctionSignature).hash_code()){
     funcSignGen((FunctionSignature*)stmt, cc);
+    return;
+  }
+
+  if(t == typeid(FunctionCallExpr).hash_code()){
+    functionCallExprGen((FunctionCallExpr*) stmt, cc);
     return;
   }
 
@@ -270,6 +285,8 @@ llvm::Value* exprGen(Expression *exp, CC *cc){
     return functionCallExprGen((FunctionCallExpr*) exp, cc);
   if(t == typeid(BinaryOperation).hash_code())
     return binaryOpExprGen((BinaryOperation *) exp, cc);
+  if(t == typeid(StringValue).hash_code())
+    return stringvalueGen((StringValue *) exp, cc);
 
   printf("Unknown exprgen for class of type %s\n", typeid(*exp).name());
   exit(1);
@@ -281,6 +298,13 @@ llvm::Type* typeGen(Type *type, CC *cc){
 
   if(t == typeid(IntType).hash_code())
     return llvm::Type::getInt64Ty(cc->context);
+
+  // TODO, improve?
+  if(t == typeid(StringType).hash_code())
+    return llvm::PointerType::getUnqual(llvm::Type::getInt8Ty(cc->context));
+
+  if(t == typeid(AnyType).hash_code())
+    return llvm::Type::getVoidTy(cc->context);
 
   printf("Unknown typeGen for a class of type %s\n", typeid(*type).name());
   exit(1);
