@@ -11,10 +11,6 @@ public:
 
 class Expression: public Node{
 public:
-  virtual Type *resolveType(){
-    printf("Unimplemented resolveType for an expression, %s\n", typeid(*this).name());
-    exit(1);
-  };
 };
 
 class Statement: public Node{
@@ -31,9 +27,6 @@ public:
     delete val;
   }
 
-  virtual Type *resolveType(){
-    return new IntType();
-  };
 };
 
 class ReturnStatement: public Statement{

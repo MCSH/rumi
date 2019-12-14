@@ -2,15 +2,19 @@
 #include "node.h"
 #include "type.h"
 #include <llvm/Bitcode/BitcodeWriter.h>
+#include <llvm/IR/Instructions.h>
 #include <llvm/IR/PassManager.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Support/raw_ostream.h>
 #include <string>
 
+// TODO improve all the typeid hash_coding.
+
 typedef CompileContext CC;
 
 CC* init_context();
 void codegen(Statement* stmt, CC *context);
+Type* resolveType(Expression *expr, CC *cc);
 llvm::Value* exprGen(Expression *exp, CC *cc);
 llvm::Type* typeGen(Type*t, CC *cc);
 
@@ -100,7 +104,7 @@ void variableDeclGen(VariableDecl *vd, CC *cc){
 
   if(vd->exp){
     // set the type
-    auto etype = vd->exp->resolveType();
+    auto etype = resolveType(vd->exp, cc);
     if(vd->t && !vd->t->compatible(etype)){
       // The var type and expr type are incompatible, throw
       // TODO
@@ -115,7 +119,7 @@ void variableDeclGen(VariableDecl *vd, CC *cc){
 
   auto t = typeGen(vd->t, cc);
   llvm::AllocaInst *alloc = cc->builder->CreateAlloca(t, 0, vd->name->c_str());
-  cc->setVariable(vd->name, alloc);
+  cc->setVariable(vd->name, alloc, vd);
 
   if(vd->exp){
     // set variable to expr
@@ -126,7 +130,7 @@ void variableDeclGen(VariableDecl *vd, CC *cc){
 
 void variableAssignGen(VariableAssign *va, CC *cc){
   // TODO
-  llvm::AllocaInst *alloc = cc->getVariable(va->name);
+  llvm::AllocaInst *alloc = cc->getVariableAlloca(va->name);
   if(!alloc){
     // TODO user error
     printf("Unknown variable %s\n", va->name->c_str());
@@ -138,7 +142,7 @@ void variableAssignGen(VariableAssign *va, CC *cc){
 
 llvm::Value* variableExprGen(VariableExpr *ve, CC *cc){
   // TODO
-  llvm::AllocaInst *alloc = cc->getVariable(ve->name);
+  llvm::AllocaInst *alloc = cc->getVariableAlloca(ve->name);
   if(!alloc){
     // TODO user error
     printf("Unknown variable %s\n", ve->name->c_str());
@@ -148,6 +152,11 @@ llvm::Value* variableExprGen(VariableExpr *ve, CC *cc){
   auto load = cc->builder->CreateLoad(alloc, "readtmp");
 
   return load;
+}
+
+Type* variableExprType(VariableExpr *ve, CC *cc){
+  Type *t = new Type(*cc->getVariableDecl(ve->name)->t);
+  return t;
 }
 
 void codegen(Statement* stmt, CC *cc){
@@ -193,7 +202,21 @@ llvm::Type* typeGen(Type *type, CC *cc){
   return NULL;
 }
 
-llvm::AllocaInst *CompileContext::getVariable(std::string *name){
+Type* resolveType(Expression *expr, CC *cc){
+  auto t = typeid(*expr).hash_code();
+
+  if(t == typeid(IntValue).hash_code())
+    return new IntType();
+
+  if(t == typeid(VariableExpr).hash_code())
+    return variableExprType((VariableExpr *) expr, cc);
+
+  printf("Unknown resolveType for a class of type %s\n", typeid(*expr).name());
+  exit(1);
+  return NULL;
+}
+
+std::tuple<llvm::AllocaInst *, VariableDecl *> *CompileContext::getVariable(std::string *name){
   BlockContext *b = this->currentBlock();
 
   // TODO recursive and global search?
@@ -201,7 +224,19 @@ llvm::AllocaInst *CompileContext::getVariable(std::string *name){
   return b->variables[*name];
 }
 
-void CompileContext::setVariable(std::string *name, llvm::AllocaInst *var){
+void CompileContext::setVariable(std::string *name, llvm::AllocaInst *var, VariableDecl *vd){
   BlockContext *b = this->currentBlock();
-  b->variables[*name] = var;
+  b->variables[*name] = new std::tuple<llvm::AllocaInst*, VariableDecl*>(var, vd);
+}
+
+llvm::AllocaInst *CompileContext::getVariableAlloca(std::string *name){
+  llvm::AllocaInst *alloca;
+  std::tie (alloca, std::ignore) = *this->getVariable(name); 
+  return alloca;
+}
+
+VariableDecl *CompileContext::getVariableDecl(std::string *name){
+  VariableDecl *d;
+  std::tie(std::ignore, d) = *this->getVariable(name);
+  return d;
 }

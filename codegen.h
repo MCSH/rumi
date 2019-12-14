@@ -1,5 +1,6 @@
 #pragma once
 #include "node.h"
+#include <tuple> 
 
 #include "llvm/Bitcode/BitcodeWriter.h"
 
@@ -18,7 +19,7 @@
 
 class BlockContext{
 public:
-  std::map<std::string, llvm::AllocaInst *> variables;
+  std::map<std::string, std::tuple<llvm::AllocaInst *, VariableDecl *>*> variables;
   llvm::BasicBlock *bblock;
 
   BlockContext(llvm::BasicBlock *bb):bblock(bb){}
@@ -38,8 +39,10 @@ class CompileContext{
   BlockContext global;
   std::vector<BlockContext *> block;
 
-  llvm::AllocaInst *getVariable(std::string *name);
-  void setVariable(std::string *name, llvm::AllocaInst *var);
+  std::tuple<llvm::AllocaInst *, VariableDecl *> *getVariable(std::string *name);
+  llvm::AllocaInst *getVariableAlloca(std::string *name);
+  VariableDecl *getVariableDecl(std::string *name);
+  void setVariable(std::string *name, llvm::AllocaInst *var, VariableDecl *vd);
 
   CompileContext(){}
 };

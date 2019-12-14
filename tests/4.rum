@@ -2,5 +2,6 @@
 
 main := () -> int{
      a := 5;
-     return a;
+     b : int = a;
+     return b;
 }

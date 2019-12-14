@@ -89,6 +89,7 @@ stmt
 variable_decl
 : ID DEFINE_AND_ASSIGN expr ';' {$$=new VariableDecl($1, NULL, $3);}
 | ID ':' type ';' {$$=new VariableDecl($1, $3);}
+| ID ':' type '=' expr ';' {$$=new VariableDecl($1,$3,$5);}
 ;
 
 variable_assign
