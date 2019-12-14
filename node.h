@@ -236,3 +236,18 @@ public:
     delete exp;
   }
 };
+
+
+class WhileStatement: public Statement{
+public:
+  Statement *w;
+  Expression *exp;
+
+  WhileStatement(Expression *exp, Statement *w): w(w), exp(exp){
+  }
+
+  virtual ~WhileStatement(){
+    delete w;
+    delete exp;
+  }
+};

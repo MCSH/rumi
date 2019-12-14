@@ -31,7 +31,7 @@ std::vector<Statement *> *mainProgramNode;
 %token RETURN
 %token INT ANY STRING
 %token TRIPLE_DOTS
-%token IF ELSE
+%token IF ELSE WHILE
 
 %type <type> type
 
@@ -39,7 +39,7 @@ std::vector<Statement *> *mainProgramNode;
 
 // TODO reorder these
 
-%type <stmt> return_stmt stmt variable_decl variable_assign cblock if_stmt
+%type <stmt> return_stmt stmt variable_decl variable_assign if_stmt while_stmt
 %type <stmt> top_level function_define arg_decl vararg_decl
 
 %type <functionSignature> function_signature 
@@ -121,16 +121,17 @@ stmt
 | variable_assign
 | function_call ';' {$$=(Statement *)$1;}
 | if_stmt
+| while_stmt
+| '{' stmts '}' {$$=new CodeBlock($2);}
+;
+
+while_stmt
+: WHILE expr stmt {$$=new WhileStatement($2, $3);}
 ;
 
 if_stmt
-: IF expr cblock %prec "then" {$$=new IfStatement($2, $3);}
-| IF expr cblock ELSE cblock {$$=new IfStatement($2, $3, $5);}
-;
-
-cblock
-: stmt
-| '{' stmts '}' {$$=new CodeBlock($2);}
+: IF expr stmt %prec "then" {$$=new IfStatement($2, $3);}
+| IF expr stmt ELSE stmt {$$=new IfStatement($2, $3, $5);}
 ;
 
 variable_decl

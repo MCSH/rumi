@@ -247,7 +247,6 @@ llvm::Value* stringvalueGen(StringValue *sv, CC *cc){
 }
 
 void ifGen(IfStatement *is, CC *cc){
-  // TODO
   llvm::Function *f = cc->builder->GetInsertBlock()->getParent();
 
   llvm::BasicBlock *ifB = llvm::BasicBlock::Create(cc->context, "if", f),
@@ -294,6 +293,39 @@ void blockGen(CodeBlock *cb, CC *cc){
   }
 }
 
+void whileGen(WhileStatement *ws, CC *cc){
+  // TODO
+
+  llvm::Function *f = cc->builder->GetInsertBlock()->getParent();
+
+  llvm::BasicBlock
+    *condB = llvm::BasicBlock::Create(cc->context, "whilecond", f),
+    *whileB = llvm::BasicBlock::Create(cc->context, "while"),
+    *mergeB = llvm::BasicBlock::Create(cc->context, "whilecont");
+
+  cc->builder->CreateBr(condB);
+
+  // While cond
+  cc->block.push_back(new BlockContext(condB));
+  cc->builder->SetInsertPoint(condB);
+  llvm::Value *cond = exprGen(ws->exp, cc);
+  cond = cc->builder->CreateICmpNE(cond, llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), 0, false), "whilecond"); // TODO improve?
+  cc->builder->CreateCondBr(cond, whileB, mergeB);
+  cc->block.pop_back();
+
+  // While Body
+  f->getBasicBlockList().push_back(whileB);
+  cc->block.push_back(new BlockContext(whileB));
+  cc->builder->SetInsertPoint(whileB);
+  codegen(ws->w, cc);
+  cc->builder->CreateBr(condB);
+  cc->block.pop_back();
+
+  // Cont
+  f->getBasicBlockList().push_back(mergeB);
+  cc->builder->SetInsertPoint(mergeB);
+}
+
 void codegen(Statement* stmt, CC *cc){
   auto t = typeid(*stmt).hash_code();
 
@@ -324,6 +356,9 @@ void codegen(Statement* stmt, CC *cc){
 
   if(t == typeid(CodeBlock).hash_code())
     return blockGen((CodeBlock*) stmt, cc);
+
+  if(t == typeid(WhileStatement).hash_code())
+    return whileGen((WhileStatement*) stmt, cc);
 
   printf("Unknown codegen for class of type %s\n", typeid(*stmt).name());
   exit(1);

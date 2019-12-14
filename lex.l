@@ -44,6 +44,7 @@ int comment_nesting = 0;
 "return" {return RETURN;}
 
 "if" {return IF;}
+"while" {return WHILE;}
 "else" {return ELSE;}
 
   /* Comments */

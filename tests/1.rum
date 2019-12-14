@@ -30,5 +30,10 @@ test := (a: int, b: int)-> int{
 }
 
 main := () -> int{
+  a := 2;
+  while a {
+    printf("within while\n");
+    a = a - 1;
+  }
   return test(2, 3);
 }
