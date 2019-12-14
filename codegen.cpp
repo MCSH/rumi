@@ -55,10 +55,9 @@ CC* init_context(){
   return cc;
 }
 
-void funcGen(FunctionDefine *fd, CC *cc){
+llvm::Function* funcSignGen(FunctionSignature *fs, CC *cc){
   // TODO
-  auto _ft = fd->sign;
-  auto fargs = fd->sign->args;
+  auto fargs = fs->args;
   std::vector<llvm::Type *> args;
   bool has_varargs = false;
   for(auto arg: *fargs){
@@ -67,11 +66,20 @@ void funcGen(FunctionDefine *fd, CC *cc){
   }
   // TODO vargs, somehow
 
-  auto type = typeGen(fd->sign->returnT, cc);
+  auto type = typeGen(fs->returnT, cc);
 
   llvm::FunctionType *fT = llvm::FunctionType::get(type, args, has_varargs);
 
-  auto f = llvm::Function::Create(fT, llvm::Function::ExternalLinkage, *_ft->name, cc->module.get());
+  auto f = llvm::Function::Create(fT, llvm::Function::ExternalLinkage, *fs->name, cc->module.get());
+
+  return f;
+}
+
+void funcGen(FunctionDefine *fd, CC *cc){
+  // TODO
+
+  auto f = funcSignGen(fd->sign, cc);
+  auto fargs = fd->sign->args;
 
   unsigned idx = 0;
   for(auto &arg: f->args()){
@@ -232,6 +240,11 @@ void codegen(Statement* stmt, CC *cc){
 
   if(t == typeid(FunctionDefine).hash_code())
     return funcGen((FunctionDefine*)stmt, cc);
+
+  if(t == typeid(FunctionSignature).hash_code()){
+    funcSignGen((FunctionSignature*)stmt, cc);
+    return;
+  }
 
   if(t == typeid(ReturnStatement).hash_code())
     return retGen((ReturnStatement*)stmt, cc);

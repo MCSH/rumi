@@ -6,6 +6,8 @@ And multi line comments
 
 /* And /* nested */ multi line comments*/
 
+c_func := (a: int) -> int;
+
 vardtest := (v: ...int) -> int{
   return 1;
 }

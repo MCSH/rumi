@@ -67,6 +67,7 @@ top_levels
 
 top_level
 : function_define
+| function_signature ';' {$$=$1;}
 ;
 
 function_define
