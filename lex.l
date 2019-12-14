@@ -13,6 +13,7 @@ int comment_nesting = 0;
 
 %x COMMENT
 %x LINE_COMMENT
+%option yylineno
 
 %%
 

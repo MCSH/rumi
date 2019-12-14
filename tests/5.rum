@@ -1,0 +1,9 @@
+// function call
+
+test_f := () -> int{
+    return 42;
+}
+
+main := () -> int{
+    return test_f();
+}

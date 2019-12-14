@@ -122,3 +122,16 @@ public:
     delete name;
   }
 };
+
+
+class FunctionCallExpr: public Expression{
+public:
+  std::string *name;
+
+  FunctionCallExpr(std::string *n): name(n){
+  }
+
+  virtual ~FunctionCallExpr(){
+    delete name;
+  }
+};

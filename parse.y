@@ -32,7 +32,7 @@ std::vector<Statement *> *mainProgramNode;
 
 %type <type> type
 
-%type <exp> value expr variable
+%type <exp> value expr variable function_call
 
 // TODO reorder these
 
@@ -105,8 +105,13 @@ variable
 ;
 
 expr
-: value {$$=$1;}
-| variable {$$=$1;}
+: value
+| function_call
+| variable
+;
+
+function_call
+: ID '(' ')' {$$=new FunctionCallExpr($1);}
 ;
 
 value

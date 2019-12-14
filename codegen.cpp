@@ -155,6 +155,19 @@ Type* variableExprType(VariableExpr *ve, CC *cc){
   return cc->getVariableDecl(ve->name)->t->clone();
 }
 
+llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
+  // TODO args, function resolve could be improved!
+  llvm::Function *calleeF = cc->module->getFunction(fc->name->c_str());
+  if (!calleeF) {
+    printf("Function not found %s\n", fc->name->c_str());
+    exit(1);
+  }
+
+  std::vector<llvm::Value *> argsV;
+
+  return cc->builder->CreateCall(calleeF, argsV, "calltmp");
+}
+
 void codegen(Statement* stmt, CC *cc){
   auto t = typeid(*stmt).hash_code();
 
@@ -181,6 +194,8 @@ llvm::Value* exprGen(Expression *exp, CC *cc){
     return intValueGen((IntValue*) exp, cc);
   if(t == typeid(VariableExpr).hash_code())
     return variableExprGen((VariableExpr*)exp, cc);
+  if(t == typeid(FunctionCallExpr).hash_code())
+    return functionCallExprGen((FunctionCallExpr*) exp, cc);
 
   printf("Unknown exprgen for class of type %s\n", typeid(*exp).name());
   exit(1);
