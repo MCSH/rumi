@@ -1,6 +1,7 @@
 #include "codegen.h"
 #include "node.h"
 #include "type.h"
+#include <cstdio>
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/PassManager.h>
@@ -56,8 +57,12 @@ CC* init_context(){
 void funcGen(FunctionDefine *fd, CC *cc){
   // TODO
   auto _ft = fd->sign;
+  auto fargs = fd->sign->args;
   std::vector<llvm::Type *> args;
-  // TODO args, somehow
+  for(auto arg: *fargs){
+    args.push_back(typeGen(arg->t, cc));
+  }
+  // TODO vargs, somehow
   bool has_varargs = false;
 
   auto type = typeGen(fd->sign->returnT, cc);
@@ -66,10 +71,25 @@ void funcGen(FunctionDefine *fd, CC *cc){
 
   auto f = llvm::Function::Create(fT, llvm::Function::ExternalLinkage, *_ft->name, cc->module.get());
 
+  unsigned idx = 0;
+  for(auto &arg: f->args()){
+    arg.setName(*(*fargs)[idx++]->name);
+  }
+
   llvm::BasicBlock *bblock = llvm::BasicBlock::Create(cc->context, "entry", f);
   cc->builder->SetInsertPoint(bblock);
+  cc->block.push_back(new BlockContext());
 
   // TODO handle arguments
+  int i = 0;
+  for(auto &arg: f->args()){
+    // TODO is it redundent to convert arg to alloca and store?
+    auto a = (*fargs)[i]; // This argument
+    llvm::AllocaInst *alloc = cc->builder->CreateAlloca(typeGen(a->t, cc), 0, *a->name);
+    cc->setVariable(a->name, alloc, a);
+    cc->builder->CreateStore(&arg, alloc);
+    i++;
+  }
 
   // TODO generate body
   for(auto s: *fd->body->stmts){
@@ -80,6 +100,8 @@ void funcGen(FunctionDefine *fd, CC *cc){
   // TODO verify returns
 
   llvm::verifyFunction(*f);
+
+  cc->block.pop_back();
 }
 
 void retGen(ReturnStatement* rt, CC *cc){
@@ -105,7 +127,6 @@ void variableDeclGen(VariableDecl *vd, CC *cc){
     auto etype = resolveType(vd->exp, cc);
     if(vd->t && !vd->t->compatible(etype)){
       // The var type and expr type are incompatible, throw
-      // TODO WTF?!
       printf("first type: %s, second type %s\n", typeid(*vd->t).name(), typeid(*etype).name());
       printf("Incompatible variable type with assigned variable\n");
       exit(1);
@@ -164,6 +185,9 @@ llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
   }
 
   std::vector<llvm::Value *> argsV;
+  for(auto e: *fc->expr){
+    argsV.push_back(exprGen(e, cc));
+  }
 
   return cc->builder->CreateCall(calleeF, argsV, "calltmp");
 }
@@ -245,12 +269,18 @@ void CompileContext::setVariable(std::string *name, llvm::AllocaInst *var, Varia
 
 llvm::AllocaInst *CompileContext::getVariableAlloca(std::string *name){
   llvm::AllocaInst *alloca;
-  std::tie (alloca, std::ignore) = *this->getVariable(name); 
+  auto tup = this->getVariable(name); 
+  if(!tup)
+    return nullptr;
+  std::tie (alloca, std::ignore) = *tup;
   return alloca;
 }
 
 VariableDecl *CompileContext::getVariableDecl(std::string *name){
   VariableDecl *d;
-  std::tie(std::ignore, d) = *this->getVariable(name);
+  auto tup = this->getVariable(name);
+  if(!tup)
+    return nullptr;
+  std::tie(std::ignore, d) = *tup;
   return d;
 }

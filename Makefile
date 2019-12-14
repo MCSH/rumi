@@ -1,5 +1,5 @@
 
-NUMTESTS = 5
+NUMTESTS = 6
 OBJS = lex.o parse.o compiler.o
 BASE_HEADS = node.h type.h
 CODE_GEN = lex.cpp parse.cpp parse.hpp
@@ -43,6 +43,7 @@ parse.cpp:	parse.y $(BASE_HEADS)
 tests:	rum
 	number=1 ; while [[ $$number -le $(NUMTESTS) ]] ; do \
 		echo "==============" ; \
+		echo tests/$$number.rum ; \
 		cat tests/$$number.rum ; \
 		./rum tests/$$number.rum ; \
 		((number = number + 1)) ; \

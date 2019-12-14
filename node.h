@@ -20,7 +20,6 @@ class IntValue: public Expression{
 public:
   std::string *val;
   IntValue(std::string *val): val(val){
-    // TODO 
   }
 
   virtual ~IntValue(){
@@ -29,11 +28,11 @@ public:
 
 };
 
+
 class ReturnStatement: public Statement{
 public:
   Expression *exp;
   ReturnStatement(Expression *e): exp(e){
-    // TODO
   }
 
   virtual ~ReturnStatement(){
@@ -41,17 +40,59 @@ public:
   }
 };
 
+
+class VariableDecl: public Statement{
+public:
+  std::string *name;
+  Type *t;
+  Expression *exp;
+  VariableDecl(){}
+  VariableDecl(std::string *n, Type *t, Expression *e=nullptr): name(n), t(t), exp(e){}
+
+  virtual ~VariableDecl(){
+    delete name;
+    delete t;
+    delete exp;
+  }
+};
+
+
+class ArgDecl: public VariableDecl{
+public:
+  std::string *name;
+  Type *t;
+  ArgDecl(std::string *n, Type *t): name(n), t(t){
+  }
+
+  virtual ~ArgDecl(){
+    delete name;
+    delete t;
+  }
+};
+
 class FunctionSignature: public Statement{
 public:
   std::string *name;
   Type *returnT;
-  FunctionSignature(std::string *val, Type *t): name(val), returnT(t){
-    // TODO
+  std::vector<ArgDecl *> *args;
+  FunctionSignature(std::string *val, std::vector<Statement *> *a, Type *t): name(val), returnT(t){
+    args = new std::vector<ArgDecl*>();
+    if(a){
+      for (auto s : *a) {
+        args->push_back((ArgDecl *)s);
+      }
+      delete a;
+    }
   }
 
   virtual ~FunctionSignature(){
     delete name;
     delete returnT;
+
+    for(auto s: *args){
+      delete s;
+    }
+    delete args;
   }
 };
 
@@ -59,7 +100,6 @@ class FunctionBody: public Statement{
 public:
   std::vector<Statement *> *stmts;
   FunctionBody(std::vector<Statement*> *s): stmts(s){
-    // TODO
   }
 
   virtual ~FunctionBody(){
@@ -76,7 +116,6 @@ public:
   FunctionSignature *sign;
   FunctionBody *body;
   FunctionDefine(FunctionSignature *d, FunctionBody *b): sign(d), body(b){
-    // TODO
   }
 
   virtual ~FunctionDefine(){
@@ -111,27 +150,20 @@ public:
 };
 
 
-class VariableDecl: public Statement{
-public:
-  std::string *name;
-  Type *t;
-  Expression *exp;
-  VariableDecl(std::string *n, Type *t, Expression *e=nullptr): name(n), t(t), exp(e){}
-
-  virtual ~VariableDecl(){
-    delete name;
-  }
-};
-
-
 class FunctionCallExpr: public Expression{
 public:
   std::string *name;
+  std::vector<Expression *> *expr;
 
-  FunctionCallExpr(std::string *n): name(n){
+  FunctionCallExpr(std::string *n, std::vector<Expression *> *expr): name(n), expr(expr){
+    if(!expr)
+      expr = new std::vector<Expression*>();
   }
 
   virtual ~FunctionCallExpr(){
     delete name;
+    for (auto e : *expr)
+      delete e;
+    delete expr;
   }
 };

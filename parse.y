@@ -20,6 +20,7 @@ std::vector<Statement *> *mainProgramNode;
     FunctionSignature *functionSignature;
     FunctionBody *functionBody;
     std::vector<Statement *> *arr;
+    std::vector<Expression *> *arrE;
 }
 
 %token <string> ID
@@ -37,12 +38,13 @@ std::vector<Statement *> *mainProgramNode;
 // TODO reorder these
 
 %type <stmt> return_stmt stmt variable_decl variable_assign
-%type <stmt> top_level function_define
+%type <stmt> top_level function_define arg_decl
 
-%type <functionSignature> function_head 
+%type <functionSignature> function_signature 
 %type <functionBody> function_body 
 
-%type <arr> program top_levels stmts
+%type <arr> program top_levels stmts args_decl args_decl_list
+%type <arrE> args args_list
 
 %start program
 
@@ -64,11 +66,27 @@ top_level
 ;
 
 function_define
-: function_head '{' function_body '}' {$$=new FunctionDefine($1, $3);}
+: function_signature '{' function_body '}' {$$=new FunctionDefine($1, $3);}
 ;
 
-function_head
-: ID DEFINE_AND_ASSIGN '(' /*TODO*/ ')' ARROW type {$$=new FunctionSignature($1,$6);}
+function_signature
+: ID DEFINE_AND_ASSIGN '(' args_decl_list ')' ARROW type {$$=new FunctionSignature($1, $4, $7);}
+;
+
+args_decl_list
+: args_decl
+| empty {$$=nullptr;}
+;
+
+empty:;
+
+args_decl
+: args_decl ',' arg_decl {$$=$1; $1->push_back($3);}
+| arg_decl {$$=new std::vector<Statement *>(); $$->push_back($1);}
+;
+
+arg_decl
+: ID ':' type {$$=new ArgDecl($1, $3);}
 ;
 
 function_body
@@ -81,9 +99,9 @@ stmts
 ;
 
 stmt
-: return_stmt {$$=$1;}
-| variable_decl {$$=$1;}
-| variable_assign {$$=$1;}
+: return_stmt
+| variable_decl
+| variable_assign
 ;
 
 variable_decl
@@ -111,7 +129,17 @@ expr
 ;
 
 function_call
-: ID '(' ')' {$$=new FunctionCallExpr($1);}
+: ID '(' args_list ')' {$$=new FunctionCallExpr($1, $3);}
+;
+
+args_list
+: args
+| empty {$$=nullptr;}
+;
+
+args
+: args ',' expr {$$=$1; $1->push_back($3);}
+| expr {$$=new std::vector<Expression *>(); $$->push_back($1);}
 ;
 
 value
@@ -129,6 +157,8 @@ void yyerror(const char *s){
     extern char *yytext;	// defined and maintained in lex.c
   
     printf("ERROR: %s at symbol %s on line %d\n", s, yytext, yylineno);
+
+    exit(1);
 }
 
 void yyerror(std::string *s){
