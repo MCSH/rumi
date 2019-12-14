@@ -1,6 +1,7 @@
 #pragma once
 #include "type.h"
 #include <string>
+#include <sstream>
 #include <vector>
 
 class Node{
@@ -30,7 +31,30 @@ public:
 class StringValue: public Expression{
 public:
   std::string *val;
-  StringValue(std::string *val): val(val){
+  StringValue(std::string *v){
+    std::stringstream ss{""};
+
+    for (int i = 1; i < v->length() - 1; i++) {
+      if (v->at(i) == '\\') {
+        switch (v->at(i + 1)) {
+        case 'n':
+          ss << '\n';
+          i++;
+          break;
+        case '"':
+          ss << '\"';
+          i++;
+          break;
+        default:
+          ss << '\\';
+        }
+      } else {
+        ss << v->at(i);
+      }
+    }
+
+    this->val = new std::string(ss.str());
+    delete v;
   }
 
   virtual ~StringValue(){
@@ -106,13 +130,13 @@ public:
   }
 };
 
-class FunctionBody: public Statement{
+class CodeBlock: public Statement{
 public:
   std::vector<Statement *> *stmts;
-  FunctionBody(std::vector<Statement*> *s): stmts(s){
+  CodeBlock(std::vector<Statement*> *s): stmts(s){
   }
 
-  virtual ~FunctionBody(){
+  virtual ~CodeBlock(){
     for(auto s: *stmts){
       delete s;
     }
@@ -124,8 +148,8 @@ public:
 class FunctionDefine: public Statement{
 public:
   FunctionSignature *sign;
-  FunctionBody *body;
-  FunctionDefine(FunctionSignature *d, FunctionBody *b): sign(d), body(b){
+  CodeBlock *body;
+  FunctionDefine(FunctionSignature *d, CodeBlock *b): sign(d), body(b){
   }
 
   virtual ~FunctionDefine(){
@@ -195,5 +219,20 @@ public:
   virtual ~BinaryOperation(){
     delete lhs;
     delete rhs;
+  }
+};
+
+class IfStatement: public Statement{
+public:
+  Statement *i, *e;
+  Expression *exp;
+
+  IfStatement(Expression *exp, Statement *i, Statement *e=nullptr): i(i), e(e), exp(exp){
+  }
+
+  virtual ~IfStatement(){
+    delete i;
+    if(e) delete e;
+    delete exp;
   }
 };

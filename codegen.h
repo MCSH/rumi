@@ -4,6 +4,7 @@
 
 #include "llvm/Bitcode/BitcodeWriter.h"
 
+#include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
@@ -16,6 +17,7 @@
 
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/MemoryBuffer.h"
+
 
 class BlockContext{
 public:

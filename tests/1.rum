@@ -12,6 +12,16 @@ printf := (t: string, c: ...any)->int;
 
 vardtest := (v: ...int) -> int{
   printf("Inside the %s function\n", "verdtest");
+  if (1){
+    printf("from inside the if\n");
+  } else {
+    printf("this shouldn't print\n"); 
+  }
+  if(1)
+    if(0)
+      printf("doesn't matter\n");
+    else
+      printf("This is from the inside else");
   return 1;
 }
 

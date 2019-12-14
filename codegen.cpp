@@ -3,6 +3,7 @@
 #include "type.h"
 #include <cstdio>
 #include <llvm/Bitcode/BitcodeWriter.h>
+#include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instructions.h>
@@ -94,7 +95,7 @@ void funcGen(FunctionDefine *fd, CC *cc){
 
   llvm::BasicBlock *bblock = llvm::BasicBlock::Create(cc->context, "entry", f);
   cc->builder->SetInsertPoint(bblock);
-  cc->block.push_back(new BlockContext());
+  cc->block.push_back(new BlockContext(bblock));
 
   // TODO handle arguments
   int i = 0;
@@ -245,6 +246,54 @@ llvm::Value* stringvalueGen(StringValue *sv, CC *cc){
   return cc->builder->CreateGlobalStringPtr(*sv->val);
 }
 
+void ifGen(IfStatement *is, CC *cc){
+  // TODO
+  llvm::Function *f = cc->builder->GetInsertBlock()->getParent();
+
+  llvm::BasicBlock *ifB = llvm::BasicBlock::Create(cc->context, "if", f),
+    *elseB,
+    *mergeB = llvm::BasicBlock::Create(cc->context, "ifcont");
+
+  if(is->e)
+    elseB = llvm::BasicBlock::Create(cc->context, "else");
+  else
+    elseB = mergeB;
+
+  llvm::Value *cond = exprGen(is->exp, cc);
+
+  cond = cc->builder->CreateICmpNE(cond, llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), 0, false), // TODO, maybe improve?
+    "ifcond");
+
+  cc->builder->CreateCondBr(cond, ifB, elseB);
+
+  // If Body
+  cc->block.push_back(new BlockContext(ifB));
+  cc->builder->SetInsertPoint(ifB);
+  codegen(is->i, cc);
+  cc->builder->CreateBr(mergeB);
+  cc->block.pop_back();
+
+  // Else
+  if(is->e){
+    cc->block.push_back(new BlockContext(elseB));
+    f->getBasicBlockList().push_back(elseB);
+    cc->builder->SetInsertPoint(elseB);
+    codegen(is->e, cc);
+    cc->builder->CreateBr(mergeB);
+    cc->block.pop_back();
+  }
+
+  f->getBasicBlockList().push_back(mergeB);
+  cc->builder->SetInsertPoint(mergeB);
+}
+
+void blockGen(CodeBlock *cb, CC *cc){
+  // TODO
+  for(auto s: *cb->stmts){
+    codegen(s, cc);
+  }
+}
+
 void codegen(Statement* stmt, CC *cc){
   auto t = typeid(*stmt).hash_code();
 
@@ -269,6 +318,12 @@ void codegen(Statement* stmt, CC *cc){
 
   if(t == typeid(VariableDecl).hash_code())
     return variableDeclGen((VariableDecl *) stmt, cc);
+
+  if(t == typeid(IfStatement).hash_code())
+    return ifGen((IfStatement*) stmt, cc);
+
+  if(t == typeid(CodeBlock).hash_code())
+    return blockGen((CodeBlock*) stmt, cc);
 
   printf("Unknown codegen for class of type %s\n", typeid(*stmt).name());
   exit(1);

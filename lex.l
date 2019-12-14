@@ -43,6 +43,9 @@ int comment_nesting = 0;
 "any" {return ANY;}
 "return" {return RETURN;}
 
+"if" {return IF;}
+"else" {return ELSE;}
+
   /* Comments */
 {WHITESPACE}+ {/*Discard */}
 {ALPHA}{ALPHANUMERIC}*  {yylval.string = new std::string(yytext); return ID;}

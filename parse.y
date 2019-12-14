@@ -18,7 +18,7 @@ std::vector<Statement *> *mainProgramNode;
     Expression *exp;
     Statement *stmt;
     FunctionSignature *functionSignature;
-    FunctionBody *functionBody;
+    CodeBlock *codeBlock;
     std::vector<Statement *> *arr;
     std::vector<Expression *> *arrE;
 }
@@ -31,6 +31,7 @@ std::vector<Statement *> *mainProgramNode;
 %token RETURN
 %token INT ANY STRING
 %token TRIPLE_DOTS
+%token IF ELSE
 
 %type <type> type
 
@@ -38,17 +39,22 @@ std::vector<Statement *> *mainProgramNode;
 
 // TODO reorder these
 
-%type <stmt> return_stmt stmt variable_decl variable_assign
+%type <stmt> return_stmt stmt variable_decl variable_assign cblock if_stmt
 %type <stmt> top_level function_define arg_decl vararg_decl
 
 %type <functionSignature> function_signature 
-%type <functionBody> function_body 
+%type <codeBlock> function_body 
 
 %type <arr> program top_levels stmts args_decl args_decl_list
 %type <arrE> args args_list
 
 %left '+' '-'
 %left '*' '/' '%'
+
+// hack to fix if else problem
+%nonassoc "then"
+%nonassoc ELSE
+
 
 %start program
 
@@ -101,7 +107,7 @@ arg_decl
 ;
 
 function_body
-: stmts {$$=new FunctionBody($1);/*TODO*/}
+: stmts {$$=new CodeBlock($1);/*TODO*/}
 ;
 
 stmts
@@ -114,6 +120,17 @@ stmt
 | variable_decl
 | variable_assign
 | function_call ';' {$$=(Statement *)$1;}
+| if_stmt
+;
+
+if_stmt
+: IF expr cblock %prec "then" {$$=new IfStatement($2, $3);}
+| IF expr cblock ELSE cblock {$$=new IfStatement($2, $3, $5);}
+;
+
+cblock
+: stmt
+| '{' stmts '}' {$$=new CodeBlock($2);}
 ;
 
 variable_decl
