@@ -1,9 +1,0 @@
-// function call
-
-test_f := (a: int) -> int{
-    return a;
-}
-
-main := () -> int{
-    return test_f(2);
-}

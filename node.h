@@ -159,11 +159,31 @@ public:
     if(!expr)
       expr = new std::vector<Expression*>();
   }
-
+ 
   virtual ~FunctionCallExpr(){
     delete name;
     for (auto e : *expr)
       delete e;
     delete expr;
+  }
+};
+
+enum Operation{
+    PLUS = 1,
+    MULT = 2,
+    SUB = 3,
+    DIV = 4,
+    MOD = 5,
+};
+
+class BinaryOperation: public Expression{
+public:
+  Expression *lhs, *rhs;
+  Operation op;
+  BinaryOperation(Expression *l, Operation op, Expression *r): op(op), lhs(l), rhs(r){}
+
+  virtual ~BinaryOperation(){
+    delete lhs;
+    delete rhs;
   }
 };

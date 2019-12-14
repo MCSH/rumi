@@ -1,7 +1,0 @@
-// var define and assign
-
-main := () -> int{
-     a := 5;
-     b : int = a;
-     return b;
-}

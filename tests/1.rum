@@ -5,3 +5,11 @@ And multi line comments
 */
 
 /* And /* nested */ multi line comments*/
+
+test := (a: int, b: int)-> int{
+  return a + b * (b+2);
+}
+
+main := () -> int{
+  return test(2, 3);
+}

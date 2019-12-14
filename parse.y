@@ -21,6 +21,7 @@ std::vector<Statement *> *mainProgramNode;
     FunctionBody *functionBody;
     std::vector<Statement *> *arr;
     std::vector<Expression *> *arrE;
+    Operation op;
 }
 
 %token <string> ID
@@ -33,7 +34,7 @@ std::vector<Statement *> *mainProgramNode;
 
 %type <type> type
 
-%type <exp> value expr variable function_call
+%type <exp> value expr variable function_call binary_operation
 
 // TODO reorder these
 
@@ -45,6 +46,11 @@ std::vector<Statement *> *mainProgramNode;
 
 %type <arr> program top_levels stmts args_decl args_decl_list
 %type <arrE> args args_list
+
+%type <op> bop
+
+%left '+' '-'
+%left '*' '/'
 
 %start program
 
@@ -126,6 +132,20 @@ expr
 : value
 | function_call
 | variable
+| binary_operation
+| '(' expr ')' {$$=$2;}
+;
+
+binary_operation
+: expr bop expr {$$=new BinaryOperation($1, $2, $3);}
+;
+
+bop
+: '+' {$$=Operation::PLUS;}
+| '-' {$$=Operation::SUB;}
+| '*' {$$=Operation::MULT;}
+| '/' {$$=Operation::DIV;}
+| '%' {$$=Operation::MOD;}
 ;
 
 function_call
@@ -156,7 +176,7 @@ void yyerror(const char *s){
     extern int yylineno;	// defined and maintained in lex.c
     extern char *yytext;	// defined and maintained in lex.c
   
-    printf("ERROR: %s at symbol %s on line %d\n", s, yytext, yylineno);
+    printf("ERROR: %s at symbol %s on line %d\n", s, yytext, yylineno+1);
 
     exit(1);
 }

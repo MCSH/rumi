@@ -3,6 +3,7 @@
 #include "type.h"
 #include <cstdio>
 #include <llvm/Bitcode/BitcodeWriter.h>
+#include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/PassManager.h>
 #include <llvm/IR/Verifier.h>
@@ -192,6 +193,39 @@ llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
   return cc->builder->CreateCall(calleeF, argsV, "calltmp");
 }
 
+llvm::Value* binaryOpExprGen(BinaryOperation *bo, CC *cc){
+  auto *lhs = exprGen(bo->lhs, cc);
+  auto *rhs = exprGen(bo->rhs, cc);
+
+  // TODO change this based on type somehow?
+  llvm::Instruction::BinaryOps instr;
+
+  switch(bo->op){
+  case Operation::PLUS:
+    instr = llvm::Instruction::Add;
+    break;
+  case Operation::SUB:
+    instr = llvm::Instruction::Sub;
+    break;
+  case Operation::MULT:
+    instr = llvm::Instruction::Mul;
+    break;
+  case Operation::DIV:
+    instr = llvm::Instruction::SDiv;
+    break;
+  case Operation::MOD:
+    instr = llvm::Instruction::SRem;
+    break;
+  }
+
+  return cc->builder->CreateBinOp(instr, lhs, rhs);
+}
+
+Type* binaryOpExprType(BinaryOperation *bo, CC * cc){
+  // TODO compare the types
+  return resolveType(bo->lhs, cc);
+}
+
 void codegen(Statement* stmt, CC *cc){
   auto t = typeid(*stmt).hash_code();
 
@@ -220,6 +254,8 @@ llvm::Value* exprGen(Expression *exp, CC *cc){
     return variableExprGen((VariableExpr*)exp, cc);
   if(t == typeid(FunctionCallExpr).hash_code())
     return functionCallExprGen((FunctionCallExpr*) exp, cc);
+  if(t == typeid(BinaryOperation).hash_code())
+    return binaryOpExprGen((BinaryOperation *) exp, cc);
 
   printf("Unknown exprgen for class of type %s\n", typeid(*exp).name());
   exit(1);
@@ -245,6 +281,9 @@ Type* resolveType(Expression *expr, CC *cc){
 
   if(t == typeid(VariableExpr).hash_code())
     return variableExprType((VariableExpr *) expr, cc);
+
+  if(t == typeid(BinaryOperation).hash_code())
+    return binaryOpExprType((BinaryOperation *) expr, cc);
 
   printf("Unknown resolveType for a class of type %s\n", typeid(*expr).name());
   exit(1);
