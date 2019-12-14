@@ -9,6 +9,7 @@
 #include <string>
 
 // TODO improve all the typeid hash_coding.
+// TODO improve error handling
 
 typedef CompileContext CC;
 
@@ -19,9 +20,6 @@ llvm::Value* exprGen(Expression *exp, CC *cc);
 llvm::Type* typeGen(Type*t, CC *cc);
 
 CC* codegen(std::vector<Statement *> *statements, std::string outfile){
-  // TODO use this!
-  typeid(statements).hash_code();
-
   CC *context = init_context();
 
   for(auto stmt: *statements){
@@ -37,8 +35,7 @@ CC* codegen(std::vector<Statement *> *statements, std::string outfile){
   llvm::raw_fd_ostream buffer(outfile, ec);
 
   if(ec){
-    // TODO
-    printf("this shouldn't happen %s \n", ec.message().c_str());
+    printf("Error openning object file: %s \n", ec.message().c_str());
   }
 
   auto module = context->module.get();
@@ -62,8 +59,9 @@ void funcGen(FunctionDefine *fd, CC *cc){
   std::vector<llvm::Type *> args;
   // TODO args, somehow
   bool has_varargs = false;
-  auto type = llvm::Type::getInt64Ty(cc->context);
-  // type, somehow TODO
+
+  auto type = typeGen(fd->sign->returnT, cc);
+
   llvm::FunctionType *fT = llvm::FunctionType::get(type, args, has_varargs);
 
   auto f = llvm::Function::Create(fT, llvm::Function::ExternalLinkage, *_ft->name, cc->module.get());
@@ -107,7 +105,10 @@ void variableDeclGen(VariableDecl *vd, CC *cc){
     auto etype = resolveType(vd->exp, cc);
     if(vd->t && !vd->t->compatible(etype)){
       // The var type and expr type are incompatible, throw
-      // TODO
+      // TODO WTF?!
+      printf("first type: %s, second type %s\n", typeid(*vd->t).name(), typeid(*etype).name());
+      printf("Incompatible variable type with assigned variable\n");
+      exit(1);
     }
 
     if(!vd->t){
@@ -129,10 +130,8 @@ void variableDeclGen(VariableDecl *vd, CC *cc){
 }
 
 void variableAssignGen(VariableAssign *va, CC *cc){
-  // TODO
   llvm::AllocaInst *alloc = cc->getVariableAlloca(va->name);
   if(!alloc){
-    // TODO user error
     printf("Unknown variable %s\n", va->name->c_str());
     exit(1);
   }
@@ -141,10 +140,8 @@ void variableAssignGen(VariableAssign *va, CC *cc){
 }
 
 llvm::Value* variableExprGen(VariableExpr *ve, CC *cc){
-  // TODO
   llvm::AllocaInst *alloc = cc->getVariableAlloca(ve->name);
   if(!alloc){
-    // TODO user error
     printf("Unknown variable %s\n", ve->name->c_str());
     exit(1);
   }
@@ -155,8 +152,7 @@ llvm::Value* variableExprGen(VariableExpr *ve, CC *cc){
 }
 
 Type* variableExprType(VariableExpr *ve, CC *cc){
-  Type *t = new Type(*cc->getVariableDecl(ve->name)->t);
-  return t;
+  return cc->getVariableDecl(ve->name)->t->clone();
 }
 
 void codegen(Statement* stmt, CC *cc){
@@ -217,11 +213,14 @@ Type* resolveType(Expression *expr, CC *cc){
 }
 
 std::tuple<llvm::AllocaInst *, VariableDecl *> *CompileContext::getVariable(std::string *name){
-  BlockContext *b = this->currentBlock();
+  for (auto i = block.rbegin(); i != block.rend(); i++) {
+    auto vars = (*i)->variables;
+    auto p = vars.find(*name);
+    if (p != vars.end())
+      return p->second;
+  }
 
-  // TODO recursive and global search?
-
-  return b->variables[*name];
+  return global.variables[*name];
 }
 
 void CompileContext::setVariable(std::string *name, llvm::AllocaInst *var, VariableDecl *vd){

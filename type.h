@@ -12,6 +12,8 @@ public:
     printf("Unimplemented compatible for a type, %s\n", typeid(*this).name());
     exit(1);
   }
+
+  virtual Type* clone() = 0;
 };
 
 class NoType: public Type{
@@ -27,5 +29,9 @@ class IntType: public Type{
     if(typeid(*t).hash_code() == typeid(IntType).hash_code())
       return true;
     return false;
+  }
+
+  virtual IntType* clone(){
+    return new IntType(*this);
   }
 };
