@@ -38,7 +38,8 @@ std::vector<Statement *> *mainProgramNode;
 
 %type <type> type int_type
 
-%type <exp> value expr variable function_call binary_operation cast_expr
+%type <exp> additive_expr multiplicative_expr unary_expr postfix_expr
+%type <exp> value expr variable function_call cast_expr
 
 // TODO reorder these
 
@@ -168,26 +169,39 @@ variable
 ;
 
 expr
-: value
-| function_call
-| variable
-| binary_operation
-| '(' expr ')' {$$=$2;}
-| cast_expr
+: additive_expr
+;
+
+additive_expr
+: multiplicative_expr
+| additive_expr '+' multiplicative_expr {$$=new BinaryOperation($1, Operation::PLUS, $3);}
+| additive_expr '-' multiplicative_expr {$$=new BinaryOperation($1, Operation::SUB, $3);}
+;
+
+multiplicative_expr
+: cast_expr
+| multiplicative_expr '*' cast_expr {$$=new BinaryOperation($1, Operation::MULT, $3);}
+| multiplicative_expr '/' cast_expr {$$=new BinaryOperation($1, Operation::DIV, $3);}
+| multiplicative_expr '%' cast_expr {$$=new BinaryOperation($1, Operation::MOD, $3);}
 ;
 
 cast_expr
-: expr ARROW type {$$=new CastExpr($3, $1);}
-// | expr '.' AS '(' type ')' {$$=new CastExpr($5, $1);}
-// | '(' type ')' expr {$$=new CastExpr($2, $4);}
+: unary_expr
+| unary_expr ARROW type {$$=new CastExpr($3, $1);}
+| unary_expr AS '(' type ')' {$$=new CastExpr($4, $1);}
+// | '(' type ')' unary_expr {$$=new CastExpr($2, $4);}
 ;
 
-binary_operation
-: expr '+' expr {$$=new BinaryOperation($1, Operation::PLUS, $3);}
-| expr '-' expr {$$=new BinaryOperation($1, Operation::SUB, $3);}
-| expr '*' expr {$$=new BinaryOperation($1, Operation::MULT, $3);}
-| expr '/' expr {$$=new BinaryOperation($1, Operation::DIV, $3);}
-| expr '%' expr {$$=new BinaryOperation($1, Operation::MOD, $3);}
+unary_expr
+: postfix_expr
+| '(' expr ')' {$$=$2;}
+;
+
+postfix_expr // Later add array access, etc here
+: value
+| variable '.' ID {$$=new MemberExpr($1, $3);}
+| ID {$$=new VariableExpr($1);}
+| ID '(' args_list ')' {$$=new FunctionCallExpr($1, $3);}
 ;
 
 function_call

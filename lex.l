@@ -21,6 +21,7 @@ int comment_nesting = 0;
 ":=" {return DEFINE_AND_ASSIGN;}
 "->" {return ARROW;}
 "..." {return TRIPLE_DOTS;}
+"."{WHITESPACE}+"as" {return AS;}
 
 "(" {return '(';}
 ")" {return ')';}
@@ -56,7 +57,6 @@ int comment_nesting = 0;
 "s64" {return S64;}
 
 "return" {return RETURN;}
-"as" {return AS;}
 
 "if" {return IF;}
 "while" {return WHILE;}

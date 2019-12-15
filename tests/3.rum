@@ -29,6 +29,7 @@ main := () -> int{
 
   f = 5;
   d = f -> s16;
+  e = f . as(s32);
 
   return 0;
 }
