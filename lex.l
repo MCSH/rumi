@@ -20,6 +20,8 @@ int comment_nesting = 0;
   /* Symbols */
 ":=" {return DEFINE_AND_ASSIGN;}
 "->" {return ARROW;}
+"..." {return TRIPLE_DOTS;}
+
 "(" {return '(';}
 ")" {return ')';}
 "{" {return '{';}
@@ -32,15 +34,16 @@ int comment_nesting = 0;
 "*" {return '*';}
 "+" {return '+';}
 "-" {return '-';}
-"*" {return '/';}
+"/" {return '/';}
 "%" {return '%';}
-
-"..." {return TRIPLE_DOTS;}
+"." {return '.';}
 
   /* Keywords */
 "int" {return INT;}
 "string" {return STRING;}
 "any" {return ANY;}
+"struct" {return STRUCT;}
+
 "return" {return RETURN;}
 
 "if" {return IF;}

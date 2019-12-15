@@ -29,7 +29,7 @@ std::vector<Statement *> *mainProgramNode;
 %token DEFINE_AND_ASSIGN
 %token ARROW
 %token RETURN
-%token INT ANY STRING
+%token INT ANY STRING STRUCT
 %token TRIPLE_DOTS
 %token IF ELSE WHILE
 
@@ -40,12 +40,12 @@ std::vector<Statement *> *mainProgramNode;
 // TODO reorder these
 
 %type <stmt> return_stmt stmt variable_decl variable_assign if_stmt while_stmt
-%type <stmt> top_level function_define arg_decl vararg_decl
+%type <stmt> top_level function_define arg_decl vararg_decl struct_stmt
 
 %type <functionSignature> function_signature 
 %type <codeBlock> function_body 
 
-%type <arr> program top_levels stmts args_decl args_decl_list
+%type <arr> program top_levels stmts args_decl args_decl_list struct_members_decl
 %type <arrE> args args_list
 
 %left '+' '-'
@@ -74,6 +74,7 @@ top_levels
 top_level
 : function_define
 | function_signature ';' {$$=$1;}
+| struct_stmt
 ;
 
 function_define
@@ -87,6 +88,15 @@ function_signature
 args_decl_list
 : args_decl
 | empty {$$=nullptr;}
+;
+
+struct_stmt
+: ID ':' STRUCT '{' struct_members_decl '}' ';' {$$=new StructStatement($1, $5);}
+;
+
+struct_members_decl
+: struct_members_decl variable_decl {$$=$1; $1->push_back($2);}
+| empty {$$=new std::vector<Statement *>();}
 ;
 
 empty:;
@@ -123,6 +133,7 @@ stmt
 | if_stmt
 | while_stmt
 | '{' stmts '}' {$$=new CodeBlock($2);}
+| struct_stmt
 ;
 
 while_stmt
@@ -141,7 +152,7 @@ variable_decl
 ;
 
 variable_assign
-: ID '=' expr ';' {$$=new VariableAssign($1, $3);}
+: variable '=' expr ';' {$$=new VariableAssign($1, $3);}
 ;
 
 return_stmt
@@ -149,7 +160,8 @@ return_stmt
 ;
 
 variable
-: ID {$$=new VariableExpr($1);}
+: variable '.' ID {$$=new MemberExpr($1, $3);}
+| ID {$$=new VariableExpr($1);}
 ;
 
 expr
@@ -191,6 +203,7 @@ type
 : INT {$$=new IntType();}
 | STRING {$$=new StringType();}
 | ANY {$$=new AnyType();}
+| ID {$$=new StructType($1);}
 ;
 
 %%

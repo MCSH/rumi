@@ -20,6 +20,7 @@ typedef CompileContext CC;
 CC* init_context();
 void codegen(Statement* stmt, CC *context);
 Type* resolveType(Expression *expr, CC *cc);
+llvm::Value *getAlloca(Expression *expr, CC *cc);
 llvm::Value* exprGen(Expression *exp, CC *cc);
 llvm::Type* typeGen(Type*t, CC *cc);
 
@@ -101,6 +102,7 @@ void funcGen(FunctionDefine *fd, CC *cc){
   int i = 0;
   for(auto &arg: f->args()){
     // TODO is it redundent to convert arg to alloca and store?
+    // TODO varargs
     auto a = (*fargs)[i]; // This argument
     llvm::AllocaInst *alloc = cc->builder->CreateAlloca(typeGen(a->t, cc), 0, *a->name);
     cc->setVariable(a->name, alloc, a);
@@ -168,9 +170,16 @@ void variableDeclGen(VariableDecl *vd, CC *cc){
 }
 
 void variableAssignGen(VariableAssign *va, CC *cc){
-  llvm::AllocaInst *alloc = cc->getVariableAlloca(va->name);
+  // llvm::AllocaInst *alloc = cc->getVariableAlloca(va->name);
+
+  llvm::AllocaInst *alloc = (llvm::AllocaInst *) getAlloca(va->base, cc);
+  
   if(!alloc){
-    printf("Unknown variable %s\n", va->name->c_str());
+    if(typeid(*va->base).hash_code()==typeid(VariableExpr).hash_code()){
+      printf("Unknown variable %s\n", ((VariableExpr*)va->base)->name->c_str());
+    } else {
+      printf("I don't know what is happening, we are on variableAssigngen\n");
+    }
     exit(1);
   }
   auto e = exprGen(va->exp, cc);
@@ -244,6 +253,39 @@ Type* binaryOpExprType(BinaryOperation *bo, CC * cc){
 
 llvm::Value* stringvalueGen(StringValue *sv, CC *cc){
   return cc->builder->CreateGlobalStringPtr(*sv->val);
+}
+
+llvm::Value* memberAlloca(MemberExpr *e, CC *cc){
+  int member_ind = 0; // TODO figure this out
+
+  auto t = (StructType*) resolveType(e->e, cc);
+  auto ss = cc->getStructStruct(t->name);
+  auto st = (llvm::StructType*)cc->getStructType(t->name);
+
+  for(auto m: *ss->members){
+    if(m->name->compare(*e->mem) == 0){
+      break;
+    }
+    member_ind++;
+  }
+
+  llvm::Value* member_index = llvm::ConstantInt::get(cc->context, llvm::APInt(32, member_ind, true));
+
+  auto alloc = getAlloca(e->e, cc);
+
+  std::vector<llvm::Value *> indices(2);
+  indices[0] = llvm::ConstantInt::get(cc->context, llvm::APInt(32, 0, true));
+  indices[1] = member_index;
+
+  llvm::Value *member_ptr = cc->builder->CreateInBoundsGEP(st, alloc, indices, "memberptr");
+  return member_ptr;
+}
+
+llvm::Value* memberExprGen(MemberExpr *e, CC *cc){
+  // TODO
+  auto member_ptr = memberAlloca(e, cc);
+  llvm::Value *loaded_member = cc->builder->CreateLoad(member_ptr, "loadtmp");
+  return loaded_member;
 }
 
 void ifGen(IfStatement *is, CC *cc){
@@ -326,6 +368,22 @@ void whileGen(WhileStatement *ws, CC *cc){
   cc->builder->SetInsertPoint(mergeB);
 }
 
+void structGen(StructStatement *ss, CC *cc){
+  // TODO
+  std::vector<llvm::Type *> members_t;
+  for(auto m: *ss->members){
+    members_t.push_back(typeGen(m->t, cc));
+  }
+
+  auto s = llvm::StructType::create(cc->context, members_t, *ss->name); // TODO check params
+  // TODO set the compiler context
+  cc->setStruct(ss->name, s, ss);
+}
+
+llvm::Type *structType(StructType *st, CC *cc){
+  return cc->getStructType(st->name);
+}
+
 void codegen(Statement* stmt, CC *cc){
   auto t = typeid(*stmt).hash_code();
 
@@ -360,6 +418,9 @@ void codegen(Statement* stmt, CC *cc){
   if(t == typeid(WhileStatement).hash_code())
     return whileGen((WhileStatement*) stmt, cc);
 
+  if(t == typeid(StructStatement).hash_code())
+    return structGen((StructStatement *) stmt, cc);
+
   printf("Unknown codegen for class of type %s\n", typeid(*stmt).name());
   exit(1);
 }
@@ -377,6 +438,8 @@ llvm::Value* exprGen(Expression *exp, CC *cc){
     return binaryOpExprGen((BinaryOperation *) exp, cc);
   if(t == typeid(StringValue).hash_code())
     return stringvalueGen((StringValue *) exp, cc);
+  if(t == typeid(MemberExpr).hash_code())
+    return memberExprGen((MemberExpr *) exp, cc);
 
   printf("Unknown exprgen for class of type %s\n", typeid(*exp).name());
   exit(1);
@@ -396,6 +459,9 @@ llvm::Type* typeGen(Type *type, CC *cc){
   if(t == typeid(AnyType).hash_code())
     return llvm::Type::getVoidTy(cc->context);
 
+  if(t == typeid(StructType).hash_code())
+    return structType((StructType*)type, cc);
+
   printf("Unknown typeGen for a class of type %s\n", typeid(*type).name());
   exit(1);
   return NULL;
@@ -413,7 +479,24 @@ Type* resolveType(Expression *expr, CC *cc){
   if(t == typeid(BinaryOperation).hash_code())
     return binaryOpExprType((BinaryOperation *) expr, cc);
 
+  if(t == typeid(MemberExpr).hash_code())
+    return new IntType(); // TODO this should be handled.
+
   printf("Unknown resolveType for a class of type %s\n", typeid(*expr).name());
+  exit(1);
+  return NULL;
+}
+
+llvm::Value *getAlloca(Expression *expr, CC *cc){
+  auto t = typeid(*expr).hash_code();
+
+  if(t == typeid(VariableExpr).hash_code())
+    return cc->getVariableAlloca(((VariableExpr*) expr)->name);
+
+  if(t == typeid(MemberExpr).hash_code())
+    return memberAlloca((MemberExpr *)expr, cc);
+  
+  printf("Unknown getAlloca for a class of type %s\n", typeid(*expr).name());
   exit(1);
   return NULL;
 }
@@ -450,4 +533,38 @@ VariableDecl *CompileContext::getVariableDecl(std::string *name){
     return nullptr;
   std::tie(std::ignore, d) = *tup;
   return d;
+}
+
+std::tuple<llvm::Type *, StructStatement *> *CompileContext::getStruct(std::string *name){
+  for (auto i = block.rbegin(); i != block.rend(); i++) {
+    auto vars = (*i)->structs;
+    auto p = vars.find(*name);
+    if (p != vars.end())
+      return p->second;
+  }
+
+  return global.structs[*name];
+}
+
+void CompileContext::setStruct(std::string *name, llvm::Type *t, StructStatement *st){
+  BlockContext *b = this->currentBlock();
+  b->structs[*name] = new std::tuple<llvm::Type*, StructStatement*>(t, st);
+}
+
+llvm::Type *CompileContext::getStructType(std::string *name){
+  llvm::Type *t;
+  auto tup = this->getStruct(name); 
+  if(!tup)
+    return nullptr;
+  std::tie (t, std::ignore) = *tup;
+  return t;
+}
+
+StructStatement *CompileContext::getStructStruct(std::string *name){
+  StructStatement *s;
+  auto tup = this->getStruct(name);
+  if(!tup)
+    return nullptr;
+  std::tie(std::ignore, s) = *tup;
+  return s;
 }

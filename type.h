@@ -2,6 +2,7 @@
 #include <typeinfo>
 #include <cstdlib>
 #include <cstdio>
+#include <string>
 
 class Type{
 public:
@@ -55,5 +56,21 @@ class StringType: public Type{
 
   virtual StringType* clone(){
     return new StringType(*this);
+  }
+};
+
+class StructType:public Type{
+public:
+  std::string *name;
+  StructType(std::string *name):name(name){
+
+  }
+
+  virtual StructType* clone(){
+    return new StructType(new std::string(*name));
+  }
+
+  virtual ~StructType(){
+    delete name;
   }
 };

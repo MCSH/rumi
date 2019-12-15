@@ -38,10 +38,10 @@ Run `gdb rum` followed by `run test.rum`. You can try the following commands:
 * String literals
 * if else
 * while
+* structs
 
 # Top Priority Language TODO list
 
-* structs
 * better vararg support
 * pointers
 * better array support

@@ -1,0 +1,14 @@
+printf := (t: string, c: ...any)->int;
+
+myStruct : struct{
+  a: int;
+  b: int;
+};
+
+main := () -> int{
+  t : myStruct;
+  t.a = 2;
+  t.b = 3;
+  printf("The value of t.a is %d\n", t.a);
+  return 0;
+}

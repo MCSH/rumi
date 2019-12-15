@@ -1,5 +1,5 @@
 
-NUMTESTS = 1
+NUMTESTS = 2
 OBJS = lex.o parse.o compiler.o
 BASE_HEADS = node.h type.h
 CODE_GEN = lex.cpp parse.cpp parse.hpp
@@ -45,6 +45,7 @@ tests:	rum
 		echo "==============" ; \
 		echo tests/$$number.rum ; \
 		cat -n tests/$$number.rum ; \
+		echo ; \
 		./rum tests/$$number.rum ; \
 		((number = number + 1)) ; \
 	done

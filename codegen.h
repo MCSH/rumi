@@ -22,6 +22,7 @@
 class BlockContext{
 public:
   std::map<std::string, std::tuple<llvm::AllocaInst *, VariableDecl *>*> variables;
+  std::map<std::string, std::tuple<llvm::Type *, StructStatement *>*> structs;
   llvm::BasicBlock *bblock;
 
   BlockContext(llvm::BasicBlock *bb):bblock(bb){}
@@ -45,6 +46,11 @@ class CompileContext{
   llvm::AllocaInst *getVariableAlloca(std::string *name);
   VariableDecl *getVariableDecl(std::string *name);
   void setVariable(std::string *name, llvm::AllocaInst *var, VariableDecl *vd);
+
+  std::tuple<llvm::Type *, StructStatement *> *getStruct(std::string *name);
+  llvm::Type* getStructType(std::string *name);
+  StructStatement *getStructStruct(std::string *name);
+  void setStruct(std::string *name, llvm::Type *t, StructStatement *st);
 
   CompileContext(){}
 };

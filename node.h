@@ -172,13 +172,13 @@ public:
 
 class VariableAssign: public Statement{
 public:
-  std::string *name;
+  Expression *base;
   Expression *exp;
-  VariableAssign(std::string *n, Expression *exp): name(n), exp(exp){
+  VariableAssign(Expression *b, Expression *exp): base(b), exp(exp){
   }
 
   virtual ~VariableAssign(){
-    delete name;
+    delete base;
     delete exp;
   }
 };
@@ -249,5 +249,36 @@ public:
   virtual ~WhileStatement(){
     delete w;
     delete exp;
+  }
+};
+
+
+class StructStatement: public Statement{
+public:
+  std::string *name;
+  std::vector<VariableDecl *> *members;
+  StructStatement(std::string *name, std::vector<Statement *> *m): name(name){
+    members = new std::vector<VariableDecl *>();
+    for(auto s: *m)
+      members->push_back((VariableDecl *) s);
+  }
+
+  virtual ~StructStatement(){
+    delete name;
+    for(auto s: *members)
+      delete s;
+    delete members;
+  }
+};
+
+class MemberExpr: public Expression{
+public:
+  Expression *e;
+  std::string *mem;
+  MemberExpr(Expression *e, std::string *mem): mem(mem), e(e){}
+
+  virtual ~MemberExpr(){
+    delete e;
+    delete mem;
   }
 };
