@@ -533,7 +533,7 @@ Type* resolveType(Expression *expr, CC *cc){
     return new IntType(); // TODO this should be handled.
 
   if(t == typeid(CastExpr).hash_code())
-    return castExprType((CastExpr*) exp, cc);
+    return castExprType((CastExpr*) expr, cc);
 
   printf("Unknown resolveType for a class of type %s\n", typeid(*expr).name());
   exit(1);
