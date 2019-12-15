@@ -25,7 +25,8 @@ std::vector<Statement *> *mainProgramNode;
 
 %token <string> ID
 %token <string> DEC SSTRING 
-                        
+
+%token AS
 %token DEFINE_AND_ASSIGN
 %token ARROW
 %token RETURN
@@ -37,7 +38,7 @@ std::vector<Statement *> *mainProgramNode;
 
 %type <type> type int_type
 
-%type <exp> value expr variable function_call binary_operation
+%type <exp> value expr variable function_call binary_operation cast_expr
 
 // TODO reorder these
 
@@ -172,6 +173,13 @@ expr
 | variable
 | binary_operation
 | '(' expr ')' {$$=$2;}
+| cast_expr
+;
+
+cast_expr
+: expr ARROW type {$$=new CastExpr($3, $1);}
+// | expr '.' AS '(' type ')' {$$=new CastExpr($5, $1);}
+// | '(' type ')' expr {$$=new CastExpr($2, $4);}
 ;
 
 binary_operation

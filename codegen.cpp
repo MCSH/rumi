@@ -14,6 +14,11 @@
 
 // TODO improve all the typeid hash_coding.
 // TODO improve error handling
+// TODO check types on function call
+// TODO check types on function return
+
+// TODO cast expression type is deleted somewhere!!!
+// TODO shift reduce
 
 typedef CompileContext CC;
 
@@ -187,6 +192,18 @@ void variableAssignGen(VariableAssign *va, CC *cc){
     exit(1);
   }
   auto e = exprGen(va->exp, cc);
+
+  // Type check
+  auto baseType = resolveType(va->base, cc);
+  auto exprType = resolveType(va->exp, cc);
+  if(!baseType->compatible(exprType)){
+    printf("Uncompatible type conversion between %s and %s\n",
+           exprType->displayName().c_str(),
+           baseType->displayName().c_str());
+    printf("On line %d\n", va->lineno);
+    exit(1);
+  }
+  
   cc->builder->CreateStore(e, alloc);
 }
 
@@ -390,6 +407,9 @@ llvm::Type *structType(StructType *st, CC *cc){
 
 llvm::Type *intTypeGen(IntType *it, CC *cc){
   switch(it->size){
+  case 0:
+    /// TODO do it based on sys arch
+    return llvm::Type::getInt64Ty(cc->context);
   case 8:
     return llvm::Type::getInt8Ty(cc->context);
   case 16:
@@ -403,6 +423,11 @@ llvm::Type *intTypeGen(IntType *it, CC *cc){
   printf("Something went wrong on intTypeGen\n");
   exit(1);
   return nullptr;
+}
+
+Type *castExprType(CastExpr *ce, CC *cc){
+  // TODO
+  return ce->t;
 }
 
 
@@ -462,6 +487,9 @@ llvm::Value* exprGen(Expression *exp, CC *cc){
     return stringvalueGen((StringValue *) exp, cc);
   if(t == typeid(MemberExpr).hash_code())
     return memberExprGen((MemberExpr *) exp, cc);
+  if(t == typeid(CastExpr).hash_code())
+    // TODO check compatible cast
+    return exprGen(((CastExpr*)exp)->exp, cc);
 
   printf("Unknown exprgen for class of type %s\n", typeid(*exp).name());
   exit(1);
@@ -503,6 +531,9 @@ Type* resolveType(Expression *expr, CC *cc){
 
   if(t == typeid(MemberExpr).hash_code())
     return new IntType(); // TODO this should be handled.
+
+  if(t == typeid(CastExpr).hash_code())
+    return castExprType((CastExpr*) exp, cc);
 
   printf("Unknown resolveType for a class of type %s\n", typeid(*expr).name());
   exit(1);

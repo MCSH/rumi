@@ -56,6 +56,7 @@ int comment_nesting = 0;
 "s64" {return S64;}
 
 "return" {return RETURN;}
+"as" {return AS;}
 
 "if" {return IF;}
 "while" {return WHILE;}

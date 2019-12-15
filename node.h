@@ -6,6 +6,12 @@
 
 class Node{
 public:
+  int lineno;
+  Node(){
+    extern int yylineno;	// defined and maintained in lex.c
+    lineno = yylineno;
+  }
+
   virtual ~Node(){
   }
 };
@@ -280,5 +286,18 @@ public:
   virtual ~MemberExpr(){
     delete e;
     delete mem;
+  }
+};
+
+class CastExpr: public Expression{
+public:
+  Type *t;
+  Expression *exp;
+  CastExpr(Type *t, Expression *e): t(t), exp(e){
+  }
+
+  virtual ~CastExpr(){
+    delete t;
+    delete exp;
   }
 };
