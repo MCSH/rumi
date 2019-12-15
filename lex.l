@@ -44,6 +44,17 @@ int comment_nesting = 0;
 "any" {return ANY;}
 "struct" {return STRUCT;}
 
+  /* Int keywords */
+"u8" {return U8;}
+"u16" {return U16;}
+"u32" {return U32;}
+"u64" {return U64;}
+
+"s8" {return S8;}
+"s16" {return S16;}
+"s32" {return S32;}
+"s64" {return S64;}
+
 "return" {return RETURN;}
 
 "if" {return IF;}

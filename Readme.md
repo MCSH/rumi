@@ -40,6 +40,14 @@ Run `gdb rum` followed by `run test.rum`. You can try the following commands:
 * while
 * structs
 
+# Current supported types:
+* Arch default int
+* Strings: string
+* Structs
+* signed and unsigned integers of 8, 16, 32, 64
+  u8, u16, u32, u64
+  s8, s16, s32, s64
+
 # Top Priority Language TODO list
 
 * better vararg support

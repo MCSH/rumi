@@ -159,6 +159,10 @@ void variableDeclGen(VariableDecl *vd, CC *cc){
   }
 
   auto t = typeGen(vd->t, cc);
+  if(!t){
+    printf("Unknown type %s\n", ((StructType*)vd->t)->name->c_str());
+    exit(1);
+  }
   llvm::AllocaInst *alloc = cc->builder->CreateAlloca(t, 0, vd->name->c_str());
   cc->setVariable(vd->name, alloc, vd);
 
@@ -384,6 +388,24 @@ llvm::Type *structType(StructType *st, CC *cc){
   return cc->getStructType(st->name);
 }
 
+llvm::Type *intTypeGen(IntType *it, CC *cc){
+  switch(it->size){
+  case 8:
+    return llvm::Type::getInt8Ty(cc->context);
+  case 16:
+    return llvm::Type::getInt16Ty(cc->context);
+  case 32:
+    return llvm::Type::getInt32Ty(cc->context);
+  case 64:
+    return llvm::Type::getInt64Ty(cc->context);
+  }
+
+  printf("Something went wrong on intTypeGen\n");
+  exit(1);
+  return nullptr;
+}
+
+
 void codegen(Statement* stmt, CC *cc){
   auto t = typeid(*stmt).hash_code();
 
@@ -450,7 +472,7 @@ llvm::Type* typeGen(Type *type, CC *cc){
   auto t = typeid(*type).hash_code();
 
   if(t == typeid(IntType).hash_code())
-    return llvm::Type::getInt64Ty(cc->context);
+    return intTypeGen((IntType*)type, cc);
 
   // TODO, improve?
   if(t == typeid(StringType).hash_code())

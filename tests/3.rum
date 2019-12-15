@@ -1,0 +1,28 @@
+
+MyStruct : struct{
+  id: u32;
+  age: u8;
+  tettt: s64;
+};
+
+
+main := () -> int{
+  a : int; // signed 32bit int
+  b : u32; // unsigned 32bit int
+
+  c : u8;
+  d : u16;
+  e : u32;
+  f : u64;
+
+  c : s8;
+  d : s16;
+  e : s32;
+  f : s64;
+
+  m : MyStruct;
+
+  m.id = 3;
+
+  return 0;
+}

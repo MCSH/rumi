@@ -30,10 +30,12 @@ std::vector<Statement *> *mainProgramNode;
 %token ARROW
 %token RETURN
 %token INT ANY STRING STRUCT
+%token U8 U16 U32 U64
+%token S8 S16 S32 S64
 %token TRIPLE_DOTS
 %token IF ELSE WHILE
 
-%type <type> type
+%type <type> type int_type
 
 %type <exp> value expr variable function_call binary_operation
 
@@ -203,7 +205,19 @@ type
 : INT {$$=new IntType();}
 | STRING {$$=new StringType();}
 | ANY {$$=new AnyType();}
+| int_type
 | ID {$$=new StructType($1);}
+;
+
+int_type
+: U8 {$$=new IntType(8, 0);}
+| U16 {$$=new IntType(16, 0);}
+| U32 {$$=new IntType(32, 0);}
+| U64 {$$=new IntType(64, 0);}
+| S8 {$$=new IntType(8, 1);}
+| S16 {$$=new IntType(16, 1);}
+| S32 {$$=new IntType(32, 1);}
+| S64 {$$=new IntType(64, 1);}
 ;
 
 %%

@@ -12,6 +12,9 @@ printf := (t: string, c: ...any)->int;
 
 vardtest := (v: ...int) -> int{
   printf("Inside the %s function\n", "verdtest");
+  if 1
+    printf("inside the first if\n"); 
+  
   if (1){
     printf("from inside the if\n");
   } else {
@@ -31,6 +34,7 @@ test := (a: int, b: int)-> int{
 
 main := () -> int{
   a := 2;
+  b : int;
   while a {
     printf("within while\n");
     a = a - 1;

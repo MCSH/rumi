@@ -26,6 +26,16 @@ class NoType: public Type{
 };
 
 class IntType: public Type{
+public:
+  int size;
+  bool isSigned;
+
+  IntType(int s=0, bool si=1): size(s), isSigned(si){
+    if(!size){
+      size = 64; // TODO set to system_arch
+    }
+  }
+  
   virtual bool compatible(Type *t){
     if(typeid(*t).hash_code() == typeid(IntType).hash_code())
       return true;
