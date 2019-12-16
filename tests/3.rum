@@ -1,4 +1,6 @@
 
+printf := (t: string, c: ...any)->int;
+
 MyStruct : struct{
   id: u32;
   age: u8;
@@ -24,12 +26,21 @@ main := () -> int{
   m : MyStruct;
 
   m.id = 3;
-
   c = 9;
 
   f = 5;
+  f = f->s16;
   d = f -> s16;
   e = f . as(s32);
+
+  f_1: f32;
+  f_2: f64;
+
+  f_1 = 30;
+  f_2 = 21;
+
+  printf("The float32 is %f\n", f_1->f64);
+  printf("The float64 is %f\n", f_2);
 
   return 0;
 }

@@ -33,6 +33,7 @@ std::vector<Statement *> *mainProgramNode;
 %token INT ANY STRING STRUCT
 %token U8 U16 U32 U64
 %token S8 S16 S32 S64
+%token F64 F32
 %token TRIPLE_DOTS
 %token IF ELSE WHILE
 
@@ -225,6 +226,8 @@ value
 
 type
 : INT {$$=new IntType();}
+| F32 {$$=new FloatType(32);}
+| F64 {$$=new FloatType(64);}
 | STRING {$$=new StringType();}
 | ANY {$$=new AnyType();}
 | int_type

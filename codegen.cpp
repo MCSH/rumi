@@ -178,6 +178,70 @@ void variableDeclGen(VariableDecl *vd, CC *cc){
   }
 }
 
+llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc, Node *n, bool expl){
+  // Node n is wanted only for line no
+  // Converting the third value, which is of the first type to second type.
+  Compatibility c = baseType->compatible(exprType);
+
+  if(c == ExpCast && !expl){
+    printf("Can't implicity cast %s to %s\n",
+           exprType->displayName().c_str(),
+           baseType->displayName().c_str());
+    printf("On line %d\n", n->lineno);
+    exit(1);
+  }
+
+  if(c == UNCOMPATIBLE){
+    printf("Uncompatible type conversion between %s and %s\n",
+           exprType->displayName().c_str(),
+           baseType->displayName().c_str());
+    printf("On line %d\n", n->lineno);
+    exit(1);
+  }
+
+  if(c == OK)
+    return e;
+
+  const auto inttype = typeid(IntType).hash_code();
+  const auto floattype = typeid(FloatType).hash_code();
+
+  auto et = typeid(*exprType).hash_code();
+  auto bt = typeid(*baseType).hash_code();
+
+  if (et == inttype && bt == inttype){
+    IntType *it = (IntType *)exprType;
+    return cc->builder->CreateIntCast(e, typeGen(baseType, cc), it->isSigned);
+  }
+
+  if(et == floattype && bt == floattype){
+    // TODO
+    return cc->builder->CreateFPCast(e, typeGen(baseType, cc));
+  }
+
+  if (et == inttype && bt == floattype) {
+    IntType *it = (IntType *)exprType;
+    if (it->isSigned)
+      return cc->builder->CreateSIToFP(e, typeGen(baseType, cc));
+    else
+      return cc->builder->CreateUIToFP(e, typeGen(baseType, cc));
+  }
+
+  if (et == floattype && bt == inttype) {
+    IntType *it = (IntType *)exprType;
+    if (it->isSigned)
+      return cc->builder->CreateFPToSI(e, typeGen(baseType, cc));
+    else
+      return cc->builder->CreateFPToUI(e, typeGen(baseType, cc));
+  }
+
+  // TODO implement other conversions.
+
+  printf("un implemented implicit from cast %s to %s\n",
+         exprType->displayName().c_str(), baseType->displayName().c_str());
+  printf("On line %d\n", n->lineno);
+  exit(1);
+}
+
 void variableAssignGen(VariableAssign *va, CC *cc){
   // llvm::AllocaInst *alloc = cc->getVariableAlloca(va->name);
 
@@ -196,14 +260,7 @@ void variableAssignGen(VariableAssign *va, CC *cc){
   // Type check
   auto baseType = resolveType(va->base, cc);
   auto exprType = resolveType(va->exp, cc);
-  if(!baseType->compatible(exprType)){
-    printf("Uncompatible type conversion between %s and %s\n",
-           exprType->displayName().c_str(),
-           baseType->displayName().c_str());
-    printf("On line %d\n", va->lineno);
-    exit(1);
-  }
-  
+  e = castGen(exprType, baseType, e, cc, va, false);
   cc->builder->CreateStore(e, alloc);
 }
 
@@ -237,6 +294,20 @@ llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
   }
 
   return cc->builder->CreateCall(calleeF, argsV, "calltmp");
+}
+
+Type* memberExprType(MemberExpr *me, CC *cc){
+  auto t = (StructType*) resolveType(me->e, cc);
+  auto ss = cc->getStructStruct(t->name);
+
+  for(auto m: *ss->members){
+    if(m->name->compare(*me->mem) == 0){
+      return m->t;
+    }
+  }
+
+  printf("Member type not found, memberExprType on line %d\n", me->lineno);
+  exit(1);
 }
 
 llvm::Value* binaryOpExprGen(BinaryOperation *bo, CC *cc){
@@ -425,6 +496,22 @@ llvm::Type *intTypeGen(IntType *it, CC *cc){
   return nullptr;
 }
 
+llvm::Type *floatTypeGen(FloatType *ft, CC *cc){
+  switch(ft->size){
+  case 0:
+    // TODO do it based on sys arch
+    return llvm::Type::getFloatTy(cc->context);
+  case 32:
+    return llvm::Type::getFloatTy(cc->context);
+  case 64:
+    return llvm::Type::getDoubleTy(cc->context);
+  }
+
+  printf("Something went wrong on floatTypeGen\n");
+  exit(1);
+  return nullptr;
+}
+
 Type *castExprType(CastExpr *ce, CC *cc){
   // TODO
   return ce->t;
@@ -487,9 +574,12 @@ llvm::Value* exprGen(Expression *exp, CC *cc){
     return stringvalueGen((StringValue *) exp, cc);
   if(t == typeid(MemberExpr).hash_code())
     return memberExprGen((MemberExpr *) exp, cc);
-  if(t == typeid(CastExpr).hash_code())
-    // TODO check compatible cast
-    return exprGen(((CastExpr*)exp)->exp, cc);
+  if(t == typeid(CastExpr).hash_code()){
+    CastExpr * ce = (CastExpr*)exp;
+    auto targetType = resolveType(ce->exp, cc);
+    auto baseType = ce->t;
+    return castGen(targetType, baseType, exprGen(ce->exp, cc), cc, ce, true);
+  }
 
   printf("Unknown exprgen for class of type %s\n", typeid(*exp).name());
   exit(1);
@@ -512,6 +602,9 @@ llvm::Type* typeGen(Type *type, CC *cc){
   if(t == typeid(StructType).hash_code())
     return structType((StructType*)type, cc);
 
+  if(t == typeid(FloatType).hash_code())
+    return floatTypeGen((FloatType*) type, cc);
+
   printf("Unknown typeGen for a class of type %s\n", typeid(*type).name());
   exit(1);
   return NULL;
@@ -530,7 +623,7 @@ Type* resolveType(Expression *expr, CC *cc){
     return binaryOpExprType((BinaryOperation *) expr, cc);
 
   if(t == typeid(MemberExpr).hash_code())
-    return new IntType(); // TODO this should be handled.
+    return memberExprType((MemberExpr*) expr, cc);
 
   if(t == typeid(CastExpr).hash_code())
     return castExprType((CastExpr*) expr, cc);

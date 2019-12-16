@@ -4,12 +4,14 @@
 #include <cstdio>
 #include <string>
 
+enum Compatibility { OK = 1, ImpCast = 2, ExpCast = 3, UNCOMPATIBLE = 4 };
+
 class Type{
 public:
   virtual ~Type(){
   }
 
-  virtual bool compatible(Type *t){
+  virtual Compatibility compatible(Type *t){
     printf("Unimplemented compatible for a type, %s\n", typeid(*this).name());
     exit(1);
   }
@@ -24,10 +26,10 @@ public:
 };
 
 class NoType: public Type{
-  virtual bool compatible(Type *t){
+  virtual Compatibility compatible(Type *t){
     if(typeid(*t).hash_code() == typeid(NoType).hash_code())
-      return true;
-    return false;
+      return Compatibility::OK;
+    return Compatibility::UNCOMPATIBLE;
   }
 };
 
@@ -47,16 +49,21 @@ public:
     return s + "Int" + std::to_string(size);
   }
   
-  virtual bool compatible(Type *t){
+  virtual Compatibility compatible(Type *t){
     if(typeid(*t).hash_code() != typeid(IntType).hash_code())
-      return false;
+      return Compatibility::UNCOMPATIBLE;
 
     IntType *target = (IntType*)t;
 
     if(target->size > this->size)
-      return false;
+      return Compatibility::ExpCast;
 
-    return true;
+    // TODO float?
+
+    if(target->size == this->size)
+      return Compatibility::OK;
+
+    return Compatibility::ImpCast;
   }
 
   virtual IntType* clone(){
@@ -64,9 +71,48 @@ public:
   }
 };
 
+class FloatType: public Type{
+public:
+  int size;
+
+  FloatType(int s=0): size(s){
+    if(!size){
+      // size = 64; // TODO set to system_arch
+    }
+  }
+
+  virtual std::string displayName(){
+    return "Float" + std::to_string(size);
+  }
+  
+  virtual Compatibility compatible(Type *t){
+    if(typeid(*t).hash_code() != typeid(FloatType).hash_code()){
+      if(typeid(*t).hash_code() != typeid(IntType).hash_code())
+        return Compatibility::UNCOMPATIBLE;
+      return ((IntType*)t)->size <= size
+        ? Compatibility::ImpCast
+        : Compatibility::ExpCast;
+    }
+
+    FloatType *target = (FloatType*)t;
+
+    if(target->size > this->size)
+      return Compatibility::UNCOMPATIBLE;
+
+    if(target->size == this->size)
+      return Compatibility::OK;
+
+    return Compatibility::ImpCast;
+  }
+
+  virtual FloatType* clone(){
+    return new FloatType(*this);
+  }
+};
+
 class AnyType: public Type{
-  virtual bool compatible(Type *t){
-    return true;
+  virtual Compatibility compatible(Type *t){
+    return Compatibility::OK;
   }
 
   virtual AnyType* clone(){
@@ -75,10 +121,10 @@ class AnyType: public Type{
 };
 
 class StringType: public Type{
-  virtual bool compatible(Type *t){
+  virtual Compatibility compatible(Type *t){
     if(typeid(*t).hash_code() == typeid(StringType).hash_code())
-      return true;
-    return false;
+      return Compatibility::OK;
+    return Compatibility::UNCOMPATIBLE;
   }
 
   virtual StringType* clone(){
