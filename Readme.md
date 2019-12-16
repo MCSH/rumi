@@ -47,6 +47,7 @@ Run `gdb rum` followed by `run test.rum`. You can try the following commands:
 * signed and unsigned integers of 8, 16, 32, 64
   u8, u16, u32, u64
   s8, s16, s32, s64
+* floats of 32 and 64 bits (float and double in c) f32, f64
 
 # Top Priority Language TODO list
 
