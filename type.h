@@ -147,3 +147,33 @@ public:
     delete name;
   }
 };
+
+
+class PointerType:public Type{
+public:
+  Type *base;
+  PointerType(Type *b): base(b){}
+
+  virtual PointerType *clone(){
+    return new PointerType(base->clone());
+  }
+
+  virtual Compatibility compatible(Type *t){
+    if(typeid(*t).hash_code() != typeid(PointerType).hash_code()){
+      return Compatibility::UNCOMPATIBLE; // TODO exceptions such as arrays and strings
+    }
+
+    PointerType *pt = (PointerType*)t;
+
+    return base->compatible(pt->base);
+  }
+
+  virtual std::string displayName(){
+    return "*" + base->displayName();
+  }
+
+  virtual ~PointerType(){
+    delete base;
+  }
+};
+  

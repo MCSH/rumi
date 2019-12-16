@@ -39,6 +39,7 @@ Run `gdb rum` followed by `run test.rum`. You can try the following commands:
 * if else
 * while
 * structs
+* pointers
 
 # Current supported types:
 * Arch default int
@@ -48,11 +49,13 @@ Run `gdb rum` followed by `run test.rum`. You can try the following commands:
   u8, u16, u32, u64
   s8, s16, s32, s64
 * floats of 32 and 64 bits (float and double in c) f32, f64
+* pointers!
 
 # Top Priority Language TODO list
 
+* arrays
+* heap allocation / deallocation (malloc/free)
 * better vararg support
-* pointers
 * better array support
 
 # Current Compiler TODO list:

@@ -373,6 +373,11 @@ llvm::Value* memberAlloca(MemberExpr *e, CC *cc){
   return member_ptr;
 }
 
+llvm::Value* pointerAccessExprAlloca(PointerAccessExpr* expr, CC *cc){
+  auto load = cc->builder->CreateLoad(exprGen(expr->exp, cc), "ptr");
+  return load;
+}
+
 llvm::Value* memberExprGen(MemberExpr *e, CC *cc){
   // TODO
   auto member_ptr = memberAlloca(e, cc);
@@ -580,6 +585,16 @@ llvm::Value* exprGen(Expression *exp, CC *cc){
     auto baseType = ce->t;
     return castGen(targetType, baseType, exprGen(ce->exp, cc), cc, ce, true);
   }
+  if(t == typeid(PointerExpr).hash_code()){
+    PointerExpr *pe = (PointerExpr*) exp;
+    return getAlloca(pe->exp, cc);
+  }
+
+  if(t == typeid(PointerAccessExpr).hash_code()){
+    auto pae = (PointerAccessExpr*) exp;
+    auto load = cc->builder->CreateLoad(exprGen(pae->exp, cc), "ptra");
+    return load;
+  }
 
   printf("Unknown exprgen for class of type %s\n", typeid(*exp).name());
   exit(1);
@@ -605,6 +620,11 @@ llvm::Type* typeGen(Type *type, CC *cc){
   if(t == typeid(FloatType).hash_code())
     return floatTypeGen((FloatType*) type, cc);
 
+  if(t == typeid(PointerType).hash_code()){
+    PointerType *pt = (PointerType*)type;
+    return llvm::PointerType::getUnqual(typeGen(pt->base, cc));
+  }
+
   printf("Unknown typeGen for a class of type %s\n", typeid(*type).name());
   exit(1);
   return NULL;
@@ -628,6 +648,16 @@ Type* resolveType(Expression *expr, CC *cc){
   if(t == typeid(CastExpr).hash_code())
     return castExprType((CastExpr*) expr, cc);
 
+  if(t == typeid(PointerExpr).hash_code()){
+    PointerExpr *pe = (PointerExpr*)expr;
+    return new PointerType(resolveType(pe->exp, cc));
+  }
+
+  if(t == typeid(PointerAccessExpr).hash_code()){
+    PointerType *pt = (PointerType *) resolveType(((PointerAccessExpr*)expr)->exp, cc);
+    return pt->base;
+  }
+
   printf("Unknown resolveType for a class of type %s\n", typeid(*expr).name());
   exit(1);
   return NULL;
@@ -641,6 +671,9 @@ llvm::Value *getAlloca(Expression *expr, CC *cc){
 
   if(t == typeid(MemberExpr).hash_code())
     return memberAlloca((MemberExpr *)expr, cc);
+
+  if(t == typeid(PointerAccessExpr).hash_code())
+    return pointerAccessExprAlloca((PointerAccessExpr*) expr, cc);
   
   printf("Unknown getAlloca for a class of type %s\n", typeid(*expr).name());
   exit(1);

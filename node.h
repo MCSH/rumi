@@ -301,3 +301,23 @@ public:
     delete exp;
   }
 };
+
+class PointerExpr: public Expression{
+public:
+  Expression *exp;
+  PointerExpr(Expression *e):exp(e){}
+
+  virtual ~PointerExpr(){
+    delete exp;
+  }
+};
+
+class PointerAccessExpr: public Expression{
+public:
+  Expression *exp;
+  PointerAccessExpr(Expression *e):exp(e){}
+
+  virtual ~PointerAccessExpr(){
+    delete exp;
+  }
+};

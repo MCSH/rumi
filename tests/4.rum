@@ -1,0 +1,15 @@
+printf := (t: string, c: ...any)->int;
+
+main := () -> int{
+ a := 3;
+
+ b : *int;
+
+ b = &a;
+
+ c : **int = &b;
+
+ *b = 2;
+
+  return *b;
+}

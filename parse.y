@@ -40,7 +40,7 @@ std::vector<Statement *> *mainProgramNode;
 %type <type> type int_type
 
 %type <exp> additive_expr multiplicative_expr unary_expr postfix_expr
-%type <exp> value expr variable function_call cast_expr
+%type <exp> value expr variable function_call cast_expr pointer_access
 
 // TODO reorder these
 
@@ -142,12 +142,12 @@ stmt
 ;
 
 while_stmt
-: WHILE expr stmt {$$=new WhileStatement($2, $3);}
+: WHILE '(' expr ')' stmt {$$=new WhileStatement($3, $5);}
 ;
 
 if_stmt
-: IF expr stmt %prec "then" {$$=new IfStatement($2, $3);}
-| IF expr stmt ELSE stmt {$$=new IfStatement($2, $3, $5);}
+: IF '(' expr ')' stmt %prec "then" {$$=new IfStatement($3, $5);}
+| IF '(' expr ')' stmt ELSE stmt {$$=new IfStatement($3, $5, $7);}
 ;
 
 variable_decl
@@ -158,6 +158,7 @@ variable_decl
 
 variable_assign
 : variable '=' expr ';' {$$=new VariableAssign($1, $3);}
+| pointer_access '=' expr ';' {$$=new VariableAssign($1, $3);}
 ;
 
 return_stmt
@@ -190,11 +191,13 @@ cast_expr
 : unary_expr
 | unary_expr ARROW type {$$=new CastExpr($3, $1);}
 | unary_expr AS '(' type ')' {$$=new CastExpr($4, $1);}
+| pointer_access
 // | '(' type ')' unary_expr {$$=new CastExpr($2, $4);}
 ;
 
 unary_expr
 : postfix_expr
+| '&' postfix_expr {$$=new PointerExpr($2);}
 | '(' expr ')' {$$=$2;}
 ;
 
@@ -203,6 +206,10 @@ postfix_expr // Later add array access, etc here
 | variable '.' ID {$$=new MemberExpr($1, $3);}
 | ID {$$=new VariableExpr($1);}
 | ID '(' args_list ')' {$$=new FunctionCallExpr($1, $3);}
+;
+
+pointer_access
+: '*' postfix_expr {$$=new PointerAccessExpr($2);} // TODO should it be expr?
 ;
 
 function_call
@@ -231,6 +238,7 @@ type
 | STRING {$$=new StringType();}
 | ANY {$$=new AnyType();}
 | int_type
+| '*' type {$$=new PointerType($2);}
 | ID {$$=new StructType($1);}
 ;
 
