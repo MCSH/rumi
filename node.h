@@ -21,6 +21,7 @@ class Statement: public Node{
 
 class Expression: public Statement{
 public:
+  Type *exprType = 0;
 };
 
 class IntValue: public Expression{

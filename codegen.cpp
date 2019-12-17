@@ -24,7 +24,6 @@ typedef CompileContext CC;
 
 CC* init_context();
 void codegen(Statement* stmt, CC *context);
-Type* resolveType(Expression *expr, CC *cc);
 llvm::Value *getAlloca(Expression *expr, CC *cc);
 llvm::Value* exprGen(Expression *exp, CC *cc);
 llvm::Type* typeGen(Type*t, CC *cc);
@@ -148,7 +147,8 @@ void variableDeclGen(VariableDecl *vd, CC *cc){
 
   if(vd->exp){
     // set the type
-    auto etype = resolveType(vd->exp, cc);
+    auto etype = vd->exp->exprType;
+    // TODO remvoe this!!!
     if(vd->t && !vd->t->compatible(etype)){
       // The var type and expr type are incompatible, throw
       printf("first type: %s, second type %s\n", typeid(*vd->t).name(), typeid(*etype).name());
@@ -258,8 +258,8 @@ void variableAssignGen(VariableAssign *va, CC *cc){
   auto e = exprGen(va->exp, cc);
 
   // Type check
-  auto baseType = resolveType(va->base, cc);
-  auto exprType = resolveType(va->exp, cc);
+  auto baseType = va->base->exprType;
+  auto exprType = va->exp->exprType;
   e = castGen(exprType, baseType, e, cc, va, false);
   cc->builder->CreateStore(e, alloc);
 }
@@ -276,10 +276,6 @@ llvm::Value* variableExprGen(VariableExpr *ve, CC *cc){
   return load;
 }
 
-Type* variableExprType(VariableExpr *ve, CC *cc){
-  return cc->getVariableDecl(ve->name)->t->clone();
-}
-
 llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
   // TODO args, function resolve could be improved!
   llvm::Function *calleeF = cc->module->getFunction(fc->name->c_str());
@@ -294,20 +290,6 @@ llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
   }
 
   return cc->builder->CreateCall(calleeF, argsV, "calltmp");
-}
-
-Type* memberExprType(MemberExpr *me, CC *cc){
-  auto t = (StructType*) resolveType(me->e, cc);
-  auto ss = cc->getStructStruct(t->name);
-
-  for(auto m: *ss->members){
-    if(m->name->compare(*me->mem) == 0){
-      return m->t;
-    }
-  }
-
-  printf("Member type not found, memberExprType on line %d\n", me->lineno);
-  exit(1);
 }
 
 llvm::Value* binaryOpExprGen(BinaryOperation *bo, CC *cc){
@@ -338,11 +320,6 @@ llvm::Value* binaryOpExprGen(BinaryOperation *bo, CC *cc){
   return cc->builder->CreateBinOp(instr, lhs, rhs);
 }
 
-Type* binaryOpExprType(BinaryOperation *bo, CC * cc){
-  // TODO compare the types
-  return resolveType(bo->lhs, cc);
-}
-
 llvm::Value* stringvalueGen(StringValue *sv, CC *cc){
   return cc->builder->CreateGlobalStringPtr(*sv->val);
 }
@@ -350,7 +327,7 @@ llvm::Value* stringvalueGen(StringValue *sv, CC *cc){
 llvm::Value* memberAlloca(MemberExpr *e, CC *cc){
   int member_ind = 0; // TODO figure this out
 
-  auto t = (StructType*) resolveType(e->e, cc);
+  auto t = (StructType*) e->e->exprType;
   auto ss = cc->getStructStruct(t->name);
   auto st = (llvm::StructType*)cc->getStructType(t->name);
 
@@ -517,12 +494,6 @@ llvm::Type *floatTypeGen(FloatType *ft, CC *cc){
   return nullptr;
 }
 
-Type *castExprType(CastExpr *ce, CC *cc){
-  // TODO
-  return ce->t;
-}
-
-
 void codegen(Statement* stmt, CC *cc){
   auto t = typeid(*stmt).hash_code();
 
@@ -581,7 +552,7 @@ llvm::Value* exprGen(Expression *exp, CC *cc){
     return memberExprGen((MemberExpr *) exp, cc);
   if(t == typeid(CastExpr).hash_code()){
     CastExpr * ce = (CastExpr*)exp;
-    auto targetType = resolveType(ce->exp, cc);
+    auto targetType = ce->exprType;
     auto baseType = ce->t;
     return castGen(targetType, baseType, exprGen(ce->exp, cc), cc, ce, true);
   }
@@ -626,39 +597,6 @@ llvm::Type* typeGen(Type *type, CC *cc){
   }
 
   printf("Unknown typeGen for a class of type %s\n", typeid(*type).name());
-  exit(1);
-  return NULL;
-}
-
-Type* resolveType(Expression *expr, CC *cc){
-  auto t = typeid(*expr).hash_code();
-
-  if(t == typeid(IntValue).hash_code())
-    return new IntType();
-
-  if(t == typeid(VariableExpr).hash_code())
-    return variableExprType((VariableExpr *) expr, cc);
-
-  if(t == typeid(BinaryOperation).hash_code())
-    return binaryOpExprType((BinaryOperation *) expr, cc);
-
-  if(t == typeid(MemberExpr).hash_code())
-    return memberExprType((MemberExpr*) expr, cc);
-
-  if(t == typeid(CastExpr).hash_code())
-    return castExprType((CastExpr*) expr, cc);
-
-  if(t == typeid(PointerExpr).hash_code()){
-    PointerExpr *pe = (PointerExpr*)expr;
-    return new PointerType(resolveType(pe->exp, cc));
-  }
-
-  if(t == typeid(PointerAccessExpr).hash_code()){
-    PointerType *pt = (PointerType *) resolveType(((PointerAccessExpr*)expr)->exp, cc);
-    return pt->base;
-  }
-
-  printf("Unknown resolveType for a class of type %s\n", typeid(*expr).name());
   exit(1);
   return NULL;
 }
