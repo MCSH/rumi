@@ -17,9 +17,6 @@
 // TODO check types on function call
 // TODO check types on function return
 
-// TODO cast expression type is deleted somewhere!!!
-// TODO shift reduce
-
 typedef CompileContext CC;
 
 CC* init_context();
@@ -243,8 +240,6 @@ llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc, Nod
 }
 
 void variableAssignGen(VariableAssign *va, CC *cc){
-  // llvm::AllocaInst *alloc = cc->getVariableAlloca(va->name);
-
   llvm::AllocaInst *alloc = (llvm::AllocaInst *) getAlloca(va->base, cc);
   
   if(!alloc){
@@ -351,7 +346,7 @@ llvm::Value* memberAlloca(MemberExpr *e, CC *cc){
 }
 
 llvm::Value* pointerAccessExprAlloca(PointerAccessExpr* expr, CC *cc){
-  auto load = cc->builder->CreateLoad(exprGen(expr->exp, cc), "ptr");
+  auto load = exprGen(expr->exp, cc);
   return load;
 }
 
@@ -552,7 +547,7 @@ llvm::Value* exprGen(Expression *exp, CC *cc){
     return memberExprGen((MemberExpr *) exp, cc);
   if(t == typeid(CastExpr).hash_code()){
     CastExpr * ce = (CastExpr*)exp;
-    auto targetType = ce->exprType;
+    auto targetType = ce->exp->exprType;
     auto baseType = ce->t;
     return castGen(targetType, baseType, exprGen(ce->exp, cc), cc, ce, true);
   }

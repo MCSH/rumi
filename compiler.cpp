@@ -167,7 +167,7 @@ void variableDeclHealthCheck(VariableDecl *vd,CC *cc){
       auto etype = resolveType(vd->exp, cc);
       auto c = vd->t->compatible(etype);
       if(c==OK || c==ImpCast){
-        // delete etype;
+        delete etype;
       } else {
         printf("Uncompatible type covnersion from %s to %s at line %d\n",
                etype->displayName().c_str(), vd->t->displayName().c_str(), vd->lineno);
@@ -237,8 +237,8 @@ void check_health(Statement *stmt, CC *cc){
 
   if(t == typeid(VariableAssign).hash_code()){
     VariableAssign *va = (VariableAssign*) stmt;
-    resolveType(va->base, cc);
-    resolveType(va->exp, cc);
+    check_health(va->base, cc);
+    check_health(va->exp, cc);
     // TODO
     return;
   }
@@ -277,10 +277,15 @@ void check_health(Statement *stmt, CC *cc){
     return;
   }
 
+  if(t == typeid(PointerExpr).hash_code()){
+    // TODO
+    return;
+  }
+
   if(t == typeid(MemberExpr).hash_code()){
     MemberExpr *me = (MemberExpr*) stmt;
     check_health(me->e, cc);
-    resolveType(me->e, cc);
+    check_health(me->e, cc);
     // TODO check to see if mem is in the struct
     return;
   }
@@ -312,39 +317,32 @@ void check_health(Statement *stmt, CC *cc){
   
 }
 
-Type* variableExprType(VariableExpr *ve, CC *cc){
-  Type * t = cc->getVariableType(ve->name);
-  if(!t){
-    printf("Undefined variable %s at line %d\n", ve->name->c_str(), ve->lineno);
-    exit(1);
-  }
-  return t->clone();
-}
-
-
 Type *resolveType(Expression *expr, CC *cc){
-  // TODO is this needed?
+  // Don't compute it twice.
   if(expr->exprType)
     return expr->exprType;
 
   auto t = typeid(*expr).hash_code();
 
-  // TODO clone?
-
   if(t == typeid(IntValue).hash_code()){
-    IntValue *iv = (IntValue *) expr;
     expr->exprType = new IntType();
     return expr->exprType;
   }
 
   if(t == typeid(StringValue).hash_code()){
-    StringValue *sv = (StringValue *) expr;
     expr->exprType = new StringType();
     return expr->exprType;
   }
 
   if(t == typeid(VariableExpr).hash_code()){
-    expr->exprType = variableExprType((VariableExpr *) expr, cc);
+    VariableExpr * ve= (VariableExpr*) expr;
+    Type *t = cc->getVariableType(ve->name);
+    if (!t) {
+      printf("Undefined variable %s at line %d\n", ve->name->c_str(),
+             ve->lineno);
+      exit(1);
+    }
+    expr->exprType = t->clone();
     return expr->exprType;
   }
 
@@ -352,26 +350,26 @@ Type *resolveType(Expression *expr, CC *cc){
     BinaryOperation *bo = (BinaryOperation*) expr;
     // TODO complete this
     // 1 + 2.0 -> float
-    expr->exprType = resolveType(bo->lhs, cc);
+    expr->exprType = resolveType(bo->lhs, cc)->clone();
     return expr->exprType;
   }
 
   if(t == typeid(CastExpr).hash_code()){
     auto ce = (CastExpr*) expr;
     resolveType(ce->exp, cc); // TODO maybe even healthcheck?
-    expr->exprType = ce->t;
+    expr->exprType = ce->t->clone();
     return expr->exprType;
   }
 
   if(t == typeid(PointerExpr).hash_code()){
     PointerExpr *pe = (PointerExpr*)expr;
-    expr->exprType = new PointerType(resolveType(pe->exp, cc));
+    expr->exprType = new PointerType(resolveType(pe->exp, cc)->clone());
     return expr->exprType;
   }
 
   if(t == typeid(PointerAccessExpr).hash_code()){
     PointerType *pt = (PointerType *) resolveType(((PointerAccessExpr*)expr)->exp, cc);
-    expr->exprType = pt->base;
+    expr->exprType = pt->base->clone();
     return expr->exprType;
   }
 
@@ -382,7 +380,7 @@ Type *resolveType(Expression *expr, CC *cc){
 
     for(auto m: *ss->members){
       if(m->name->compare(*me->mem) == 0){
-        expr->exprType = m->t;
+        expr->exprType = m->t->clone();
         return expr->exprType;
       }
     }
