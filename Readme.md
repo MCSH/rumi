@@ -50,10 +50,11 @@ Run `gdb rum` followed by `run test.rum`. You can try the following commands:
   s8, s16, s32, s64
 * floats of 32 and 64 bits (float and double in c) f32, f64
 * pointers!
+* arrays
 
 # Top Priority Language TODO list
 
-* arrays
+* array of unknown size (arraypointer)
 * heap allocation / deallocation (malloc/free)
 * better vararg support
 * better array support
