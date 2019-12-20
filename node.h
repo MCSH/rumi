@@ -290,6 +290,18 @@ public:
   }
 };
 
+class ArrayExpr: public Expression{
+public:
+  Expression *e;
+  Expression *mem;
+  ArrayExpr(Expression *e, Expression *mem): mem(mem), e(e){}
+
+  virtual ~ArrayExpr(){
+    delete e;
+    delete mem;
+  }
+};
+
 class CastExpr: public Expression{
 public:
   Type *t;

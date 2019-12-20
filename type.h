@@ -177,3 +177,26 @@ public:
   }
 };
   
+class ArrayType: public Type{
+public:
+  Type *base;
+  int count;
+  ArrayType(Type *b, int c): base(b), count(c){}
+
+  ArrayType(Type *b, std::string *c): base(b){
+    count = atoi(c->c_str());
+    delete c;
+  }
+
+  virtual ArrayType *clone(){
+    return new ArrayType(base->clone(), count);
+  }
+
+  virtual std::string displayName(){
+    return "Array of " + base->displayName() + " of size " + std::to_string(count);
+  }
+
+  virtual ~ArrayType(){
+    delete base;
+  }
+};

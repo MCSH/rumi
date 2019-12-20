@@ -167,6 +167,7 @@ return_stmt
 
 variable
 : variable '.' ID {$$=new MemberExpr($1, $3);}
+| variable '[' expr ']' {$$=new ArrayExpr($1, $3);}
 | ID {$$=new VariableExpr($1);}
 ;
 
@@ -204,6 +205,7 @@ unary_expr
 postfix_expr // Later add array access, etc here
 : value
 | variable '.' ID {$$=new MemberExpr($1, $3);}
+| variable '[' expr ']' {$$=new ArrayExpr($1, $3);}
 | ID {$$=new VariableExpr($1);}
 | ID '(' args_list ')' {$$=new FunctionCallExpr($1, $3);}
 ;
@@ -239,6 +241,7 @@ type
 | ANY {$$=new AnyType();}
 | int_type
 | '*' type {$$=new PointerType($2);}
+| type '[' DEC ']' {$$=new ArrayType($1, $3);}
 | ID {$$=new StructType($1);}
 ;
 

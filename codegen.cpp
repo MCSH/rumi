@@ -148,7 +148,11 @@ void variableDeclGen(VariableDecl *vd, CC *cc){
     printf("Unknown type %s\n", ((StructType*)vd->t)->name->c_str());
     exit(1);
   }
-  llvm::AllocaInst *alloc = cc->builder->CreateAlloca(t, 0, vd->name->c_str());
+  // TODO handle global
+  auto bblock = cc->block.back()->bblock;
+  llvm::IRBuilder<> TmpB(bblock, bblock->begin());
+
+  llvm::AllocaInst *alloc = TmpB.CreateAlloca(t, 0, vd->name->c_str());
   cc->setVariable(vd->name, alloc, vd);
 
   if(vd->exp){
@@ -335,6 +339,17 @@ llvm::Value* memberAlloca(MemberExpr *e, CC *cc){
   return member_ptr;
 }
 
+llvm::Value* arrayAlloca(ArrayExpr* ae, CC *cc){
+  auto t = typeGen(ae->e->exprType, cc);
+  auto alloc = getAlloca(ae->e, cc);
+  auto ind = exprGen(ae->mem, cc);
+
+  std::vector<llvm::Value *>indices(2);
+  indices[0] = llvm::ConstantInt::get(cc->context, llvm::APInt(64, 0, true));
+  indices[1] = ind;
+  return cc->builder->CreateInBoundsGEP(t, alloc, indices, "arrptr");
+}
+
 llvm::Value* pointerAccessExprAlloca(PointerAccessExpr* expr, CC *cc){
   auto load = exprGen(expr->exp, cc);
   return load;
@@ -343,6 +358,13 @@ llvm::Value* pointerAccessExprAlloca(PointerAccessExpr* expr, CC *cc){
 llvm::Value* memberExprGen(MemberExpr *e, CC *cc){
   // TODO
   auto member_ptr = memberAlloca(e, cc);
+  llvm::Value *loaded_member = cc->builder->CreateLoad(member_ptr, "loadtmp");
+  return loaded_member;
+}
+
+llvm::Value* arrayExprGen(ArrayExpr *e, CC *cc){
+  // TODO
+  auto member_ptr = arrayAlloca(e, cc);
   llvm::Value *loaded_member = cc->builder->CreateLoad(member_ptr, "loadtmp");
   return loaded_member;
 }
@@ -535,6 +557,8 @@ llvm::Value* exprGen(Expression *exp, CC *cc){
     return stringvalueGen((StringValue *) exp, cc);
   if(t == typeid(MemberExpr).hash_code())
     return memberExprGen((MemberExpr *) exp, cc);
+  if(t == typeid(ArrayExpr).hash_code())
+    return arrayExprGen((ArrayExpr *) exp, cc);
   if(t == typeid(CastExpr).hash_code()){
     CastExpr * ce = (CastExpr*)exp;
     auto targetType = ce->exp->exprType;
@@ -581,6 +605,11 @@ llvm::Type* typeGen(Type *type, CC *cc){
     return llvm::PointerType::getUnqual(typeGen(pt->base, cc));
   }
 
+  if(t == typeid(ArrayType).hash_code()){
+    ArrayType *at = (ArrayType*)type;
+    return llvm::ArrayType::get(typeGen(at->base, cc), at->count);
+  }
+
   printf("Unknown typeGen for a class of type %s\n", typeid(*type).name());
   exit(1);
   return NULL;
@@ -594,6 +623,9 @@ llvm::Value *getAlloca(Expression *expr, CC *cc){
 
   if(t == typeid(MemberExpr).hash_code())
     return memberAlloca((MemberExpr *)expr, cc);
+
+  if(t == typeid(ArrayExpr).hash_code())
+    return arrayAlloca((ArrayExpr*)expr, cc);
 
   if(t == typeid(PointerAccessExpr).hash_code())
     return pointerAccessExprAlloca((PointerAccessExpr*) expr, cc);

@@ -344,8 +344,17 @@ void compile(Statement *stmt, CC *cc){
   if(t == typeid(MemberExpr).hash_code()){
     MemberExpr *me = (MemberExpr*) stmt;
     compile(me->e, cc);
-    compile(me->e, cc);
+    compile(me->e, cc); // TODO repetition
     // TODO check to see if mem is in the struct
+    return;
+  }
+
+  if(t == typeid(ArrayExpr).hash_code()){
+    ArrayExpr *ae = (ArrayExpr*) stmt;
+    compile(ae->e, cc);
+    compile(ae->mem, cc);
+    // TODO check to see if ae->e is array
+    // TODO check to see if ae->mem is number
     return;
   }
 
@@ -443,6 +452,15 @@ Type *resolveType(Expression *expr, CC *cc){
     }
     printf("Member type not found, memberExprType on line %d\n", me->lineno);
     exit(1);
+  }
+
+  if(t == typeid(ArrayExpr).hash_code()){
+    auto *ae = (ArrayExpr*) expr;
+    auto t = resolveType(ae->e, cc);
+    // TODO check to see if it is an array
+    auto bt = (ArrayType*) t;
+    expr->exprType = bt->base->clone();
+    return expr->exprType;
   }
 
   if(t == typeid(FunctionCallExpr).hash_code()){
