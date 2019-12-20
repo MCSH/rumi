@@ -16,6 +16,7 @@
 // TODO improve error handling
 // TODO check types on function call
 // TODO check types on function return
+// TODO codegen should not throw any errors.
 
 typedef CompileContext CC;
 
@@ -142,24 +143,6 @@ llvm::Value* intValueGen(IntValue* i, CC *cc){
 void variableDeclGen(VariableDecl *vd, CC *cc){
   // TODO maybe we need the block first for allocation?
 
-  if(vd->exp){
-    // set the type
-    auto etype = vd->exp->exprType;
-    // TODO remvoe this!!!
-    if(vd->t && !vd->t->compatible(etype)){
-      // The var type and expr type are incompatible, throw
-      printf("first type: %s, second type %s\n", typeid(*vd->t).name(), typeid(*etype).name());
-      printf("Incompatible variable type with assigned variable\n");
-      exit(1);
-    }
-
-    if(!vd->t){
-      vd->t = etype;
-    } else {
-      delete etype;
-    }
-  }
-
   auto t = typeGen(vd->t, cc);
   if(!t){
     printf("Unknown type %s\n", ((StructType*)vd->t)->name->c_str());
@@ -180,11 +163,14 @@ llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc, Nod
   // Converting the third value, which is of the first type to second type.
   Compatibility c = baseType->compatible(exprType);
 
+  // TODO most of this should be handled in castCompile and is redundent.
+  
   if(c == ExpCast && !expl){
     printf("Can't implicity cast %s to %s\n",
            exprType->displayName().c_str(),
            baseType->displayName().c_str());
     printf("On line %d\n", n->lineno);
+    printf("Compiler bug reported from codegen::castGen");
     exit(1);
   }
 
@@ -193,6 +179,7 @@ llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc, Nod
            exprType->displayName().c_str(),
            baseType->displayName().c_str());
     printf("On line %d\n", n->lineno);
+    printf("Compiler bug reported from codegen::castGen");
     exit(1);
   }
 
@@ -244,7 +231,7 @@ void variableAssignGen(VariableAssign *va, CC *cc){
   
   if(!alloc){
     if(typeid(*va->base).hash_code()==typeid(VariableExpr).hash_code()){
-      printf("Unknown variable %s\n", ((VariableExpr*)va->base)->name->c_str());
+      printf("Unknown variable %s\nThis is a compiler bug reported from codegen::variableAssignGen", ((VariableExpr*)va->base)->name->c_str());
     } else {
       printf("I don't know what is happening, we are on variableAssigngen\n");
     }
@@ -253,6 +240,7 @@ void variableAssignGen(VariableAssign *va, CC *cc){
   auto e = exprGen(va->exp, cc);
 
   // Type check
+  // TODO this shouldn't be here, we are checking it in compiler
   auto baseType = va->base->exprType;
   auto exprType = va->exp->exprType;
   e = castGen(exprType, baseType, e, cc, va, false);
@@ -263,6 +251,7 @@ llvm::Value* variableExprGen(VariableExpr *ve, CC *cc){
   llvm::AllocaInst *alloc = cc->getVariableAlloca(ve->name);
   if(!alloc){
     printf("Unknown variable %s\n", ve->name->c_str());
+    printf("This is a compiler bug reported in codegen::variableExprGen\n");
     exit(1);
   }
 
@@ -276,6 +265,7 @@ llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
   llvm::Function *calleeF = cc->module->getFunction(fc->name->c_str());
   if (!calleeF) {
     printf("Function not found %s\n", fc->name->c_str());
+    printf("This is a compiler bug, reported from codegen::functionCallExprGen\n");
     exit(1);
   }
 
