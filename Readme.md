@@ -54,7 +54,6 @@ Run `gdb rum` followed by `run test.rum`. You can try the following commands:
 
 # Top Priority Language TODO list
 
-* array of unknown size (arraypointer)
 * heap allocation / deallocation (malloc/free)
 * better vararg support
 * better array support
