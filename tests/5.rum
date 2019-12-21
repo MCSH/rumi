@@ -14,8 +14,13 @@ main := ()->int{
 
   printf("the array's 3rd member was %d\n", arr[a]);
 
+  arr2 : int[x];
+
+  arr2[0] = 3;
+
+  printf("the second array's 1st member was %d\n", arr2[0]);
+
   return 0;
 
-  // arr2 : int[x];
   // arr : []int;
 }

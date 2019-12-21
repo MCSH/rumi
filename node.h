@@ -334,3 +334,32 @@ public:
     delete exp;
   }
 };
+
+class ArrayType: public Type{
+public:
+  Type *base;
+  int count;
+  Expression *exp;
+
+  ArrayType(Type *b, Expression *e): base(b), exp(e){}
+  ArrayType(Type *b, int count): base(b), count(count){}
+
+  virtual ArrayType *clone(){
+    if(count){
+      return new ArrayType(base->clone(), count);
+    }
+    return new ArrayType(base->clone(), exp);
+  }
+
+  virtual std::string displayName(){
+    if(count)
+      return "Array of " + base->displayName() + " of size " + std::to_string(count);
+    return "Array of " + base->displayName();
+  }
+
+  virtual ~ArrayType(){
+    delete base;
+    if(exp)
+      delete exp;
+  }
+};

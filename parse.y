@@ -37,7 +37,7 @@ std::vector<Statement *> *mainProgramNode;
 %token TRIPLE_DOTS
 %token IF ELSE WHILE
 
-%type <type> type int_type
+%type <type> type int_type prefix_type postfix_type
 
 %type <exp> additive_expr multiplicative_expr unary_expr postfix_expr
 %type <exp> value expr variable function_call cast_expr pointer_access
@@ -234,15 +234,24 @@ value
 ;
 
 type
+: prefix_type
+;
+
+prefix_type
+: '*' prefix_type {$$=new PointerType($2);}
+| postfix_type
+;
+
+postfix_type
 : INT {$$=new IntType();}
 | F32 {$$=new FloatType(32);}
 | F64 {$$=new FloatType(64);}
 | STRING {$$=new StringType();}
 | ANY {$$=new AnyType();}
 | int_type
-| '*' type {$$=new PointerType($2);}
-| type '[' DEC ']' {$$=new ArrayType($1, $3);}
+| postfix_type '[' expr ']' {$$=new ArrayType($1, $3);}
 | ID {$$=new StructType($1);}
+| '(' type ')' {$$=$2;}
 ;
 
 int_type

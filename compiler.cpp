@@ -189,6 +189,16 @@ void structCompile(StructStatement *ss, CC *cc){
 
 void variableDeclCompile(VariableDecl *vd,CC *cc){
   Type *type;
+  // check for arrays
+  if (vd->t) {
+    if (ArrayType *at = dynamic_cast<ArrayType *>(vd->t)){
+      if (auto *mt = dynamic_cast<IntValue *>(at->exp)) {
+        at->count = atoi(mt->val->c_str());
+      } else {
+        compile(at->exp, cc);
+      }
+    }
+  }
   // check exp type
   if(vd->exp){
     if(vd->t){

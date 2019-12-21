@@ -7,6 +7,7 @@
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instructions.h>
+#include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/PassManager.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Support/raw_ostream.h>
@@ -25,6 +26,7 @@ void codegen(Statement* stmt, CC *context);
 llvm::Value *getAlloca(Expression *expr, CC *cc);
 llvm::Value* exprGen(Expression *exp, CC *cc);
 llvm::Type* typeGen(Type*t, CC *cc);
+llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc, Node *n, bool expl);
 
 CC* codegen(std::vector<Statement *> *statements, std::string outfile){
   CC *context = init_context();
@@ -100,7 +102,11 @@ void funcGen(FunctionDefine *fd, CC *cc){
   cc->builder->SetInsertPoint(bblock);
   cc->block.push_back(new BlockContext(bblock));
 
-  // TODO handle arguments
+  // TODO stackrestore at end, before returns. Use a special block.
+  llvm::Value *ss = cc->builder->CreateCall(llvm::Intrinsic::getDeclaration(
+      cc->module.get(), llvm::Intrinsic::stacksave));
+
+  // handle arguments
   int i = 0;
   for(auto &arg: f->args()){
     // TODO is it redundent to convert arg to alloca and store?
@@ -112,13 +118,15 @@ void funcGen(FunctionDefine *fd, CC *cc){
     i++;
   }
 
-  // TODO generate body
+  // generate body
   for(auto s: *fd->body->stmts){
-    // TODO
     codegen(s, cc);
   }
 
-  // TODO verify returns
+  // TODO the rest of stackrestore
+  std::vector<llvm::Value *> a;
+  a.push_back(ss);
+  // cc->builder->CreateCall(llvm::Intrinsic::getDeclaration(cc->module.get(), llvm::Intrinsic::stackrestore), a);
 
   llvm::verifyFunction(*f);
 
@@ -140,29 +148,44 @@ llvm::Value* intValueGen(IntValue* i, CC *cc){
   return llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), value, true);
 }
 
-void variableDeclGen(VariableDecl *vd, CC *cc){
+void variableDeclGen(VariableDecl *vd, CC *cc) {
   // TODO maybe we need the block first for allocation?
-
   auto t = typeGen(vd->t, cc);
-  if(!t){
-    printf("Unknown type %s\n", ((StructType*)vd->t)->name->c_str());
+  if (!t) {
+    printf("Unknown type %s\n", ((StructType *)vd->t)->name->c_str());
     exit(1);
   }
-  // TODO handle global
+
   auto bblock = cc->block.back()->bblock;
+
+  if (auto at = dynamic_cast<ArrayType *>(vd->t)) {
+    if (!at->count) {
+      // stacksave/stackrestore? TODO
+      auto count = exprGen(at->exp, cc);
+      count = castGen(at->exp->exprType, at->base, count, cc, vd, true);
+      auto alloc = cc->builder->CreateAlloca(t, 0, count, vd->name->c_str());
+      cc->setVariable(vd->name, alloc, vd);
+      return;
+    }
+  }
+  // Normal variable OR array of fixed size
+
+  // TODO handle global
   llvm::IRBuilder<> TmpB(bblock, bblock->begin());
 
   llvm::AllocaInst *alloc = TmpB.CreateAlloca(t, 0, vd->name->c_str());
   cc->setVariable(vd->name, alloc, vd);
 
-  if(vd->exp){
+  // TODO if not array, handle array with exp seperately
+  if (vd->exp) {
     // set variable to expr
     auto exp = exprGen(vd->exp, cc);
     cc->builder->CreateStore(exp, alloc);
   }
 }
 
-llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc, Node *n, bool expl){
+llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc,
+                     Node *n, bool expl) {
   // Node n is wanted only for line no
   // Converting the third value, which is of the first type to second type.
   Compatibility c = baseType->compatible(exprType);
@@ -340,14 +363,28 @@ llvm::Value* memberAlloca(MemberExpr *e, CC *cc){
 }
 
 llvm::Value* arrayAlloca(ArrayExpr* ae, CC *cc){
-  auto t = typeGen(ae->e->exprType, cc);
-  auto alloc = getAlloca(ae->e, cc);
-  auto ind = exprGen(ae->mem, cc);
+  ArrayType *at = (ArrayType*)ae->e->exprType;
 
-  std::vector<llvm::Value *>indices(2);
-  indices[0] = llvm::ConstantInt::get(cc->context, llvm::APInt(64, 0, true));
-  indices[1] = ind;
-  return cc->builder->CreateInBoundsGEP(t, alloc, indices, "arrptr");
+  // check for count member
+  if (at->count) {
+    auto t = typeGen(ae->e->exprType, cc);
+    auto alloc = getAlloca(ae->e, cc);
+    // TODO check alloc here and everywhere else!
+    auto ind = exprGen(ae->mem, cc);
+
+    std::vector<llvm::Value *> indices(2);
+    indices[0] = llvm::ConstantInt::get(cc->context, llvm::APInt(64, 0, true));
+    indices[1] = ind;
+    return cc->builder->CreateInBoundsGEP(t, alloc, indices, "arrptr");
+  } else {
+    // This is basically a pointer
+    auto t = typeGen(ae->e->exprType, cc);
+    auto alloc = getAlloca(ae->e, cc);
+    std::vector<llvm::Value *> indices(1);
+    indices[0] = exprGen(ae->mem, cc);
+    auto tmp = cc->builder->CreateInBoundsGEP(t, alloc, indices, "ptrarrptr");
+    return tmp;
+  }
 }
 
 llvm::Value* pointerAccessExprAlloca(PointerAccessExpr* expr, CC *cc){
@@ -363,7 +400,6 @@ llvm::Value* memberExprGen(MemberExpr *e, CC *cc){
 }
 
 llvm::Value* arrayExprGen(ArrayExpr *e, CC *cc){
-  // TODO
   auto member_ptr = arrayAlloca(e, cc);
   llvm::Value *loaded_member = cc->builder->CreateLoad(member_ptr, "loadtmp");
   return loaded_member;
@@ -607,7 +643,12 @@ llvm::Type* typeGen(Type *type, CC *cc){
 
   if(t == typeid(ArrayType).hash_code()){
     ArrayType *at = (ArrayType*)type;
-    return llvm::ArrayType::get(typeGen(at->base, cc), at->count);
+
+    // check for count
+    if(at->count)
+      return llvm::ArrayType::get(typeGen(at->base, cc), at->count);
+    else
+      return typeGen(at->base, cc);
   }
 
   printf("Unknown typeGen for a class of type %s\n", typeid(*type).name());
