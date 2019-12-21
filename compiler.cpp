@@ -1,86 +1,12 @@
 #include "compiler.h"
 #include "node.h"
 #include "type.h"
-#include <map>
 
 
 int yyparse();
 extern "C" FILE *yyin;
 
-    // TODO memory leak
-class BC { // Block Context
-public:
-  Type *returnType;
-  std::map<std::string, Type *> vars;
-  std::map<std::string, StructStatement *> structs;
-  std::map<std::string, FunctionSignature *> functions;
-
-  void newVar(std::string *name, Type *type){
-    // TODO check for name collision
-    vars[*name] = type;
-  }
-
-  void newStruct(std::string *name, StructStatement *ss){
-    // TODO check for name collision
-    // TODO maybe register as var?
-    structs[*name] = ss;
-  }
-
-  void newFunction(std::string *name, FunctionSignature *fs){
-    // TODO check for name collision
-    // TODO maybe register as var?
-    functions[*name] = fs;
-  }
-};
-
-    // TODO memory leak
-class CC{
-public:
-  BC global;
-  std::vector<BC *> blocks;
-
-  BC* getBlock(){
-    if(blocks.size()!=0)
-      return blocks.back();
-    return &global;
-  }
-
-  BC* getParentBlock(){
-    if(blocks.size() < 2)
-      return &global;
-    return blocks[blocks.size()-2];
-  }
-
-  Type *getVariableType(std::string *name){
-    for(auto i = blocks.rbegin(); i!=blocks.rend(); i++){
-      auto vars = (*i)->vars;
-      auto p = vars.find(*name);
-      if(p!=vars.end())
-        return p->second;
-    }
-    return global.vars[*name];
-  }
-
-  StructStatement *getStruct(std::string *name){
-    for(auto i = blocks.rbegin(); i!=blocks.rend(); i++){
-      auto vars = (*i)->structs;
-      auto p = vars.find(*name);
-      if(p!=vars.end())
-        return p->second;
-    }
-    return global.structs[*name];
-  }
-
-  FunctionSignature *getFunction(std::string *name){
-    for(auto i = blocks.rbegin(); i!=blocks.rend(); i++){
-      auto vars = (*i)->functions;
-      auto p = vars.find(*name);
-      if(p!=vars.end())
-        return p->second;
-    }
-    return global.functions[*name];
-  }
-};
+typedef CompileContext CC;
 
 void compile(Statement *stmts, CC* cc);
 Type *resolveType(Expression *exp, CC *cc);
@@ -136,8 +62,7 @@ Expression *castCompile(Type *exprType, Type *baseType, Expression *e, CC *cc, N
 }
 
 void functionSignCompile(FunctionSignature *fs, CC *cc){
-  BC *b = cc->getBlock();
-  b->returnType = fs->returnT;
+  BlockContext *b = cc->getBlock();
 
   bool varargs = false;
   for(auto arg: *fs->args){
@@ -158,9 +83,11 @@ void functionSignCompile(FunctionSignature *fs, CC *cc){
 }
 
 void functionDefineCompile(FunctionDefine *fd, CC *cc){
-  cc ->blocks.push_back(new BC());
+  cc->blocks.push_back(new BlockContext());
 
   functionSignCompile(fd->sign, cc);
+
+  cc->getBlock()->currentFunction = fd;
 
   for(auto s: *fd->body->stmts){
     compile(s, cc);
@@ -176,7 +103,7 @@ void returnStmtCompile(ReturnStatement *rs, CC *cc){
 
   // return type
   Type *t = resolveType(rs->exp, cc);
-  Type *ft = cc->getBlock()->returnType;
+  Type *ft = cc->getCurrentFunction()->sign->returnT;
 
   // check the return type using castcompile
   rs->exp = castCompile(t, ft, rs->exp, cc, rs, false);
@@ -195,6 +122,7 @@ void variableDeclCompile(VariableDecl *vd,CC *cc){
       if (auto *mt = dynamic_cast<IntValue *>(at->exp)) {
         at->count = atoi(mt->val->c_str());
       } else {
+        cc->getCurrentFunction()->dynamicStack = true;
         compile(at->exp, cc);
       }
     }
@@ -238,9 +166,9 @@ void compile(Statement *stmt, CC *cc){
     return functionDefineCompile((FunctionDefine*) stmt, cc);
 
   if(t == typeid(FunctionSignature).hash_code()){
-    cc->blocks.push_back(new BC());
+    cc->blocks.push_back(new BlockContext());
     functionSignCompile((FunctionSignature *) stmt, cc);
-    BC *bc = cc->blocks.back();
+    BlockContext *bc = cc->blocks.back();
     cc->blocks.pop_back();
     delete bc;
     return;
@@ -296,7 +224,7 @@ void compile(Statement *stmt, CC *cc){
   }
 
   if(t == typeid(CodeBlock).hash_code()){
-    cc->blocks.push_back(new BC());
+    cc->blocks.push_back(new BlockContext());
     CodeBlock *cb = (CodeBlock *)stmt;
     for(auto s: *cb->stmts){
       compile(s, cc);

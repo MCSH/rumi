@@ -1,8 +1,12 @@
-# Rumi - a "toy" compiler
+# Rumi
 
 > Everything you possess of skill, and wealth, and handicraft, wasn't it first merely a thought and a quest? - Rumi
 
-Rumi is a WIP compiler, that's all there is to it.
+Rumi is a WIP compiler.
+
+The goal is to have a language that is low level, has functional properties, can be linked with c, doesn't make local functions a nightmare, has a compile time language that is the same as the runtime language, and focuses on making programming joyful.
+
+It is implemented with flex, bison and llvm.
 
 # How to compile the compiler?
 

@@ -156,6 +156,7 @@ class FunctionDefine: public Statement{
 public:
   FunctionSignature *sign;
   CodeBlock *body;
+  bool dynamicStack = false; // Wether we have dynamic stack, i.e., stack array of dynamic size
   FunctionDefine(FunctionSignature *d, CodeBlock *b): sign(d), body(b){
   }
 

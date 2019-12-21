@@ -19,7 +19,7 @@
 // TODO check types on function return
 // TODO codegen should not throw any errors.
 
-typedef CompileContext CC;
+typedef CodegenContext CC;
 
 CC* init_context();
 void codegen(Statement* stmt, CC *context);
@@ -100,11 +100,19 @@ void funcGen(FunctionDefine *fd, CC *cc){
 
   llvm::BasicBlock *bblock = llvm::BasicBlock::Create(cc->context, "entry", f);
   cc->builder->SetInsertPoint(bblock);
-  cc->block.push_back(new BlockContext(bblock));
+  cc->block.push_back(new CodegenBlockContext(bblock));
 
   // TODO stackrestore at end, before returns. Use a special block.
-  llvm::Value *ss = cc->builder->CreateCall(llvm::Intrinsic::getDeclaration(
-      cc->module.get(), llvm::Intrinsic::stacksave));
+  llvm::Value *ss = nullptr;
+  if(fd->dynamicStack){
+    ss = cc->builder->CreateCall(llvm::Intrinsic::getDeclaration(
+        cc->module.get(), llvm::Intrinsic::stacksave));
+    // TODO the rest of stackrestore
+    std::vector<llvm::Value *> a;
+    a.push_back(ss);
+    // cc->builder->CreateCall(llvm::Intrinsic::getDeclaration(cc->module.get(),
+    // llvm::Intrinsic::stackrestore), a);
+  }
 
   // handle arguments
   int i = 0;
@@ -122,11 +130,6 @@ void funcGen(FunctionDefine *fd, CC *cc){
   for(auto s: *fd->body->stmts){
     codegen(s, cc);
   }
-
-  // TODO the rest of stackrestore
-  std::vector<llvm::Value *> a;
-  a.push_back(ss);
-  // cc->builder->CreateCall(llvm::Intrinsic::getDeclaration(cc->module.get(), llvm::Intrinsic::stackrestore), a);
 
   llvm::verifyFunction(*f);
 
@@ -425,7 +428,7 @@ void ifGen(IfStatement *is, CC *cc){
   cc->builder->CreateCondBr(cond, ifB, elseB);
 
   // If Body
-  cc->block.push_back(new BlockContext(ifB));
+  cc->block.push_back(new CodegenBlockContext(ifB));
   cc->builder->SetInsertPoint(ifB);
   codegen(is->i, cc);
   cc->builder->CreateBr(mergeB);
@@ -433,7 +436,7 @@ void ifGen(IfStatement *is, CC *cc){
 
   // Else
   if(is->e){
-    cc->block.push_back(new BlockContext(elseB));
+    cc->block.push_back(new CodegenBlockContext(elseB));
     f->getBasicBlockList().push_back(elseB);
     cc->builder->SetInsertPoint(elseB);
     codegen(is->e, cc);
@@ -465,7 +468,7 @@ void whileGen(WhileStatement *ws, CC *cc){
   cc->builder->CreateBr(condB);
 
   // While cond
-  cc->block.push_back(new BlockContext(condB));
+  cc->block.push_back(new CodegenBlockContext(condB));
   cc->builder->SetInsertPoint(condB);
   llvm::Value *cond = exprGen(ws->exp, cc);
   cond = cc->builder->CreateICmpNE(cond, llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), 0, false), "whilecond"); // TODO improve?
@@ -474,7 +477,7 @@ void whileGen(WhileStatement *ws, CC *cc){
 
   // While Body
   f->getBasicBlockList().push_back(whileB);
-  cc->block.push_back(new BlockContext(whileB));
+  cc->block.push_back(new CodegenBlockContext(whileB));
   cc->builder->SetInsertPoint(whileB);
   codegen(ws->w, cc);
   cc->builder->CreateBr(condB);
@@ -676,7 +679,8 @@ llvm::Value *getAlloca(Expression *expr, CC *cc){
   return NULL;
 }
 
-std::tuple<llvm::AllocaInst *, VariableDecl *> *CompileContext::getVariable(std::string *name){
+std::tuple<llvm::AllocaInst *, VariableDecl *> *
+CodegenContext::getVariable(std::string *name) {
   for (auto i = block.rbegin(); i != block.rend(); i++) {
     auto vars = (*i)->variables;
     auto p = vars.find(*name);
@@ -687,12 +691,13 @@ std::tuple<llvm::AllocaInst *, VariableDecl *> *CompileContext::getVariable(std:
   return global.variables[*name];
 }
 
-void CompileContext::setVariable(std::string *name, llvm::AllocaInst *var, VariableDecl *vd){
-  BlockContext *b = this->currentBlock();
+void CodegenContext::setVariable(std::string *name, llvm::AllocaInst *var,
+                                 VariableDecl *vd) {
+  CodegenBlockContext *b = this->currentBlock();
   b->variables[*name] = new std::tuple<llvm::AllocaInst*, VariableDecl*>(var, vd);
 }
 
-llvm::AllocaInst *CompileContext::getVariableAlloca(std::string *name){
+llvm::AllocaInst *CodegenContext::getVariableAlloca(std::string *name) {
   llvm::AllocaInst *alloca;
   auto tup = this->getVariable(name); 
   if(!tup)
@@ -701,7 +706,7 @@ llvm::AllocaInst *CompileContext::getVariableAlloca(std::string *name){
   return alloca;
 }
 
-VariableDecl *CompileContext::getVariableDecl(std::string *name){
+VariableDecl *CodegenContext::getVariableDecl(std::string *name) {
   VariableDecl *d;
   auto tup = this->getVariable(name);
   if(!tup)
@@ -710,7 +715,8 @@ VariableDecl *CompileContext::getVariableDecl(std::string *name){
   return d;
 }
 
-std::tuple<llvm::Type *, StructStatement *> *CompileContext::getStruct(std::string *name){
+std::tuple<llvm::Type *, StructStatement *> *
+CodegenContext::getStruct(std::string *name) {
   for (auto i = block.rbegin(); i != block.rend(); i++) {
     auto vars = (*i)->structs;
     auto p = vars.find(*name);
@@ -721,12 +727,13 @@ std::tuple<llvm::Type *, StructStatement *> *CompileContext::getStruct(std::stri
   return global.structs[*name];
 }
 
-void CompileContext::setStruct(std::string *name, llvm::Type *t, StructStatement *st){
-  BlockContext *b = this->currentBlock();
+void CodegenContext::setStruct(std::string *name, llvm::Type *t,
+                               StructStatement *st) {
+  CodegenBlockContext *b = this->currentBlock();
   b->structs[*name] = new std::tuple<llvm::Type*, StructStatement*>(t, st);
 }
 
-llvm::Type *CompileContext::getStructType(std::string *name){
+llvm::Type *CodegenContext::getStructType(std::string *name) {
   llvm::Type *t;
   auto tup = this->getStruct(name); 
   if(!tup)
@@ -735,7 +742,7 @@ llvm::Type *CompileContext::getStructType(std::string *name){
   return t;
 }
 
-StructStatement *CompileContext::getStructStruct(std::string *name){
+StructStatement *CodegenContext::getStructStruct(std::string *name) {
   StructStatement *s;
   auto tup = this->getStruct(name);
   if(!tup)

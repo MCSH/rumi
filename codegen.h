@@ -19,18 +19,18 @@
 #include "llvm/Support/MemoryBuffer.h"
 
 
-class BlockContext{
+class CodegenBlockContext{
 public:
   std::map<std::string, std::tuple<llvm::AllocaInst *, VariableDecl *>*> variables;
   std::map<std::string, std::tuple<llvm::Type *, StructStatement *>*> structs;
   llvm::BasicBlock *bblock;
 
-  BlockContext(llvm::BasicBlock *bb):bblock(bb){}
-  BlockContext(){}
+  CodegenBlockContext(llvm::BasicBlock *bb):bblock(bb){}
+  CodegenBlockContext(){}
 };
 
-class CompileContext{
-  BlockContext *currentBlock(){
+class CodegenContext {
+  CodegenBlockContext *currentBlock(){
     if(block.size()!=0)
       return block.back();
     return &global;
@@ -39,8 +39,8 @@ class CompileContext{
   llvm::LLVMContext context;
   std::unique_ptr<llvm::Module> module;
   llvm::IRBuilder<> *builder;
-  BlockContext global;
-  std::vector<BlockContext *> block;
+  CodegenBlockContext global;
+  std::vector<CodegenBlockContext *> block;
 
   std::tuple<llvm::AllocaInst *, VariableDecl *> *getVariable(std::string *name);
   llvm::AllocaInst *getVariableAlloca(std::string *name);
@@ -52,7 +52,8 @@ class CompileContext{
   StructStatement *getStructStruct(std::string *name);
   void setStruct(std::string *name, llvm::Type *t, StructStatement *st);
 
-  CompileContext(){}
+  CodegenContext() {}
 };
 
-CompileContext* codegen(std::vector<Statement *> *statements, std::string outfile);
+CodegenContext *codegen(std::vector<Statement *> *statements,
+                        std::string outfile);

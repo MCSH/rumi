@@ -47,6 +47,7 @@ tests:	rum
 		cat -n tests/$$number.rum ; \
 		echo ; \
 		./rum tests/$$number.rum ; \
+		lli tests/$$number.rum.o ; \
 		((number = number + 1)) ; \
 	done
 
