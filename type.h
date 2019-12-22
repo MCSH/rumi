@@ -55,6 +55,10 @@ public:
 
     IntType *target = (IntType*)t;
 
+    if(this->size == 0){
+      return Compatibility::ImpCast; // TODO
+    }
+
     if(target->size > this->size)
       return Compatibility::ExpCast;
 

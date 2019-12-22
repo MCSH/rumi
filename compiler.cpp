@@ -187,6 +187,9 @@ void compile(Statement *stmt, CC *cc){
     }
 
     // generate arguments
+    if(!fce->expr)
+      fce->expr = new std::vector<Expression *>();
+
     for(auto e: *fce->expr)
       compile(e, cc);
     return;
@@ -313,6 +316,13 @@ void compile(Statement *stmt, CC *cc){
     // TODO use cast compile
     CastExpr *ce = (CastExpr*) stmt;
     compile(ce->exp, cc);
+    return;
+  }
+
+  if(t == typeid(DeferStatement).hash_code()){
+    // TODO
+    DeferStatement *ds = (DeferStatement*) stmt;
+    compile(ds->s, cc);
     return;
   }
 

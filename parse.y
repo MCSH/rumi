@@ -35,7 +35,7 @@ std::vector<Statement *> *mainProgramNode;
 %token S8 S16 S32 S64
 %token F64 F32
 %token TRIPLE_DOTS
-%token IF ELSE WHILE
+%token IF ELSE WHILE DEFER
 
 %type <type> type int_type prefix_type postfix_type
 
@@ -46,6 +46,7 @@ std::vector<Statement *> *mainProgramNode;
 
 %type <stmt> return_stmt stmt variable_decl variable_assign if_stmt while_stmt
 %type <stmt> top_level function_define arg_decl vararg_decl struct_stmt
+%type <stmt> defer_stmt
 
 %type <functionSignature> function_signature 
 %type <codeBlock> function_body 
@@ -139,6 +140,11 @@ stmt
 | while_stmt
 | '{' stmts '}' {$$=new CodeBlock($2);}
 | struct_stmt
+| defer_stmt
+;
+
+defer_stmt
+: DEFER stmt {$$=new DeferStatement($2);}
 ;
 
 while_stmt

@@ -1,14 +1,55 @@
 
 
 malloc := (size: s64) -> *u8;
-free := (pointer: *u8) -> void;
+free := (pointer: *u8) -> u8;
 printf := (t: string, c: ...any)->int;
 
-// test := (size: int) -> *int;
+defer_test := () -> int{
+  i : int = 0; //1
+
+  defer printf("this should come in second\n"); // 5
+
+  defer printf("hii\n"); // 4
+
+  printf("this should come in first\n"); //2
+
+  return i+1; //3 
+}
 
 main := () -> int{
-  p : *u8 = malloc(8);
+  p : *u8 = malloc(8); // p = new chat();
+  defer free(p);
+
+/*
+  f : file = fopen(...);
+  defer close(f);
+*/
+
   *p = 2;
-  printf("p=%d\n", *p);
+
+  defer if(1){
+    printf("hi!\n");
+  }
+
+  if(1){
+    printf("in if\n");
+    defer printf("Defered in if\n");
+    printf("still in if\n");
+  } else {
+    defer printf("This shouldn't happen\n");
+  }
+
+  {
+     printf("inside a block\n");
+     defer printf("defered inside a block\n");
+     printf("still inside a block\n");
+  }
+
+  defer printf("p=%d\n", *p);
+
+  *p = 10;
+
+  defer_test();
+
   return 0;
 }

@@ -260,6 +260,17 @@ public:
   }
 };
 
+class DeferStatement: public Statement{
+public:
+  Statement *s;
+
+  DeferStatement(Statement *s): s(s){
+  }
+
+  virtual ~DeferStatement(){
+    delete s;
+  }
+};
 
 class StructStatement: public Statement{
 public:

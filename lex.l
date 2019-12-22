@@ -64,6 +64,7 @@ int comment_nesting = 0;
 "f64" {return F64;}
 
 "return" {return RETURN;}
+"defer" {return DEFER;}
 
 "if" {return IF;}
 "while" {return WHILE;}

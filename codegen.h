@@ -24,6 +24,7 @@ class CodegenBlockContext{
 public:
   std::map<std::string, std::tuple<llvm::AllocaInst *, VariableDecl *>*> variables;
   std::map<std::string, std::tuple<llvm::Type *, StructStatement *>*> structs;
+
   llvm::BasicBlock *bblock;
   llvm::BasicBlock *endblock;
   llvm::AllocaInst *returnAlloca;
@@ -45,6 +46,7 @@ class CodegenContext {
   CodegenBlockContext global;
   std::vector<CodegenBlockContext *> block;
   llvm::Function *mainF;
+  std::vector<std::vector<Statement *> *> defered;
 
   std::tuple<llvm::AllocaInst *, VariableDecl *> *getVariable(std::string *name);
   llvm::AllocaInst *getVariableAlloca(std::string *name);

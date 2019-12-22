@@ -86,8 +86,22 @@ llvm::Function* funcSignGen(FunctionSignature *fs, CC *cc){
   return f;
 }
 
+void handleDefer(CC *cc){
+  // TODO fix
+  auto defered = cc->defered.back();
+  for(auto i = defered->rbegin(); i != defered->rend(); i++){
+    codegen(*i, cc);
+  }
+  // TODO memory leak
+  defered->clear();
+  delete defered;
+  cc->defered.pop_back();
+}
+
 void funcGen(FunctionDefine *fd, CC *cc){
   // TODO
+
+  cc->defered.push_back(new std::vector<Statement*>());
 
   auto f = funcSignGen(fd->sign, cc);
   auto fargs = fd->sign->args;
@@ -145,7 +159,10 @@ void funcGen(FunctionDefine *fd, CC *cc){
   // TODO we should raise an error for return-less functions
   // cc->builder->CreateBr(endblock);
   cc->builder->SetInsertPoint(endblock);
-  cc->builder->CreateRet(ra);
+
+  handleDefer(cc);
+  
+  cc->builder->CreateRet(cc->builder->CreateLoad(ra));
 
   llvm::verifyFunction(*f);
 
@@ -471,9 +488,13 @@ void ifGen(IfStatement *is, CC *cc){
 
 void blockGen(CodeBlock *cb, CC *cc){
   // TODO
+  cc->defered.push_back(new std::vector<Statement*>());
+
   for(auto s: *cb->stmts){
     codegen(s, cc);
   }
+
+  handleDefer(cc);
 }
 
 void whileGen(WhileStatement *ws, CC *cc){
@@ -519,6 +540,10 @@ void structGen(StructStatement *ss, CC *cc){
   auto s = llvm::StructType::create(cc->context, members_t, *ss->name); // TODO check params
   // TODO set the compiler context
   cc->setStruct(ss->name, s, ss);
+}
+
+void deferGen(DeferStatement* ds, CC *cc){
+  cc->defered.back()->push_back(ds->s);
 }
 
 llvm::Type *structType(StructType *st, CC *cc){
@@ -597,6 +622,9 @@ void codegen(Statement* stmt, CC *cc){
 
   if(t == typeid(StructStatement).hash_code())
     return structGen((StructStatement *) stmt, cc);
+
+  if(t == typeid(DeferStatement).hash_code())
+    return deferGen((DeferStatement*) stmt, cc);
 
   printf("Unknown codegen for class of type %s\n", typeid(*stmt).name());
   exit(1);
