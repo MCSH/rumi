@@ -47,6 +47,7 @@ int comment_nesting = 0;
 "string" {return STRING;}
 "any" {return ANY;}
 "struct" {return STRUCT;}
+"void" {return VOID;}
 
   /* Int keywords */
 "u8" {return U8;}

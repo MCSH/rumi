@@ -649,6 +649,9 @@ llvm::Type* typeGen(Type *type, CC *cc){
   if(t == typeid(AnyType).hash_code())
     return llvm::Type::getVoidTy(cc->context);
 
+  if(t == typeid(VoidType).hash_code())
+    return llvm::Type::getVoidTy(cc->context);
+
   if(t == typeid(StructType).hash_code())
     return structType((StructType*)type, cc);
 

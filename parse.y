@@ -30,7 +30,7 @@ std::vector<Statement *> *mainProgramNode;
 %token DEFINE_AND_ASSIGN
 %token ARROW
 %token RETURN
-%token INT ANY STRING STRUCT
+%token INT ANY STRING STRUCT VOID
 %token U8 U16 U32 U64
 %token S8 S16 S32 S64
 %token F64 F32
@@ -248,6 +248,7 @@ postfix_type
 | F64 {$$=new FloatType(64);}
 | STRING {$$=new StringType();}
 | ANY {$$=new AnyType();}
+| VOID {$$=new VoidType();}
 | int_type
 | postfix_type '[' expr ']' {$$=new ArrayType($1, $3);}
 | ID {$$=new StructType($1);}

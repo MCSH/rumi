@@ -1,0 +1,14 @@
+
+
+malloc := (size: s64) -> *u8;
+free := (pointer: *u8) -> void;
+printf := (t: string, c: ...any)->int;
+
+// test := (size: int) -> *int;
+
+main := () -> int{
+  p : *u8 = malloc(8);
+  *p = 2;
+  printf("p=%d\n", *p);
+  return 0;
+}

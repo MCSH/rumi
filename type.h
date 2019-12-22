@@ -120,6 +120,16 @@ class AnyType: public Type{
   }
 };
 
+class VoidType: public Type{
+  virtual Compatibility compatible(Type *t){
+    return Compatibility::OK; // TODO check
+  }
+
+  virtual VoidType* clone(){
+    return new VoidType(*this);
+  }
+};
+
 class StringType: public Type{
   virtual Compatibility compatible(Type *t){
     if(typeid(*t).hash_code() == typeid(StringType).hash_code())
@@ -141,6 +151,10 @@ public:
 
   virtual StructType* clone(){
     return new StructType(new std::string(*name));
+  }
+
+  virtual std::string displayName(){
+    return "struct " + *name;
   }
 
   virtual ~StructType(){
