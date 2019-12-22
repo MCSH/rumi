@@ -63,4 +63,4 @@ class CodegenContext {
 };
 
 CodegenContext *codegen(std::vector<Statement *> *statements,
-                        std::string outfile);
+                        std::string outfile, bool print);

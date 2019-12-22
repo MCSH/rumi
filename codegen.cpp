@@ -28,7 +28,7 @@ llvm::Value* exprGen(Expression *exp, CC *cc);
 llvm::Type* typeGen(Type*t, CC *cc);
 llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc, Node *n, bool expl);
 
-CC* codegen(std::vector<Statement *> *statements, std::string outfile){
+CC* codegen(std::vector<Statement *> *statements, std::string outfile, bool print){
   CC *context = init_context();
 
   for(auto stmt: *statements){
@@ -36,7 +36,8 @@ CC* codegen(std::vector<Statement *> *statements, std::string outfile){
   }
 
   // ostream, assebly annotation writer, preserve order, is for debug
-  context->module->print(llvm::outs(), nullptr);
+  if(print)
+    context->module->print(llvm::outs(), nullptr);
 
   llvm::verifyModule(*context->module.get());
 

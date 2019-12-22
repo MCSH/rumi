@@ -13,7 +13,7 @@ int main(int argc, char **argv){
     return 1;
   }
   auto statements = compile(argv[1]);
-  codegen(statements, getModuleName(argv[1]));
+  codegen(statements, getModuleName(argv[1]), true);
 
   return 0;
 }
