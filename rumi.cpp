@@ -1,17 +1,7 @@
 #include "compiler.h"
 #include "codegen.h"
-// #include <llvm/ExecutionEngine/Orc/CompileUtils.h>
-// #include <llvm/ExecutionEngine/Orc/Core.h>
-// #include <llvm/ExecutionEngine/Orc/IRCompileLayer.h>
-// #include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
-// #include <llvm/ExecutionEngine/Orc/ObjectTransformLayer.h>
-// #include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
 #include <llvm/IR/DataLayout.h>
 #include <stdio.h>
-// #include "llvm/ExecutionEngine/Orc/LLJIT.h"
-// #include "llvm/Support/Error.h"
-// #include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
-// #include "llvm/ExecutionEngine/SectionMemoryManager.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
 
@@ -26,6 +16,12 @@ int main(int argc, char **argv){
     printf("No file, abort\n");
     return 1;
   }
+
+  LLVMInitializeNativeTarget();
+  LLVMInitializeNativeAsmPrinter();
+  LLVMInitializeNativeAsmParser();
+
+
   auto statements = compile(argv[1]);
   auto cc = codegen(statements, getModuleName(argv[1]), false);
 
