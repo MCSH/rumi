@@ -1,5 +1,6 @@
 #pragma once
 #include "node.h"
+#include <llvm/IR/Instructions.h>
 #include <tuple> 
 
 #include "llvm/Bitcode/BitcodeWriter.h"
@@ -24,6 +25,8 @@ public:
   std::map<std::string, std::tuple<llvm::AllocaInst *, VariableDecl *>*> variables;
   std::map<std::string, std::tuple<llvm::Type *, StructStatement *>*> structs;
   llvm::BasicBlock *bblock;
+  llvm::BasicBlock *endblock;
+  llvm::AllocaInst *returnAlloca;
 
   CodegenBlockContext(llvm::BasicBlock *bb):bblock(bb){}
   CodegenBlockContext(){}
@@ -51,6 +54,9 @@ class CodegenContext {
   llvm::Type* getStructType(std::string *name);
   StructStatement *getStructStruct(std::string *name);
   void setStruct(std::string *name, llvm::Type *t, StructStatement *st);
+
+  llvm::BasicBlock *getEndBlock();
+  llvm::AllocaInst *getReturnAlloca();
 
   CodegenContext() {}
 };

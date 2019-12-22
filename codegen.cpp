@@ -102,17 +102,27 @@ void funcGen(FunctionDefine *fd, CC *cc){
   cc->builder->SetInsertPoint(bblock);
   cc->block.push_back(new CodegenBlockContext(bblock));
 
-  // TODO stackrestore at end, before returns. Use a special block.
+  llvm::BasicBlock *endblock = llvm::BasicBlock::Create(cc->context, "end", f);
+  auto cbc = cc->block.back();
+  cbc->endblock = endblock;
+
+  // TODO check for void
+  auto ra = cc->builder->CreateAlloca(typeGen(fd->sign->returnT, cc), 0, "returnval");
+  cbc->returnAlloca = ra;
+
+
+  // stackrestore at end, before returns
   llvm::Value *ss = nullptr;
   if(fd->dynamicStack){
     ss = cc->builder->CreateCall(llvm::Intrinsic::getDeclaration(
         cc->module.get(), llvm::Intrinsic::stacksave));
-    // TODO the rest of stackrestore
     std::vector<llvm::Value *> a;
     a.push_back(ss);
-    // cc->builder->CreateCall(llvm::Intrinsic::getDeclaration(cc->module.get(),
-    // llvm::Intrinsic::stackrestore), a);
+    cc->builder->SetInsertPoint(endblock);
+    cc->builder->CreateCall(llvm::Intrinsic::getDeclaration(cc->module.get(), llvm::Intrinsic::stackrestore), a);
   }
+  cc->builder->SetInsertPoint(bblock);
+
 
   // handle arguments
   int i = 0;
@@ -131,6 +141,11 @@ void funcGen(FunctionDefine *fd, CC *cc){
     codegen(s, cc);
   }
 
+  // TODO we should raise an error for return-less functions
+  // cc->builder->CreateBr(endblock);
+  cc->builder->SetInsertPoint(endblock);
+  cc->builder->CreateRet(ra);
+
   llvm::verifyFunction(*f);
 
   cc->block.pop_back();
@@ -138,10 +153,11 @@ void funcGen(FunctionDefine *fd, CC *cc){
 
 void retGen(ReturnStatement* rt, CC *cc){
   // TODO check void
-  if(rt->exp)
-    cc->builder->CreateRet(exprGen(rt->exp, cc));
-  else
-    cc->builder->CreateRetVoid();
+  if(rt->exp){
+    cc->builder->CreateStore(exprGen(rt->exp, cc), cc->getReturnAlloca());
+  }
+  // No special thing needed for void
+  cc->builder->CreateBr(cc->getEndBlock());
 }
 
 llvm::Value* intValueGen(IntValue* i, CC *cc){
@@ -749,4 +765,24 @@ StructStatement *CodegenContext::getStructStruct(std::string *name) {
     return nullptr;
   std::tie(std::ignore, s) = *tup;
   return s;
+}
+
+llvm::BasicBlock *CodegenContext::getEndBlock(){
+  for (auto i = block.rbegin(); i != block.rend(); i++) {
+    auto eb = (*i)->endblock;
+    if(eb)
+      return eb;
+  }
+
+  return nullptr;
+}
+
+llvm::AllocaInst *CodegenContext::getReturnAlloca(){
+  for (auto i = block.rbegin(); i != block.rend(); i++) {
+    auto ra = (*i)->returnAlloca;
+    if(ra)
+      return ra;
+  }
+
+  return nullptr;
 }
