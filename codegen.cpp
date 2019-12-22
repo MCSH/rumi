@@ -149,6 +149,10 @@ void funcGen(FunctionDefine *fd, CC *cc){
   llvm::verifyFunction(*f);
 
   cc->block.pop_back();
+
+  if(fd->sign->name->compare("main") == 0){
+    cc->mainF = f;
+  }
 }
 
 void retGen(ReturnStatement* rt, CC *cc){

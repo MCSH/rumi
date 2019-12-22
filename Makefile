@@ -17,7 +17,7 @@ rum:	$(OBJS) rum.cpp codegen.o
 	$(CC) $(COMPILER_EXEC_LLVM_FLAGS) $(OBJS) codegen.o rum.cpp -o rum
 
 rumi:	$(OBJS) rumi.cpp
-	$(CC) $(COMPILER_EXEC_FLAGS) $(OBJS) rumi.cpp -o rumi
+	$(CC) $(COMPILER_EXEC_LLVM_FLAGS) $(OBJS) codegen.o rumi.cpp -o rumi
 
 compiler.o:	compiler.cpp compiler.h $(BASE_HEADS)
 	$(CC) $(COMPILER_OBJECT_FLAGS) compiler.cpp

@@ -44,6 +44,7 @@ class CodegenContext {
   llvm::IRBuilder<> *builder;
   CodegenBlockContext global;
   std::vector<CodegenBlockContext *> block;
+  llvm::Function *mainF;
 
   std::tuple<llvm::AllocaInst *, VariableDecl *> *getVariable(std::string *name);
   llvm::AllocaInst *getVariableAlloca(std::string *name);
