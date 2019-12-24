@@ -256,6 +256,7 @@ llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc,
 
   const auto inttype = typeid(IntType).hash_code();
   const auto floattype = typeid(FloatType).hash_code();
+  const auto pointertype = typeid(PointerType).hash_code();
 
   auto et = typeid(*exprType).hash_code();
   auto bt = typeid(*baseType).hash_code();
@@ -286,9 +287,13 @@ llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc,
       return cc->builder->CreateFPToUI(e, typeGen(baseType, cc));
   }
 
+  if(et == pointertype && bt == pointertype){
+    return cc->builder->CreateBitOrPointerCast(e, typeGen(baseType, cc));
+  }
+
   // TODO implement other conversions.
 
-  printf("un implemented implicit from cast %s to %s\n",
+  printf("un implemented implicit cast from %s to %s\n",
          exprType->displayName().c_str(), baseType->displayName().c_str());
   printf("On line %d\n", n->lineno);
   exit(1);

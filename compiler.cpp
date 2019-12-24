@@ -392,7 +392,7 @@ Type *resolveType(Expression *expr, CC *cc){
     auto t = (StructType*) resolveType(me->e, cc);
     auto ss = cc->getStruct(t->name);
 
-    // TODO error when ss not found
+    // error when ss not found
     if(!ss){
       printf("Struct %s was not found, line %d\n", t->name->c_str(), expr->lineno);
       exit(1);

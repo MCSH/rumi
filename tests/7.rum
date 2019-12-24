@@ -1,0 +1,16 @@
+
+malloc := (s: u64) -> *u8;
+printf := (t: string, c: ...any)->int;
+
+main := ()-> int{
+
+  ptr : *int;
+
+  ptr = malloc(/*sizeof(int)*/32)->*int;
+
+  *ptr = 2;
+
+  printf("*ptr=%d\n", *ptr);
+
+  return 0;
+}
