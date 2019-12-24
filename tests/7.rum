@@ -6,7 +6,7 @@ main := ()-> int{
 
   ptr : *int;
 
-  ptr = malloc(/*sizeof(int)*/32)->*int;
+  ptr = malloc(/*sizeof(int)*/4)->*int;
 
   *ptr = 2;
 
