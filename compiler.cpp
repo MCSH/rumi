@@ -99,6 +99,9 @@ void functionDefineCompile(FunctionDefine *fd, CC *cc){
 void returnStmtCompile(ReturnStatement *rs, CC *cc){
   // TODO handle void?
 
+  if(!rs->exp)
+    return;
+
   compile(rs->exp, cc);
 
   // return type

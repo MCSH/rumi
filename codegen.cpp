@@ -121,10 +121,16 @@ void funcGen(FunctionDefine *fd, CC *cc){
   auto cbc = cc->block.back();
   cbc->endblock = endblock;
 
-  // TODO check for void
-  auto ra = cc->builder->CreateAlloca(typeGen(fd->sign->returnT, cc), 0, "returnval");
-  cbc->returnAlloca = ra;
+  bool isVoid = typeid(*fd->sign->returnT).hash_code() == typeid(VoidType).hash_code();
 
+  llvm::AllocaInst *ra;
+
+  // TODO check for void
+  if(!isVoid){
+    ra  = cc->builder->CreateAlloca(typeGen(fd->sign->returnT, cc), 0,
+                                        "returnval");
+    cbc->returnAlloca = ra;
+  }
 
   // stackrestore at end, before returns
   llvm::Value *ss = nullptr;
@@ -162,7 +168,10 @@ void funcGen(FunctionDefine *fd, CC *cc){
 
   handleDefer(cc);
   
-  cc->builder->CreateRet(cc->builder->CreateLoad(ra));
+  if(isVoid)
+    cc->builder->CreateRetVoid();
+  else 
+    cc->builder->CreateRet(cc->builder->CreateLoad(ra));
 
   llvm::verifyFunction(*f);
 
@@ -349,6 +358,8 @@ llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
     argsV.push_back(exprGen(e, cc));
   }
 
+  if(calleeF->getReturnType()->isVoidTy())
+    return cc->builder->CreateCall(calleeF, argsV);
   return cc->builder->CreateCall(calleeF, argsV, "calltmp");
 }
 

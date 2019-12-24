@@ -77,8 +77,9 @@ public:
 class ReturnStatement: public Statement{
 public:
   Expression *exp;
-  ReturnStatement(Expression *e): exp(e){
-  }
+  ReturnStatement(Expression *e): exp(e){}
+
+  ReturnStatement(){}
 
   virtual ~ReturnStatement(){
     delete exp;

@@ -150,7 +150,15 @@ class StructType:public Type{
 public:
   std::string *name;
   StructType(std::string *name):name(name){
+  }
 
+  virtual Compatibility compatible(Type *t){
+    if(typeid(*t).hash_code() != typeid(StructType).hash_code())
+      return Compatibility::UNCOMPATIBLE;
+    // TODO polymorphism
+    if(name->compare(*((StructType*)t)->name)==0)
+      return Compatibility::OK;
+    return Compatibility::UNCOMPATIBLE;
   }
 
   virtual StructType* clone(){

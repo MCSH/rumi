@@ -170,6 +170,7 @@ variable_assign
 
 return_stmt
 : RETURN expr ';' {$$=new ReturnStatement($2);}
+| RETURN ';' {$$=new ReturnStatement();}
 ;
 
 variable
