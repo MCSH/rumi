@@ -55,6 +55,7 @@ Run `gdb rum` followed by `run test.rum`. You can try the following commands:
 * floats of 32 and 64 bits (float and double in c) f32, f64
 * pointers!
 * arrays
+* function pointers
 
 # Top Priority Language TODO list
 
