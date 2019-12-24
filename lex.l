@@ -65,6 +65,7 @@ int comment_nesting = 0;
 
 "return" {return RETURN;}
 "defer" {return DEFER;}
+"sizeof" {return SIZEOF;}
 
 "if" {return IF;}
 "while" {return WHILE;}

@@ -184,7 +184,9 @@ void retGen(ReturnStatement* rt, CC *cc){
 
 llvm::Value* intValueGen(IntValue* i, CC *cc){
   // TODO Check max size
-  int value = atoi(i->val->c_str());
+  int value = i->size;
+  if(i->val)
+    value = atoi(i->val->c_str());
   // TODO check params?
   return llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), value, true);
 }
@@ -286,7 +288,7 @@ llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc,
     else
       return cc->builder->CreateFPToUI(e, typeGen(baseType, cc));
   }
-
+  cc->builder->getDoubleTy()->getPrimitiveSizeInBits();
   if(et == pointertype && bt == pointertype){
     return cc->builder->CreateBitOrPointerCast(e, typeGen(baseType, cc));
   }
@@ -667,6 +669,14 @@ llvm::Value* exprGen(Expression *exp, CC *cc){
     auto pae = (PointerAccessExpr*) exp;
     auto load = cc->builder->CreateLoad(exprGen(pae->exp, cc), "ptra");
     return load;
+  }
+
+  if(t == typeid(SizeofExpr).hash_code()){
+    auto se = (SizeofExpr*) exp;
+    auto dl = cc->module->getDataLayout();
+    auto size = dl.getTypeAllocSize(typeGen(se->t, cc)); 
+    // TODO memory leak
+    return exprGen(new IntValue(size), cc);
   }
 
   printf("Unknown exprgen for class of type %s\n", typeid(*exp).name());

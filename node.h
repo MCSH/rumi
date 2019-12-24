@@ -27,11 +27,16 @@ public:
 class IntValue: public Expression{
 public:
   std::string *val;
+  int size;
+
   IntValue(std::string *val): val(val){
   }
 
+  IntValue(int size): size(size){}
+
   virtual ~IntValue(){
-    delete val;
+    if(val)
+      delete val;
   }
 };
 
@@ -373,5 +378,16 @@ public:
     delete base;
     if(exp)
       delete exp;
+  }
+};
+
+class SizeofExpr: public Expression{
+public:
+  Type *t;
+
+  SizeofExpr(Type *t): t(t){}
+
+  virtual ~SizeofExpr(){
+    delete t;
   }
 };

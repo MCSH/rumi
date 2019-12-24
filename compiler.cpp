@@ -320,9 +320,14 @@ void compile(Statement *stmt, CC *cc){
   }
 
   if(t == typeid(DeferStatement).hash_code()){
-    // TODO
+    // TODO Maybe we should handle defer here instead of codegen?
     DeferStatement *ds = (DeferStatement*) stmt;
     compile(ds->s, cc);
+    return;
+  }
+
+  if(t == typeid(SizeofExpr).hash_code()){
+    // TODO no compilation?
     return;
   }
 
@@ -428,6 +433,10 @@ Type *resolveType(Expression *expr, CC *cc){
     }
     expr->exprType = f->returnT->clone();
     return expr->exprType;
+  }
+
+  if(t == typeid(SizeofExpr).hash_code()){
+    return new IntType(); // TODO improve?
   }
 
   printf("Undefined resolveType for expression %s at compiler::resolveType\n", typeid(*expr).name());

@@ -2,15 +2,29 @@
 malloc := (s: u64) -> *u8;
 printf := (t: string, c: ...any)->int;
 
+MyStruct : struct{
+  a : int;
+  b : int;
+  c : s32;
+  d : f64;
+}
+
 main := ()-> int{
 
   ptr : *int;
 
-  ptr = malloc(/*sizeof(int)*/4)->*int;
+  ptr = malloc(sizeof(int))->*int;
 
   *ptr = 2;
 
   printf("*ptr=%d\n", *ptr);
+
+  printf("sizeof(MyStruct)=%d\n", sizeof(MyStruct));
+  printf("sizeof(*MyStruct)=%d\n", sizeof(*MyStruct));
+
+  printf("sizeof(f64)=%d\n", sizeof(f64));
+  printf("sizeof(s64)=%d\n", sizeof(s64));
+  printf("sizeof(s8)=%d\n", sizeof(s8));
 
   return 0;
 }

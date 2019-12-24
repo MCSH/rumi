@@ -3,7 +3,7 @@ printf := (t: string, c: ...any)->int;
 myStruct : struct{
   a: int;
   b: int;
-};
+}
 
 main := () -> int{
   t : myStruct;

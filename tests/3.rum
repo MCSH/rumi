@@ -5,7 +5,7 @@ MyStruct : struct{
   id: u32;
   age: u8;
   tettt: s64;
-};
+}
 
 
 main := () -> int{

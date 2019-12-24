@@ -30,6 +30,7 @@ std::vector<Statement *> *mainProgramNode;
 %token DEFINE_AND_ASSIGN
 %token ARROW
 %token RETURN
+%token SIZEOF
 %token INT ANY STRING STRUCT VOID
 %token U8 U16 U32 U64
 %token S8 S16 S32 S64
@@ -97,7 +98,7 @@ args_decl_list
 ;
 
 struct_stmt
-: ID ':' STRUCT '{' struct_members_decl '}' ';' {$$=new StructStatement($1, $5);}
+: ID ':' STRUCT '{' struct_members_decl '}' {$$=new StructStatement($1, $5);}
 ;
 
 struct_members_decl
@@ -179,6 +180,7 @@ variable
 
 expr
 : additive_expr
+| SIZEOF '(' type ')' {$$=new SizeofExpr($3);}
 ;
 
 additive_expr
