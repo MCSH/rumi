@@ -334,6 +334,14 @@ void variableAssignGen(VariableAssign *va, CC *cc){
 llvm::Value* variableExprGen(VariableExpr *ve, CC *cc){
   llvm::AllocaInst *alloc = cc->getVariableAlloca(ve->name);
   if(!alloc){
+    // is it a function?
+
+    llvm::Function *f = cc->module->getFunction(*ve->name);
+    if(f){
+      // We have a function
+      return f;
+    }
+
     printf("Unknown variable %s\n", ve->name->c_str());
     printf("This is a compiler bug reported in codegen::variableExprGen\n");
     exit(1);
@@ -347,10 +355,25 @@ llvm::Value* variableExprGen(VariableExpr *ve, CC *cc){
 llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
   // TODO args, function resolve could be improved!
   llvm::Function *calleeF = cc->module->getFunction(fc->name->c_str());
+  llvm::Value *cf;
+  bool is_void;
   if (!calleeF) {
-    printf("Function not found %s\n", fc->name->c_str());
-    printf("This is a compiler bug, reported from codegen::functionCallExprGen\n");
-    exit(1);
+    // maybe it's a function variable
+    auto vd = cc->getVariableDecl(fc->name);
+
+    if(typeid(*vd->t).hash_code() == typeid(FunctionType).hash_code()){
+      // it's a function variable
+      auto cd = cc->getVariableAlloca(fc->name);
+      cf = cc->builder->CreateLoad(cd);
+    } else {
+      printf("Function not found %s\n", fc->name->c_str());
+      printf("This is a compiler bug, reported from "
+             "codegen::functionCallExprGen\n");
+      exit(1);
+    }
+  } else {
+    is_void = calleeF->getReturnType()->isVoidTy();
+    cf = calleeF;
   }
 
   std::vector<llvm::Value *> argsV;
@@ -358,9 +381,9 @@ llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
     argsV.push_back(exprGen(e, cc));
   }
 
-  if(calleeF->getReturnType()->isVoidTy())
-    return cc->builder->CreateCall(calleeF, argsV);
-  return cc->builder->CreateCall(calleeF, argsV, "calltmp");
+  if(is_void)
+    return cc->builder->CreateCall(cf, argsV);
+  return cc->builder->CreateCall(cf, argsV, "calltmp");
 }
 
 llvm::Value* binaryOpExprGen(BinaryOperation *bo, CC *cc){
@@ -730,6 +753,18 @@ llvm::Type* typeGen(Type *type, CC *cc){
       return llvm::ArrayType::get(typeGen(at->base, cc), at->count);
     else
       return typeGen(at->base, cc);
+  }
+
+  if(t == typeid(FunctionType).hash_code()){
+    FunctionType *ft = (FunctionType*) type;
+    std::vector<llvm::Type *> params;
+
+    for(auto arg: *ft->args)
+      params.push_back(typeGen(arg, cc));
+
+    // TODO this should be a poitner by default
+
+    return llvm::PointerType::getUnqual(llvm::FunctionType::get(typeGen(ft->returnType, cc), params,false)); // TODO varargs
   }
 
   printf("Unknown typeGen for a class of type %s\n", typeid(*type).name());

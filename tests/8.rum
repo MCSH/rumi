@@ -1,0 +1,25 @@
+
+printf := (T: string, s: ...any)->void;
+
+add := (a: int, b: int) -> int{
+  return a + b;
+}
+
+mult := (a: int, b: int)-> int{
+  return a*b;
+}
+
+main := ()->int{
+
+  f : (int, int)-> int;
+
+  f = add;
+
+  printf("f(1,2)=%d\n", f(1,2));
+
+  f = mult;
+
+  printf("f(1,2)=%d\n", f(1,2));
+
+  return 0;
+}

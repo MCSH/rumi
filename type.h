@@ -56,6 +56,8 @@ public:
     IntType *target = (IntType*)t;
 
     if(this->size == 0){
+      if(target->size == 0)
+        return Compatibility::OK;
       return Compatibility::ImpCast; // TODO
     }
 

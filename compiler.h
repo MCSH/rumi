@@ -29,6 +29,7 @@ public:
     // TODO check for name collision
     // TODO maybe register as var?
     functions[*name] = fs;
+    newVar(name, fs->getType());
   }
 };
 

@@ -185,8 +185,13 @@ void compile(Statement *stmt, CC *cc){
     // check function exists
     auto fs = cc->getFunction(fce->name);
     if(!fs){
-      printf("Function not found %s\n", fce->name->c_str());
-      exit(1);
+      // it could be a function variable
+      auto fv = cc->getVariableType(fce->name);
+
+      if(!fv || typeid(*fv).hash_code()!=typeid(FunctionType).hash_code()){
+        printf("Function not found %s\n", fce->name->c_str());
+        exit(1);
+      }
     }
 
     // generate arguments
@@ -430,6 +435,16 @@ Type *resolveType(Expression *expr, CC *cc){
     // TODO check for clone
     auto f = cc->getFunction(fce->name);
     if(!f){
+      // maybe it's a function variable
+      auto f = cc->getVariableType(fce->name);
+
+      // verify it is of function type:
+      if(f && typeid(*f).hash_code() == typeid(FunctionType).hash_code()){
+        // It's okay
+        expr->exprType = f->clone();
+        return expr->exprType;
+      }
+      
       printf("Unknown function %s at line %d\n",
              fce->name->c_str(), fce->lineno);
       exit(1);
@@ -444,4 +459,19 @@ Type *resolveType(Expression *expr, CC *cc){
 
   printf("Undefined resolveType for expression %s at compiler::resolveType\n", typeid(*expr).name());
   exit(1);
+}
+
+Type *FunctionSignature::getType(){
+  // TODO maybe cache this?
+  if(fType)
+    return fType;
+
+  std::vector<Type *> *a=new std::vector<Type*>();
+
+  for(auto arg: *args){
+    a->push_back(arg->t->clone());
+  }
+
+  fType = new FunctionType(a, returnT->clone());
+  return fType;
 }

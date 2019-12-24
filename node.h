@@ -1,5 +1,6 @@
 #pragma once
 #include "type.h"
+#include <algorithm>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -131,6 +132,10 @@ public:
       delete a;
     }
   }
+
+  Type *fType;
+
+  Type *getType();
 
   virtual ~FunctionSignature(){
     delete name;
@@ -390,5 +395,77 @@ public:
 
   virtual ~SizeofExpr(){
     delete t;
+  }
+};
+
+class TypeNode: public Expression{
+public:
+  Type *exprType;
+  TypeNode(Type *exprType): exprType(exprType){}
+};
+
+class FunctionType: public Type{
+public:
+  Type *returnType;
+  std::vector<Type*> *args;
+  FunctionType(std::vector<Statement *> *args, Type* returnType): returnType(returnType){
+    this->args = new std::vector<Type*>();
+    for(auto a: *args){
+      TypeNode *tn = (TypeNode *) a;
+      this->args->push_back(tn->exprType->clone());
+      delete tn;
+    }
+    delete args;
+  }
+
+  FunctionType(std::vector<Type *> *args, Type *returnType): returnType(returnType), args(args){}
+
+  virtual FunctionType *clone(){
+    // TODO
+    std::vector<Type *> *nargs = new std::vector<Type *>();
+
+    for(auto a: *args){
+      nargs->push_back(a->clone());
+    }
+
+    return new FunctionType(nargs, returnType->clone());
+  }
+
+
+  virtual std::string displayName(){
+
+    std::string argsName = "";
+    for(auto arg: *args){
+      argsName = argsName + arg->displayName() + ", ";
+    }
+
+    return "Function of type ("+argsName+")->"+returnType->displayName();
+  }
+
+  virtual Compatibility compatible(Type *t){
+    if(typeid(*t).hash_code()!= typeid(FunctionType).hash_code())
+      return Compatibility::UNCOMPATIBLE;
+
+    // TODO this could be improved
+
+    auto ft = (FunctionType*) t;
+
+    if(ft->args->size() != args->size())
+      return Compatibility::UNCOMPATIBLE;
+
+    Compatibility ans = returnType->compatible(ft->returnType);
+
+    for(int i = 0 ; i < args->size(); i ++){
+      Type *tmp = (*args)[i];
+      Type *tmp2 = (*ft->args)[i];
+      ans = std::max(ans, tmp->compatible(tmp2));
+    }
+    
+    return ans;
+  }
+
+  virtual ~FunctionType(){
+    delete returnType;
+    delete args;
   }
 };

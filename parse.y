@@ -38,7 +38,9 @@ std::vector<Statement *> *mainProgramNode;
 %token TRIPLE_DOTS
 %token IF ELSE WHILE DEFER
 
-%type <type> type int_type prefix_type postfix_type
+%type <type> type int_type prefix_type postfix_type function_type
+
+%type <stmt> stype
 
 %type <exp> additive_expr multiplicative_expr unary_expr postfix_expr
 %type <exp> value expr variable function_call cast_expr pointer_access
@@ -52,7 +54,7 @@ std::vector<Statement *> *mainProgramNode;
 %type <functionSignature> function_signature 
 %type <codeBlock> function_body 
 
-%type <arr> program top_levels stmts args_decl args_decl_list struct_members_decl
+%type <arr> program top_levels stmts args_decl args_decl_list struct_members_decl type_array type_arg
 %type <arrE> args args_list
 
 %left '+' '-'
@@ -244,6 +246,25 @@ value
 
 type
 : prefix_type
+| function_type
+;
+
+function_type // TODO varargs
+: '(' type_arg ')' ARROW type {$$=new FunctionType($2, $5);}
+;
+
+type_arg
+: empty {$$=new std::vector<Statement *>;}
+| type_array
+;
+
+type_array
+: stype {$$=new std::vector<Statement *>; $$->push_back($1);}
+| type_array ',' stype {$$=$1; $$->push_back($3);}
+;
+
+stype
+: type {$$=new TypeNode($1);}
 ;
 
 prefix_type
@@ -261,7 +282,7 @@ postfix_type
 | int_type
 | postfix_type '[' expr ']' {$$=new ArrayType($1, $3);}
 | ID {$$=new StructType($1);}
-| '(' type ')' {$$=$2;}
+// | '(' type ')' {$$=$2;}
 ;
 
 int_type
