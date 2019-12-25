@@ -381,13 +381,19 @@ llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
   if (!calleeF) {
     // maybe it's a function variable
     auto vd = cc->getVariableDecl(fc->name);
+    ArgDecl* ad;
 
-    if(typeid(*vd->t).hash_code() == typeid(FunctionType).hash_code()){
+    if(vd && (ad=dynamic_cast<ArgDecl*>(vd)) && typeid(*ad->t).hash_code()==typeid(FunctionType).hash_code()){
+      auto cd = cc->getVariableAlloca(fc->name);
+      cf = cc->builder->CreateLoad(cd);
+    }
+    else if(vd && typeid(*vd->t).hash_code() == typeid(FunctionType).hash_code()){
       // it's a function variable
       auto cd = cc->getVariableAlloca(fc->name);
       cf = cc->builder->CreateLoad(cd);
     } else {
       printf("Function not found %s\n", fc->name->c_str());
+      printf("line no %d\n", fc->lineno);
       printf("This is a compiler bug, reported from "
              "codegen::functionCallExprGen\n");
       exit(1);

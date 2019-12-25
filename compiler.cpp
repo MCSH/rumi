@@ -445,7 +445,7 @@ Type *resolveType(Expression *expr, CC *cc){
       // verify it is of function type:
       if(f && typeid(*f).hash_code() == typeid(FunctionType).hash_code()){
         // It's okay
-        expr->exprType = f->clone();
+        expr->exprType = ((FunctionType*)f)->returnType->clone();
         return expr->exprType;
       }
       

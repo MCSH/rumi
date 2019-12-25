@@ -121,6 +121,10 @@ class AnyType: public Type{
     return Compatibility::OK;
   }
 
+  virtual std::string displayName(){
+    return "any";
+  }
+
   virtual AnyType* clone(){
     return new AnyType(*this);
   }
@@ -141,6 +145,10 @@ class StringType: public Type{
     if(typeid(*t).hash_code() == typeid(StringType).hash_code())
       return Compatibility::OK;
     return Compatibility::UNCOMPATIBLE;
+  }
+
+  virtual std::string displayName(){
+    return "string";
   }
 
   virtual StringType* clone(){
