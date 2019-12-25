@@ -204,5 +204,4 @@ public:
     delete base;
   }
 };
-  
-// ArrayType moved to Node.h
+

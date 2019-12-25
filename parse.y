@@ -281,6 +281,7 @@ postfix_type
 | VOID {$$=new VoidType();}
 | int_type
 | postfix_type '[' expr ']' {$$=new ArrayType($1, $3);}
+| postfix_type '[' ']' {$$=new ArrayType($1);}
 | ID {$$=new StructType($1);}
 // | '(' type ')' {$$=$2;}
 ;

@@ -211,7 +211,7 @@ void variableDeclGen(VariableDecl *vd, CC *cc) {
   auto bblock = cc->block.back()->bblock;
 
   if (auto at = dynamic_cast<ArrayType *>(vd->t)) {
-    if (!at->count) {
+    if (at->exp) {
       // stacksave/stackrestore? TODO
       auto count = exprGen(at->exp, cc);
       count = castGen(at->exp->exprType, at->base, count, cc, vd, true);
@@ -310,6 +310,13 @@ llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc,
   exit(1);
 }
 
+llvm::Value* arrayToPointer(llvm::Type* t, llvm::Value * alloc, CC *cc){
+  std::vector<llvm::Value *> indices(2);
+  indices[0] = llvm::ConstantInt::get(cc->context, llvm::APInt(64, 0, true));
+  indices[1] = llvm::ConstantInt::get(cc->context, llvm::APInt(64, 0, true));
+  return cc->builder->CreateInBoundsGEP(t, alloc, indices, "arrptr");
+}
+
 void variableAssignGen(VariableAssign *va, CC *cc){
   llvm::AllocaInst *alloc = (llvm::AllocaInst *) getAlloca(va->base, cc);
   
@@ -321,6 +328,20 @@ void variableAssignGen(VariableAssign *va, CC *cc){
     }
     exit(1);
   }
+
+  if(typeid(*va->exp->exprType).hash_code()==typeid(ArrayType).hash_code()){
+    // TODO check?
+    auto art = (ArrayType*) va->exp->exprType;
+    // auto arrayAlloc = cc->builder->CreateLoad(getAlloca(va->exp, cc));
+    auto arrayAlloc = getAlloca(va->exp, cc);
+    // auto at = typeGen(art->base, cc);
+    auto at = typeGen(art, cc);
+    auto ptr = arrayToPointer(at, arrayAlloc, cc);
+    cc->builder->CreateStore(ptr, alloc);
+    return ;
+  }
+
+
   auto e = exprGen(va->exp, cc);
 
   // Type check
@@ -378,7 +399,18 @@ llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
 
   std::vector<llvm::Value *> argsV;
   for(auto e: *fc->expr){
-    argsV.push_back(exprGen(e, cc));
+    if(e->exprType && typeid(*e->exprType).hash_code() == typeid(ArrayType).hash_code()){
+      // For Arrays, send the pointer to the first element
+
+      ArrayType *at = (ArrayType*) e->exprType;
+      auto t = typeGen(at, cc);
+
+      auto alloc = getAlloca(e, cc);
+
+      argsV.push_back(arrayToPointer(t, alloc, cc));
+    } else {
+      argsV.push_back(exprGen(e, cc));
+    }
   }
 
   if(is_void)
@@ -458,7 +490,7 @@ llvm::Value* arrayAlloca(ArrayExpr* ae, CC *cc){
     indices[0] = llvm::ConstantInt::get(cc->context, llvm::APInt(64, 0, true));
     indices[1] = ind;
     return cc->builder->CreateInBoundsGEP(t, alloc, indices, "arrptr");
-  } else {
+  } else if(at->exp){
     // This is basically a pointer
     auto t = typeGen(ae->e->exprType, cc);
     auto alloc = getAlloca(ae->e, cc);
@@ -466,6 +498,14 @@ llvm::Value* arrayAlloca(ArrayExpr* ae, CC *cc){
     indices[0] = exprGen(ae->mem, cc);
     auto tmp = cc->builder->CreateInBoundsGEP(t, alloc, indices, "ptrarrptr");
     return tmp;
+  } else {
+    // I have no clue how this is working, but it does.
+    auto t = typeGen(ae->e->exprType, cc);
+    auto alloc = getAlloca(ae->e, cc);
+    alloc = cc->builder->CreateLoad(alloc);
+    std::vector<llvm::Value *> indices(1);
+    indices[0] = exprGen(ae->mem, cc);
+    return cc->builder->CreateInBoundsGEP(t->getPointerElementType(), alloc, indices, "ptrarrptr");
   }
 }
 
@@ -751,8 +791,10 @@ llvm::Type* typeGen(Type *type, CC *cc){
     // check for count
     if(at->count)
       return llvm::ArrayType::get(typeGen(at->base, cc), at->count);
-    else
+    else if(at->exp)
       return typeGen(at->base, cc);
+    else
+      return llvm::PointerType::getUnqual(typeGen(at->base, cc));
   }
 
   if(t == typeid(FunctionType).hash_code()){

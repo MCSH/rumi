@@ -360,23 +360,39 @@ public:
 
 class ArrayType: public Type{
 public:
-  Type *base;
-  int count;
-  Expression *exp;
+  Type *base = 0;
+  int count = 0;
+  Expression *exp = 0;
 
   ArrayType(Type *b, Expression *e): base(b), exp(e){}
   ArrayType(Type *b, int count): base(b), count(count){}
+  ArrayType(Type *b): base(b){}
 
   virtual ArrayType *clone(){
     if(count){
       return new ArrayType(base->clone(), count);
     }
-    return new ArrayType(base->clone(), exp);
+    if(exp)
+      return new ArrayType(base->clone(), exp);
+    return new ArrayType(base->clone());
+  }
+
+  virtual Compatibility compatible(Type *t){
+    if(typeid(*t).hash_code()!= typeid(ArrayType).hash_code()) // TODO or pointer?
+      return Compatibility::UNCOMPATIBLE;
+
+    auto at = (ArrayType*) t;
+
+    // TODO check for size, etc
+
+    return base->compatible(at->base);
   }
 
   virtual std::string displayName(){
     if(count)
       return "Array of " + base->displayName() + " of size " + std::to_string(count);
+    if(exp)
+      return "Array of " + base->displayName() + " of unknown size at runtime";
     return "Array of " + base->displayName();
   }
 

@@ -122,11 +122,15 @@ void variableDeclCompile(VariableDecl *vd,CC *cc){
   // check for arrays
   if (vd->t) {
     if (ArrayType *at = dynamic_cast<ArrayType *>(vd->t)){
-      if (auto *mt = dynamic_cast<IntValue *>(at->exp)) {
-        at->count = atoi(mt->val->c_str());
-      } else {
-        cc->getCurrentFunction()->dynamicStack = true;
-        compile(at->exp, cc);
+      if(at->exp || at->count){
+        if (auto *mt = dynamic_cast<IntValue *>(at->exp)) {
+          at->count = atoi(mt->val->c_str());
+          delete at->exp; // TODO problematic, remove in case of segfault
+          at->exp = nullptr;
+        } else {
+          cc->getCurrentFunction()->dynamicStack = true;
+          compile(at->exp, cc);
+        }
       }
     }
   }
