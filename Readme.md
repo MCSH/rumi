@@ -62,7 +62,6 @@ Run `gdb rum` followed by `run test.rum`. You can try the following commands:
 
 * heap allocation / deallocation (malloc/free)
 * better vararg support
-* better array support
 
 # Current Compiler TODO list:
 
