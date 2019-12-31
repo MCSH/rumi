@@ -103,7 +103,6 @@ public:
   }
 };
 
-
 class ArgDecl: public VariableDecl{
 public:
   std::string *name;
@@ -487,5 +486,17 @@ public:
   virtual ~FunctionType(){
     delete returnType;
     delete args;
+  }
+};
+
+class ImportStatement: public Statement{
+public:
+  std::string *name;
+  std::vector<Statement *> *stmts;
+  ImportStatement(std::string *n): name(n){}
+  virtual ~ImportStatement(){
+    delete name;
+    if(stmts)
+      delete stmts;
   }
 };

@@ -1,0 +1,7 @@
+import "base.rum"
+
+main := () -> int {
+  printf("in main\n");
+
+  return 0;
+}

@@ -718,6 +718,13 @@ llvm::Type *floatTypeGen(FloatType *ft, CC *cc){
 void codegen(Statement* stmt, CC *cc){
   auto t = typeid(*stmt).hash_code();
 
+  if(t == typeid(ImportStatement).hash_code()){
+    ImportStatement *is = (ImportStatement*) stmt;
+    for(auto s : *is->stmts)
+      codegen(s, cc);
+    return;
+  }
+
   if(t == typeid(FunctionDefine).hash_code())
     return funcGen((FunctionDefine*)stmt, cc);
 

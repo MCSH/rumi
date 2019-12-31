@@ -1,6 +1,8 @@
 #include "compiler.h"
 #include "node.h"
 #include "type.h"
+#include <unistd.h> // chdir
+#include <libgen.h> // dirname
 
 
 int yyparse();
@@ -19,14 +21,47 @@ void compile(std::vector<Statement *> *stmts){
   }
 }
 
+std::vector<Statement *>* compile(std::vector<Statement *> *stmts, CC *cc){
+  for(auto s: *stmts)
+    compile(s, cc);
+
+  return stmts;
+}
+
 std::vector<Statement *>* compile(char *fileName){
   yyin = fopen(fileName, "r");
+
+  chdir(dirname(fileName)); // TODO change for windows
+
   extern std::vector<Statement *> *mainProgramNode;
   yyparse();
+  auto p = mainProgramNode;
 
-  compile(mainProgramNode);
+  compile(p);
 
-  return mainProgramNode;
+  return p;
+}
+
+void importCompile(ImportStatement *is, CC *cc){
+  // TODO improve
+  int len = is->name->size() -1;
+  char *fname = (char*)malloc(sizeof(char*) *len);
+  for(int i = 1; i < len; i++){
+    fname[i-1] = (*is->name)[i];
+  }
+  fname[len-1] = 0;
+  yyin = fopen(fname, "r");
+  if(!yyin){
+    printf("Could not import file %s\n", fname);
+    exit(1);
+  }
+  extern std::vector<Statement *> *mainProgramNode;
+  yyparse();
+  auto p = mainProgramNode;
+
+  p = compile(p, cc);
+  // merge me with the mainProgram
+  is->stmts = p;
 }
 
 Expression *castCompile(Type *exprType, Type *baseType, Expression *e, CC *cc, Node *n, bool expl){
@@ -170,6 +205,9 @@ void compile(Statement *stmt, CC *cc){
   if(Expression *exp = dynamic_cast<Expression*>(stmt)){
     resolveType(exp, cc);
   }
+
+  if(t == typeid(ImportStatement).hash_code())
+    return importCompile((ImportStatement*) stmt, cc);
 
   if(t == typeid(FunctionDefine).hash_code())
     return functionDefineCompile((FunctionDefine*) stmt, cc);

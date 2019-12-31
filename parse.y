@@ -31,6 +31,7 @@ std::vector<Statement *> *mainProgramNode;
 %token ARROW
 %token RETURN
 %token SIZEOF
+%token IMPORT
 %token INT ANY STRING STRUCT VOID
 %token U8 U16 U32 U64
 %token S8 S16 S32 S64
@@ -48,7 +49,7 @@ std::vector<Statement *> *mainProgramNode;
 // TODO reorder these
 
 %type <stmt> return_stmt stmt variable_decl variable_assign if_stmt while_stmt
-%type <stmt> top_level function_define arg_decl vararg_decl struct_stmt
+%type <stmt> top_level function_define arg_decl vararg_decl struct_stmt import_stmt
 %type <stmt> defer_stmt
 
 %type <functionSignature> function_signature 
@@ -84,6 +85,7 @@ top_level
 : function_define
 | function_signature ';' {$$=$1;}
 | struct_stmt
+| import_stmt
 ;
 
 function_define
@@ -97,6 +99,11 @@ function_signature
 args_decl_list
 : args_decl
 | empty {$$=nullptr;}
+;
+
+import_stmt
+: IMPORT SSTRING {$$=new ImportStatement($2);}
+
 ;
 
 struct_stmt

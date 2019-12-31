@@ -1,5 +1,5 @@
 
-NUMTESTS = 11
+NUMTESTS = 12
 OBJS = lex.o parse.o compiler.o type.o
 BASE_HEADS = node.h type.h
 CODE_GEN = lex.cpp parse.cpp parse.hpp

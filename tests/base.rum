@@ -1,0 +1,2 @@
+
+printf := (T: string, s: ...any)->void;
