@@ -80,7 +80,9 @@ public:
   Expression *exp;
   ReturnStatement(Expression *e): exp(e){}
 
-  ReturnStatement(){}
+  ReturnStatement(){
+    exp = 0;
+  }
 
   virtual ~ReturnStatement(){
     delete exp;
