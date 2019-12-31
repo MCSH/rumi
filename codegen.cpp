@@ -409,11 +409,19 @@ llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
       // For Arrays, send the pointer to the first element
 
       ArrayType *at = (ArrayType*) e->exprType;
+
       auto t = typeGen(at, cc);
-
       auto alloc = getAlloca(e, cc);
-
-      argsV.push_back(arrayToPointer(t, alloc, cc));
+      // TODO not for pointer arrays!
+      if(at->count){
+        argsV.push_back(arrayToPointer(t, alloc, cc));
+      }
+      else if(at->exp){
+        argsV.push_back(alloc);
+      }
+      else{
+        argsV.push_back(cc->builder->CreateLoad(alloc));
+      }
     } else {
       argsV.push_back(exprGen(e, cc));
     }
