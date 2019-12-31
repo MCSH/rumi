@@ -229,7 +229,7 @@ postfix_expr // Later add array access, etc here
 ;
 
 pointer_access
-: '*' unary_expr {$$=new PointerAccessExpr($2);} // TODO should it be expr?
+: '*' cast_expr {$$=new PointerAccessExpr($2);} // TODO should it be expr?
 ;
 
 function_call
