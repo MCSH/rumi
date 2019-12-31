@@ -288,6 +288,7 @@ class StructStatement: public Statement{
 public:
   std::string *name;
   std::vector<VariableDecl *> *members;
+  bool has_initializer = false;
   StructStatement(std::string *name, std::vector<Statement *> *m): name(name){
     members = new std::vector<VariableDecl *>();
     for(auto s: *m)

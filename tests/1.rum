@@ -50,13 +50,12 @@ binop_test := (a: int, b: int)-> void{
 }
 
 MyStruct : struct{
-  id: int;
+  id: int = 3;
   b : int;
 }
 
 struct_test := () -> void{
   t: MyStruct;
-  t.id = 3;
   t.b = 12;
   printf("t.b=%d\n", t.b);
   printf("t.id=%d\n", t.id);

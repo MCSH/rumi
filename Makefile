@@ -43,7 +43,7 @@ parse.cpp:	parse.y $(BASE_HEADS)
 	bison -d -l -o parse.cpp parse.y
 
 .PHONY: tests
-tests:	rum
+tests:	rum rumi
 	rm -f tests/*.o || true
 	number=1 ; while [[ $$number -le $(NUMTESTS) ]] ; do \
 		echo "==============" ; \

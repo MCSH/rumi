@@ -150,6 +150,11 @@ void returnStmtCompile(ReturnStatement *rs, CC *cc){
 void structCompile(StructStatement *ss, CC *cc){
   cc->getBlock()->newStruct(ss->name, ss);
   // TODO do we want to do anything with the members?
+  for(VariableDecl *s: *ss->members){
+    compile(s, cc);
+    if(s->exp)
+      ss->has_initializer = true;
+  }
 }
 
 void variableDeclCompile(VariableDecl *vd,CC *cc){

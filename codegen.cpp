@@ -234,6 +234,29 @@ void variableDeclGen(VariableDecl *vd, CC *cc) {
     auto exp = exprGen(vd->exp, cc);
     cc->builder->CreateStore(exp, alloc);
   }
+
+  if(typeid(*vd->t).hash_code() == typeid(StructType).hash_code()){
+    StructStatement *ss = cc->getStructStruct(((StructType*)vd->t)->name);
+    if(ss->has_initializer){
+      for(int i=0; i < ss->members->size(); i++){
+        auto vd = (*ss->members)[i];
+        if(vd->exp){
+
+          llvm::Value* member_index = llvm::ConstantInt::get(cc->context, llvm::APInt(32, i, true));
+
+          std::vector<llvm::Value *> indices(2);
+          indices[0] =
+              llvm::ConstantInt::get(cc->context, llvm::APInt(32, 0, true));
+          indices[1] = member_index;
+
+          llvm::Value *member_ptr =
+              cc->builder->CreateInBoundsGEP(t, alloc, indices, "memberptr");
+
+          cc->builder->CreateStore(exprGen(vd->exp, cc), member_ptr);
+        }
+      }
+    }
+  }
 }
 
 llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc,
@@ -412,7 +435,7 @@ llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
 
       auto t = typeGen(at, cc);
       auto alloc = getAlloca(e, cc);
-      // TODO not for pointer arrays!
+
       if(at->count){
         argsV.push_back(arrayToPointer(t, alloc, cc));
       }
