@@ -137,6 +137,7 @@ void variableDeclCompile(VariableDecl *vd,CC *cc){
   // check exp type
   if(vd->exp){
     if(vd->t){
+      compile(vd->exp, cc);
       auto etype = resolveType(vd->exp, cc);
       auto c = vd->t->compatible(etype);
       if(c==OK || c==ImpCast){
@@ -148,6 +149,7 @@ void variableDeclCompile(VariableDecl *vd,CC *cc){
       }
       type = vd->t;
     } else {
+      compile(vd->exp, cc);
       type = resolveType(vd->exp, cc);
     }
   } else {

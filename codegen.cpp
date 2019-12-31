@@ -428,28 +428,70 @@ llvm::Value* binaryOpExprGen(BinaryOperation *bo, CC *cc){
   auto *lhs = exprGen(bo->lhs, cc);
   auto *rhs = exprGen(bo->rhs, cc);
 
-  // TODO change this based on type somehow?
-  llvm::Instruction::BinaryOps instr;
+  auto lt = typeid(*bo->lhs->exprType).hash_code();
+  auto rt = typeid(*bo->rhs->exprType).hash_code();
 
-  switch(bo->op){
-  case Operation::PLUS:
-    instr = llvm::Instruction::Add;
-    break;
-  case Operation::SUB:
-    instr = llvm::Instruction::Sub;
-    break;
-  case Operation::MULT:
-    instr = llvm::Instruction::Mul;
-    break;
-  case Operation::DIV:
-    instr = llvm::Instruction::SDiv;
-    break;
-  case Operation::MOD:
-    instr = llvm::Instruction::SRem;
-    break;
+  auto it = typeid(IntType).hash_code();
+  auto ft = typeid(FloatType).hash_code();
+
+  auto pt = typeid(PointerType).hash_code();
+
+  // TODO change this based on type somehow?
+  if((lt == it || lt == ft) && (rt== it || rt == ft)){
+    llvm::Instruction::BinaryOps instr;
+
+    switch (bo->op) {
+    case Operation::PLUS:
+      instr = llvm::Instruction::Add;
+      break;
+    case Operation::SUB:
+      instr = llvm::Instruction::Sub;
+      break;
+    case Operation::MULT:
+      instr = llvm::Instruction::Mul;
+      break;
+    case Operation::DIV:
+      instr = llvm::Instruction::SDiv;
+      break;
+    case Operation::MOD:
+      instr = llvm::Instruction::SRem;
+      break;
+    }
+
+    return cc->builder->CreateBinOp(instr, lhs, rhs);
   }
 
-  return cc->builder->CreateBinOp(instr, lhs, rhs);
+  if(((pt == lt && rt == it) || (pt == it && rt == pt)) &&
+     (bo->op == PLUS || bo->op == SUB)){
+    // TODO handle the type in compiler?
+    // TODO handling pointer
+
+    // Set lhs to the pointer
+    if(rt == pt){
+      auto tmp = lhs;
+      lhs = rhs;
+      rhs = tmp;
+
+      auto tmp2 = bo->lhs;
+      bo->lhs = bo->rhs;
+      bo->rhs = tmp2;
+    }
+
+    // TODO cast rhs to i64 (or 32 dep on arch)
+
+    if(bo->op == SUB){
+      auto mone = llvm::ConstantInt::get(cc->context, llvm::APInt(64, -1, false));
+      rhs = cc->builder->CreateBinOp(llvm::Instruction::Mul, rhs, mone);
+    }
+
+    auto t = typeGen(bo->lhs->exprType, cc);
+
+    std::vector<llvm::Value *> indices(1);
+    indices[0] = rhs;
+    return cc->builder->CreateInBoundsGEP(t->getPointerElementType(), lhs, indices, "ptrarrptr");
+  }
+
+  printf("Can't run the expression on types %s and %s on line %d\n", bo->lhs->exprType->displayName().c_str(), bo->rhs->exprType->displayName().c_str(), bo->lineno);
 }
 
 llvm::Value* stringvalueGen(StringValue *sv, CC *cc){

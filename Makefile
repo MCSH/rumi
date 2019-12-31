@@ -1,6 +1,6 @@
 
-NUMTESTS = 10
-OBJS = lex.o parse.o compiler.o
+NUMTESTS = 11
+OBJS = lex.o parse.o compiler.o type.o
 BASE_HEADS = node.h type.h
 CODE_GEN = lex.cpp parse.cpp parse.hpp
 CC = clang++
@@ -33,6 +33,9 @@ lex.cpp:	lex.l
 
 parse.o: parse.cpp
 	$(CC) $(COMPILER_OBJECT_FLAGS) parse.cpp
+
+type.o: type.cpp type.h
+	$(CC) $(COMPILER_OBJECT_FLAGS) type.cpp
 
 parse.hpp: parse.cpp parse.o
 

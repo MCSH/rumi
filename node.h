@@ -378,8 +378,12 @@ public:
   }
 
   virtual Compatibility compatible(Type *t){
-    if(typeid(*t).hash_code()!= typeid(ArrayType).hash_code()) // TODO or pointer?
+    auto tid = typeid(*t).hash_code();
+    if(tid!= typeid(ArrayType).hash_code() && tid!=typeid(PointerType).hash_code())
       return Compatibility::UNCOMPATIBLE;
+
+    if(tid == typeid(PointerType).hash_code())
+      return base->compatible(((PointerType*)t)->base);
 
     auto at = (ArrayType*) t;
 

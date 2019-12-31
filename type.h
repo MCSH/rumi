@@ -194,15 +194,7 @@ public:
     return new PointerType(base->clone());
   }
 
-  virtual Compatibility compatible(Type *t){
-    if(typeid(*t).hash_code() != typeid(PointerType).hash_code()){
-      return Compatibility::UNCOMPATIBLE; // TODO exceptions such as arrays and strings
-    }
-
-    PointerType *pt = (PointerType*)t;
-
-    return base->compatible(pt->base);
-  }
+  virtual Compatibility compatible(Type *t);
 
   virtual std::string displayName(){
     return "*" + base->displayName();

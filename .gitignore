@@ -8,3 +8,4 @@ rum
 rumi
 codegen.o
 tests/*.o
+type.o
