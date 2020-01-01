@@ -11,12 +11,11 @@ section := (name: string)->void{
   return;
 }
 
-vardtest := (v: ... int)->void{
-  printf("inside vardiac function\n");
-  return;
-}
-
 vardiac_test := ()->void{
+  vardtest := (v: ... int)->void{
+    printf("inside vardiac function\n");
+    return;
+  }
   vardtest();
   vardtest(1,2,3);
   return;
@@ -151,15 +150,15 @@ heap_test := () -> void{
   return;
 }
 
-add := (a: int, b: int)->int{
-  return a + b;
-}
-
-mult := (a: int, b: int)->int{
-  return a * b;
-}
-
 function_var_test := () -> void{
+  add := (a: int, b: int)->int{
+    return a + b;
+    }
+
+  mult := (a: int, b: int)->int{
+    return a * b;
+  }
+
   f : (int, int)-> int;
   f = add;
   printf("add(1,2)=%d\n", f(1,2));
@@ -169,15 +168,16 @@ function_var_test := () -> void{
   return;
 }
 
-add_one_to_array := (A: int[], count: int)->void{
-  while(count){
-    count = count - 1;
-    A[count] = A[count] + 1;
-  }
-  return;
-}
-
 array_in_args_test := ()->void{
+
+  add_one_to_array := (A: int[], count: int)->void{
+    while(count){
+      count = count - 1;
+      A[count] = A[count] + 1;
+    }
+    return;
+  }
+
   a: int[2];
   a[0] = 1;
   a[1] = 2;
@@ -213,30 +213,34 @@ array_in_args_test := ()->void{
   return;
 }
 
-successor := (a: int)-> int{
-  return a + 1;
-}
-
-map := (A: int[], count: int, f:(int)->int, B: int[])->void{
-  while(count){
-    count = count - 1;
-    B[count] = f(A[count]);
-  }
-
-  return;
-}
-
-aggregate := (A: int[], count: int, f: (int, int)->int)->int{
-  ans := A[count - 1];
-  count = count - 1;
-  while(count){
-    count = count -1;
-    ans = f(ans, A[count]);
-  }
-  return ans;
-}
-
 functional_test := () -> void{
+  add := (a: int, b: int)->int{
+    return a + b;
+  }
+
+  successor := (a: int)-> int{
+    return a + 1;
+  }
+
+  map := (A: int[], count: int, f:(int)->int, B: int[])->void{
+    while(count){
+      count = count - 1;
+      B[count] = f(A[count]);
+  }
+
+    return;
+  }
+
+  aggregate := (A: int[], count: int, f: (int, int)->int)->int{
+    ans := A[count - 1];
+    count = count - 1;
+    while(count){
+      count = count -1;
+      ans = f(ans, A[count]);
+    }
+    return ans;
+  }
+
   a : int[2];
   a[0] = 1;
   a[1] = 2;

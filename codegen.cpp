@@ -28,7 +28,7 @@ llvm::Value* exprGen(Expression *exp, CC *cc);
 llvm::Type* typeGen(Type*t, CC *cc);
 llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc, Node *n, bool expl);
 
-CC* codegen(std::vector<Statement *> *statements, std::string outfile, bool print){
+CC* codegen(std::vector<Statement *> *statements, std::string outfile, bool print, bool ofile){
   CC *context = init_context();
 
   for(auto stmt: *statements){
@@ -41,16 +41,17 @@ CC* codegen(std::vector<Statement *> *statements, std::string outfile, bool prin
 
   llvm::verifyModule(*context->module.get());
 
-  std::error_code ec;
-  llvm::raw_fd_ostream buffer(outfile, ec);
+  if(ofile){
+    std::error_code ec;
+    llvm::raw_fd_ostream buffer(outfile, ec);
 
-  if(ec){
-    printf("Error openning object file: %s \n", ec.message().c_str());
+    if (ec) {
+      printf("Error openning object file: %s \n", ec.message().c_str());
+    }
+
+    auto module = context->module.get();
+    llvm::WriteBitcodeToFile(*module, buffer);
   }
-
-  auto module = context->module.get();
-
-  llvm::WriteBitcodeToFile(*module, buffer);
 
   return context;
 }
@@ -81,7 +82,14 @@ llvm::Function* funcSignGen(FunctionSignature *fs, CC *cc){
 
   llvm::FunctionType *fT = llvm::FunctionType::get(type, args, has_varargs);
 
-  auto f = llvm::Function::Create(fT, llvm::Function::ExternalLinkage, *fs->name, cc->module.get());
+  llvm::Function* f;
+
+  if(fs->isLocal){
+    // TODO choose the best linkage
+    f = llvm::Function::Create(fT, llvm::Function::PrivateLinkage, *fs->name, cc->module.get());
+  } else {
+    f = llvm::Function::Create(fT, llvm::Function::ExternalLinkage, *fs->name, cc->module.get());
+  }
 
   return f;
 }
@@ -112,6 +120,8 @@ void funcGen(FunctionDefine *fd, CC *cc){
       break;
     arg.setName(*(*fargs)[idx++]->name);
   }
+
+  auto preIp = cc->builder->GetInsertBlock();
 
   llvm::BasicBlock *bblock = llvm::BasicBlock::Create(cc->context, "entry", f);
   cc->builder->SetInsertPoint(bblock);
@@ -180,6 +190,8 @@ void funcGen(FunctionDefine *fd, CC *cc){
   if(fd->sign->name->compare("main") == 0){
     cc->mainF = f;
   }
+
+  cc->builder->SetInsertPoint(preIp);
 }
 
 void retGen(ReturnStatement* rt, CC *cc){

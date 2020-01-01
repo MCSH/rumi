@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
+#include <unistd.h>
 
 std::string getModuleName(char *name){
   std::string ans(name);
@@ -22,8 +23,10 @@ int main(int argc, char **argv){
   LLVMInitializeNativeAsmParser();
 
 
+  char *cwd = get_current_dir_name();
   auto statements = compile(argv[1]);
-  auto cc = codegen(statements, getModuleName(argv[1]), false);
+  chdir(cwd); // Compile will change cwd, so go back for mod generating.
+  auto cc = codegen(statements, getModuleName(argv[1]), false, false);
 
   llvm::ExecutionEngine *EE = llvm::EngineBuilder(std::move(cc->module)).create();
 

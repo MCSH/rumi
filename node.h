@@ -124,6 +124,7 @@ public:
   std::string *name;
   Type *returnT;
   std::vector<ArgDecl *> *args;
+  bool isLocal = false;
   FunctionSignature(std::string *val, std::vector<Statement *> *a, Type *t): name(val), returnT(t){
     args = new std::vector<ArgDecl*>();
     if(a){

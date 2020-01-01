@@ -143,6 +143,7 @@ stmts
 
 stmt
 : return_stmt
+| function_define {((FunctionDefine*)$$)->sign->isLocal=true;}
 | variable_decl
 | variable_assign
 | function_call ';' {$$=(Statement *)$1;}
