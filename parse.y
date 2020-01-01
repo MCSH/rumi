@@ -50,7 +50,7 @@ std::vector<Statement *> *mainProgramNode;
 
 %type <stmt> return_stmt stmt variable_decl variable_assign if_stmt while_stmt
 %type <stmt> top_level function_define arg_decl vararg_decl struct_stmt import_stmt
-%type <stmt> defer_stmt
+%type <stmt> defer_stmt compile_stmt
 
 %type <functionSignature> function_signature 
 %type <codeBlock> function_body 
@@ -86,6 +86,13 @@ top_level
 | function_signature ';' {$$=$1;}
 | struct_stmt
 | import_stmt
+| compile_stmt
+;
+
+
+compile_stmt
+// TODO ID.member
+: '@' ID top_level {$$=new CompileStatement($2, $3);}
 ;
 
 function_define

@@ -40,8 +40,10 @@ class CodegenContext {
     return &global;
   }
  public:
+
   llvm::LLVMContext context;
-  std::unique_ptr<llvm::Module> module;
+  //std::unique_ptr<llvm::Module> module;
+  llvm::Module *module;
   llvm::IRBuilder<> *builder;
   CodegenBlockContext global;
   std::vector<CodegenBlockContext *> block;

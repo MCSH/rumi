@@ -504,3 +504,15 @@ public:
       delete stmts;
   }
 };
+
+
+class CompileStatement: public Statement{
+public:
+  std::string *name;
+  Statement *s;
+  CompileStatement(std::string *n, Statement *s): name(n), s(s){}
+  virtual ~CompileStatement(){
+    delete name;
+    delete s;
+  }
+};

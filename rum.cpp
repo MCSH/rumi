@@ -2,6 +2,7 @@
 #include "codegen.h"
 #include <stdio.h>
 #include <unistd.h>
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
 
 std::string getModuleName(char *name){
   std::string ans(name);
@@ -13,14 +14,19 @@ int main(int argc, char **argv){
     printf("No file, abort\n");
     return 1;
   }
+
+  LLVMInitializeNativeTarget();
+  LLVMInitializeNativeAsmPrinter();
+  LLVMInitializeNativeAsmParser();
+
   std::string modName = getModuleName(argv[1]);
   char *cwd = get_current_dir_name();
 
-  auto statements = compile(argv[1]);
+  auto co = compile(argv[1]);
 
   chdir(cwd); // Compile will change cwd, so go back for mod generating.
 
-  codegen(statements, modName, true);
+  codegen(co->codes, modName, true);
 
   return 0;
 }

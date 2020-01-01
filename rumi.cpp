@@ -24,11 +24,12 @@ int main(int argc, char **argv){
 
 
   char *cwd = get_current_dir_name();
-  auto statements = compile(argv[1]);
+  auto co = compile(argv[1]);
   chdir(cwd); // Compile will change cwd, so go back for mod generating.
-  auto cc = codegen(statements, getModuleName(argv[1]), false, false);
+  auto cc = codegen(co->codes, getModuleName(argv[1]), false, false);
 
-  llvm::ExecutionEngine *EE = llvm::EngineBuilder(std::move(cc->module)).create();
+
+  llvm::ExecutionEngine *EE = llvm::EngineBuilder(std::unique_ptr<llvm::Module>(cc->module)).create();
 
   auto main = cc->mainF;
 

@@ -329,3 +329,18 @@ main := () -> int{
 
   return 0;
 }
+
+@compile
+compile_test := () -> int{
+  printf("Welcome to compile time!\n");
+  // A return value of 0 means okay
+  return 0;
+}
+
+@compile
+second_compile_test := () -> int{
+  printf("Fail\n");
+  // A return value of 1 is a warning
+  // A return value of anything other than 0 or 1 means fatal error
+  return 1;
+}

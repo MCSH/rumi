@@ -13,12 +13,16 @@ typedef CompileContext CC;
 void compile(Statement *stmts, CC* cc);
 Type *resolveType(Expression *exp, CC *cc);
 
-void compile(std::vector<Statement *> *stmts){
+CompileContext *compile(std::vector<Statement *> *stmts){
   CC *cc = new CC();
   
+  cc->codes = stmts;
+
   for(auto s: *stmts){
     compile(s, cc);
   }
+
+  return cc;
 }
 
 std::vector<Statement *>* compile(std::vector<Statement *> *stmts, CC *cc){
@@ -28,7 +32,7 @@ std::vector<Statement *>* compile(std::vector<Statement *> *stmts, CC *cc){
   return stmts;
 }
 
-std::vector<Statement *>* compile(char *fileName){
+CompileContext* compile(char *fileName){
   yyin = fopen(fileName, "r");
 
   chdir(dirname(fileName)); // TODO change for windows
@@ -37,9 +41,7 @@ std::vector<Statement *>* compile(char *fileName){
   yyparse();
   auto p = mainProgramNode;
 
-  compile(p);
-
-  return p;
+  return compile(p);
 }
 
 void importCompile(ImportStatement *is, CC *cc){
@@ -385,6 +387,16 @@ void compile(Statement *stmt, CC *cc){
 
   if(t == typeid(SizeofExpr).hash_code()){
     // TODO no compilation?
+    return;
+  }
+
+  if(t == typeid(CompileStatement).hash_code()){
+    // First, compile the top_level
+    CompileStatement *s = (CompileStatement*)stmt;
+    compile(s->s, cc);
+
+    // Now set it to be run
+    cc->compiles.push_back(s);
     return;
   }
 

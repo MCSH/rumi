@@ -11,8 +11,11 @@
 #include <llvm/IR/PassManager.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Support/raw_ostream.h>
+#include <memory>
 #include <string>
 
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
+#include "llvm/ExecutionEngine/GenericValue.h"
 // TODO improve all the typeid hash_coding.
 // TODO improve error handling
 // TODO check types on function call
@@ -39,7 +42,7 @@ CC* codegen(std::vector<Statement *> *statements, std::string outfile, bool prin
   if(print)
     context->module->print(llvm::outs(), nullptr);
 
-  llvm::verifyModule(*context->module.get());
+  llvm::verifyModule(*context->module);
 
   if(ofile){
     std::error_code ec;
@@ -49,7 +52,7 @@ CC* codegen(std::vector<Statement *> *statements, std::string outfile, bool prin
       printf("Error openning object file: %s \n", ec.message().c_str());
     }
 
-    auto module = context->module.get();
+    auto module = context->module;
     llvm::WriteBitcodeToFile(*module, buffer);
   }
 
@@ -59,7 +62,8 @@ CC* codegen(std::vector<Statement *> *statements, std::string outfile, bool prin
 
 CC* init_context(){
   CC *cc = new CC();
-  cc->module = llvm::make_unique<llvm::Module>("my cool jit", cc->context);
+  // cc->module = llvm::make_unique<llvm::Module>("my cool jit", cc->context);
+  cc->module = new llvm::Module("my cool jit", cc->context);
   cc->builder = new llvm::IRBuilder<>(cc->context);
   return cc;
 }
@@ -86,9 +90,9 @@ llvm::Function* funcSignGen(FunctionSignature *fs, CC *cc){
 
   if(fs->isLocal){
     // TODO choose the best linkage
-    f = llvm::Function::Create(fT, llvm::Function::PrivateLinkage, *fs->name, cc->module.get());
+    f = llvm::Function::Create(fT, llvm::Function::PrivateLinkage, *fs->name, *cc->module);
   } else {
-    f = llvm::Function::Create(fT, llvm::Function::ExternalLinkage, *fs->name, cc->module.get());
+    f = llvm::Function::Create(fT, llvm::Function::ExternalLinkage, *fs->name, *cc->module);
   }
 
   return f;
@@ -106,7 +110,7 @@ void handleDefer(CC *cc){
   cc->defered.pop_back();
 }
 
-void funcGen(FunctionDefine *fd, CC *cc){
+llvm::Function* funcGen(FunctionDefine *fd, CC *cc){
   // TODO
 
   cc->defered.push_back(new std::vector<Statement*>());
@@ -146,11 +150,11 @@ void funcGen(FunctionDefine *fd, CC *cc){
   llvm::Value *ss = nullptr;
   if(fd->dynamicStack){
     ss = cc->builder->CreateCall(llvm::Intrinsic::getDeclaration(
-        cc->module.get(), llvm::Intrinsic::stacksave));
+        cc->module, llvm::Intrinsic::stacksave));
     std::vector<llvm::Value *> a;
     a.push_back(ss);
     cc->builder->SetInsertPoint(endblock);
-    cc->builder->CreateCall(llvm::Intrinsic::getDeclaration(cc->module.get(), llvm::Intrinsic::stackrestore), a);
+    cc->builder->CreateCall(llvm::Intrinsic::getDeclaration(cc->module, llvm::Intrinsic::stackrestore), a);
   }
   cc->builder->SetInsertPoint(bblock);
 
@@ -192,6 +196,8 @@ void funcGen(FunctionDefine *fd, CC *cc){
   }
 
   cc->builder->SetInsertPoint(preIp);
+
+  return f;
 }
 
 void retGen(ReturnStatement* rt, CC *cc){
@@ -758,6 +764,44 @@ llvm::Type *floatTypeGen(FloatType *ft, CC *cc){
   return nullptr;
 }
 
+void compileGen(CompileStatement *stmt, CC *cc){
+  // TODO
+  if(stmt->name->compare("compile")==0){
+    // Compile the main statement
+    // Ensure it's a function
+    FunctionDefine *df;
+    if(!(df=dynamic_cast<FunctionDefine*>(stmt->s))){
+      printf("@compile directive must be used with a function, line %d.\n", stmt->lineno);
+    }
+
+    // TODO ensure return type of int
+    
+    llvm::Function *f = funcGen(df, cc);
+
+    llvm::ExecutionEngine *EE = llvm::EngineBuilder(std::unique_ptr<llvm::Module>(cc->module)).create();
+
+    std::vector<llvm::GenericValue> noargs;
+    llvm::GenericValue gv = EE->runFunction(f, noargs);
+
+    int retval = gv.IntVal.getLimitedValue();
+
+    if(retval){
+      printf("Compiel directive %s exited with value %d on line %d\n",
+             stmt->name->c_str(), retval, stmt->lineno);
+      if (retval != 1) {
+        printf("Aborting\n");
+        exit(1);
+      }
+    }
+
+    EE->removeModule(cc->module);
+
+  } else {
+    printf("Unknown compile directive %s on line %d\naborting\n", stmt->name->c_str(), stmt->lineno);
+    exit(1);
+  }
+}
+
 void codegen(Statement* stmt, CC *cc){
   auto t = typeid(*stmt).hash_code();
 
@@ -768,8 +812,10 @@ void codegen(Statement* stmt, CC *cc){
     return;
   }
 
-  if(t == typeid(FunctionDefine).hash_code())
-    return funcGen((FunctionDefine*)stmt, cc);
+  if(t == typeid(FunctionDefine).hash_code()){
+    funcGen((FunctionDefine*)stmt, cc);
+    return;
+  }
 
   if(t == typeid(FunctionSignature).hash_code()){
     funcSignGen((FunctionSignature*)stmt, cc);
@@ -804,6 +850,9 @@ void codegen(Statement* stmt, CC *cc){
 
   if(t == typeid(DeferStatement).hash_code())
     return deferGen((DeferStatement*) stmt, cc);
+
+  if(t == typeid(CompileStatement).hash_code())
+    return compileGen((CompileStatement*)stmt, cc);
 
   printf("Unknown codegen for class of type %s\n", typeid(*stmt).name());
   exit(1);

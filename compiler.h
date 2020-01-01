@@ -3,8 +3,6 @@
 #include "node.h"
 #include <map>
 
-std::vector<Statement *>* compile(char *fileName);
-
     // TODO memory leak
 class BlockContext { // Block Context
 public:
@@ -38,6 +36,9 @@ class CompileContext{
 public:
   BlockContext global;
   std::vector<BlockContext *> blocks;
+
+  std::vector<CompileStatement *>compiles;
+  std::vector<Statement*> *codes;
 
   BlockContext *getBlock() {
     if(blocks.size()!=0)
@@ -90,3 +91,6 @@ public:
     return NULL;
   }
 };
+
+CompileContext *compile(char *fileName);
+
