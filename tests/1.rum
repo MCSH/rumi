@@ -4,7 +4,8 @@
 and /*nested*/ comments*/
 
 // Imports
-import "base.rum"
+// import "base.rum"
+import base
 
 section := (name: string)->void{
   printf("\n\n========\n%s\n========\n\n", name);

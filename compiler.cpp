@@ -100,7 +100,7 @@ void importCompile(ImportStatement *is, CC *cc){
     strcat(path, "/");
     strcat(path, fname);
 
-    printf("No local file %s, trying %s\n", fname, path);
+    // printf("No local file %s, trying %s\n", fname, path);
 
     yyin = fopen(path, "r");
 
