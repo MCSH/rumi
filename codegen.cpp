@@ -854,6 +854,12 @@ void codegen(Statement* stmt, CC *cc){
   if(t == typeid(CompileStatement).hash_code())
     return compileGen((CompileStatement*)stmt, cc);
 
+  if(t == typeid(MemberStatement).hash_code())
+    return codegen(((MemberStatement*)stmt)->f, cc);
+
+  if(t == typeid(MethodCall).hash_code())
+    return codegen(((MethodCall*)stmt)->fce, cc);
+
   printf("Unknown codegen for class of type %s\n", typeid(*stmt).name());
   exit(1);
 }
@@ -899,6 +905,9 @@ llvm::Value* exprGen(Expression *exp, CC *cc){
     // TODO memory leak
     return exprGen(new IntValue(size), cc);
   }
+
+  if(t == typeid(MethodCall).hash_code())
+    return exprGen(((MethodCall*)exp)->fce, cc);
 
   printf("Unknown exprgen for class of type %s\n", typeid(*exp).name());
   exit(1);

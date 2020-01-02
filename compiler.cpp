@@ -454,6 +454,37 @@ void compile(Statement *stmt, CC *cc){
     return;
   }
 
+  if(t == typeid(MemberStatement).hash_code()){
+    // Resolve the struct,
+    // Add to it's methods
+    MemberStatement *m = (MemberStatement*)stmt;
+    StructStatement *s = cc->getStruct(m->name);
+    if(!s){
+      printf("Struct %s not found on line %d\n", m->name->c_str(), m->lineno);
+      exit(1);
+    }
+    std::string methodName(*m->f->sign->name);
+    *m->f->sign->name = (*m->name)+"$"+(*m->f->sign->name);
+    Type *selfT = new StructType(new std::string(m->name->c_str()));
+    selfT = new PointerType(selfT);
+    ArgDecl *self = new ArgDecl(new std::string("self"), selfT, false);
+    m->f->sign->args->insert(m->f->sign->args->begin(), self);
+    compile(m->f, cc);
+    s->methods[methodName] = m->f;
+    return;
+  }
+
+  if(t == typeid(MethodCall).hash_code()){
+    // it's basically a function call
+    MethodCall *mc = (MethodCall*) stmt;
+    compile(mc->e, cc);
+    mc->expr->begin();
+    mc->expr->insert(mc->expr->begin(), new PointerExpr(mc->e));
+    compile((*mc->expr)[0], cc);
+    mc->fce = new FunctionCallExpr(mc->f->sign->name, mc->expr);
+    return;
+  }
+
   printf("Undefined compile for statement %s at compiler::compile, lineno: %d\n", typeid(*stmt).name(), stmt->lineno);
   exit(1);
   
@@ -570,6 +601,26 @@ Type *resolveType(Expression *expr, CC *cc){
 
   if(t == typeid(SizeofExpr).hash_code()){
     return new IntType(); // TODO improve?
+  }
+
+  if(t == typeid(MethodCall).hash_code()){
+    MethodCall *mc = (MethodCall*) expr;
+    compile(mc->e, cc);
+
+    auto t = (StructType*) resolveType(mc->e, cc);
+
+    auto st = cc->getStruct(t->name);
+
+    FunctionDefine *f = st->methods[*mc->name];
+
+    if(!f){
+      printf("Struct %s doesn't have any method named %s\n", t->name->c_str(), mc->name->c_str());
+      exit(1);
+    }
+
+    mc->f = f;
+
+    return f->sign->returnT;
   }
 
   printf("Undefined resolveType for expression %s at compiler::resolveType\n", typeid(*expr).name());

@@ -44,13 +44,13 @@ std::vector<Statement *> *mainProgramNode;
 %type <stmt> stype
 
 %type <exp> additive_expr multiplicative_expr unary_expr postfix_expr
-%type <exp> value expr variable function_call cast_expr pointer_access
+%type <exp> value expr variable function_call cast_expr pointer_access member_call
 
 // TODO reorder these
 
 %type <stmt> return_stmt stmt variable_decl variable_assign if_stmt while_stmt
 %type <stmt> top_level function_define arg_decl vararg_decl struct_stmt import_stmt
-%type <stmt> defer_stmt compile_stmt
+%type <stmt> defer_stmt compile_stmt member_define
 
 %type <functionSignature> function_signature 
 %type <codeBlock> function_body 
@@ -87,6 +87,7 @@ top_level
 | struct_stmt
 | import_stmt
 | compile_stmt
+| member_define
 ;
 
 
@@ -97,6 +98,10 @@ compile_stmt
 
 function_define
 : function_signature '{' function_body '}' {$$=new FunctionDefine($1, $3);}
+;
+
+member_define
+: ID '.' function_define {$$=new MemberStatement($1, $3);}
 ;
 
 function_signature
@@ -154,6 +159,7 @@ stmt
 | variable_decl
 | variable_assign
 | function_call ';' {$$=(Statement *)$1;}
+| member_call ';' {$$=(Statement *)$1;}
 | if_stmt
 | while_stmt
 | '{' stmts '}' {$$=new CodeBlock($2);}
@@ -192,6 +198,7 @@ return_stmt
 
 variable
 : variable '.' ID {$$=new MemberExpr($1, $3);}
+| variable '.' ID '(' args_list ')' {$$=new MethodCall($1, $3, $5);}
 | variable '[' expr ']' {$$=new ArrayExpr($1, $3);}
 | ID {$$=new VariableExpr($1);}
 ;
@@ -231,7 +238,10 @@ unary_expr
 postfix_expr // Later add array access, etc here
 : value
 | variable '.' ID {$$=new MemberExpr($1, $3);}
+| variable '.' ID '(' args_list ')' {$$=new MethodCall($1, $3, $5);}
 | variable '[' expr ']' {$$=new ArrayExpr($1, $3);}
+| '(' expr ')' '.' ID {$$=new MemberExpr($2, $5);}
+| '(' expr ')' '.' ID '(' args_list ')' {$$=new MethodCall($2, $5, $7);}
 | ID {$$=new VariableExpr($1);}
 | ID '(' args_list ')' {$$=new FunctionCallExpr($1, $3);}
 ;
@@ -242,6 +252,11 @@ pointer_access
 
 function_call
 : ID '(' args_list ')' {$$=new FunctionCallExpr($1, $3);}
+;
+
+member_call
+: variable '.' ID '(' args_list ')' {$$=new MethodCall($1, $3, $5);}
+| '(' expr ')' '.' ID {$$=new MemberExpr($2, $5);}
 ;
 
 args_list

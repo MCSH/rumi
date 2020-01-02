@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <map>
 
 class Node{
 public:
@@ -212,7 +213,7 @@ public:
 
   FunctionCallExpr(std::string *n, std::vector<Expression *> *expr): name(n), expr(expr){
     if(!expr)
-      expr = new std::vector<Expression*>();
+      this->expr = new std::vector<Expression*>();
   }
  
   virtual ~FunctionCallExpr(){
@@ -289,6 +290,7 @@ class StructStatement: public Statement{
 public:
   std::string *name;
   std::vector<VariableDecl *> *members;
+  std::map<std::string, FunctionDefine *> methods;
   bool has_initializer = false;
   StructStatement(std::string *name, std::vector<Statement *> *m): name(name){
     members = new std::vector<VariableDecl *>();
@@ -514,5 +516,43 @@ public:
   virtual ~CompileStatement(){
     delete name;
     delete s;
+  }
+};
+
+class MemberStatement: public Statement{
+public:
+  std::string *name;
+  FunctionDefine *f;
+  MemberStatement(std::string *n, Statement *f): name(n), f((FunctionDefine*)f){
+    // Change the function name to prevent name colision
+  }
+
+  virtual ~MemberStatement(){
+    delete name;
+    delete f;
+  }
+};
+
+class MethodCall: public Expression{
+public:
+  Expression *e;
+  std::string *name;
+  std::vector<Expression *> *expr;
+
+  FunctionCallExpr *fce;
+  FunctionDefine *f;
+
+  MethodCall(Expression *e, std::string *n, std::vector<Expression *> *expr): e(e), name(n), expr(expr){
+    if(!expr){
+      this->expr = new std::vector<Expression*>();
+    }
+  }
+ 
+  virtual ~MethodCall(){
+    delete e;
+    delete name;
+    for (auto e : *expr)
+      delete e;
+    delete expr;
   }
 };

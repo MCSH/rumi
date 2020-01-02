@@ -1,0 +1,15 @@
+import base
+
+MyStruct : struct{
+  id: int=0;
+}
+
+MyStruct.print := () -> void{
+  printf("Mystruct with id=%d\n", (*self).id);
+}
+
+main := ()->int{
+  m: MyStruct;
+  m.print();
+  return 0;
+}
