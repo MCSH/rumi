@@ -1,5 +1,6 @@
 
-NUMTESTS = 1
+export RUMI_PATH=$(shell pwd)/rumlib
+NUMTESTS = 2
 OBJS = lex.o parse.o compiler.o type.o
 BASE_HEADS = node.h type.h
 CODE_GEN = lex.cpp parse.cpp parse.hpp
@@ -45,6 +46,7 @@ parse.cpp:	parse.y $(BASE_HEADS)
 .PHONY: tests
 tests:	rum rumi
 	rm -f tests/*.o || true
+	env | grep RUM
 	number=1 ; while [[ $$number -le $(NUMTESTS) ]] ; do \
 		echo "==============" ; \
 		echo tests/$$number.rum ; \
@@ -57,3 +59,4 @@ tests:	rum rumi
 
 clean:
 	rm -f rum rumi $(OBJS) $(CODE_GEN) codegen.o tests/*.o || true
+

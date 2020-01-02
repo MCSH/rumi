@@ -110,7 +110,7 @@ args_decl_list
 
 import_stmt
 : IMPORT SSTRING {$$=new ImportStatement($2);}
-
+| IMPORT ID {$$=new ImportStatement($2);}
 ;
 
 struct_stmt
