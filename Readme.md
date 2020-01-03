@@ -65,6 +65,5 @@ Run `gdb rum` followed by `run test.rum`. You can try the following commands:
 
 # Current Compiler TODO list:
 
-* Add compiler flag support (`-o` for example)
 * Allow multiple file compile at the same time
 * Integrate linker into the compiler

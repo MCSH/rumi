@@ -14,10 +14,10 @@ COMPILER_EXEC_LLVM_FLAGS = $(COMPILER_EXEC_FLAGS) $(COMPILER_LLVM_FLAGS)
 
 all:	rum rumi
 
-rum:	$(OBJS) rum.cpp codegen.o
+rum:	$(OBJS) rum.cpp codegen.o cli.h
 	$(CC) $(COMPILER_EXEC_LLVM_FLAGS) $(OBJS) codegen.o rum.cpp -o rum
 
-rumi:	$(OBJS) rumi.cpp
+rumi:	$(OBJS) rumi.cpp cli.h
 	$(CC) $(COMPILER_EXEC_LLVM_FLAGS) $(OBJS) codegen.o rumi.cpp -o rumi
 
 compiler.o:	compiler.cpp compiler.h $(BASE_HEADS)
@@ -52,7 +52,7 @@ tests:	rum rumi
 		echo tests/$$number.rum ; \
 		cat -n tests/$$number.rum ; \
 		echo ; \
-		./rum tests/$$number.rum ; \
+		./rum -l tests/$$number.rum ; \
 		lli tests/$$number.rum.o ; \
 		((number = number + 1)) ; \
 	done

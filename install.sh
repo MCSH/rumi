@@ -16,3 +16,5 @@ make rumi
 cp rum rumi "$IPATH/bin/"
 
 cp -r rumlib/* "$IPATH"
+
+echo "Done!"

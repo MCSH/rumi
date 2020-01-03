@@ -6,16 +6,24 @@
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include <unistd.h>
 
+#include "cli.h"
+
 std::string getModuleName(char *name){
   std::string ans(name);
   return ans.append(".o");
 }
 
 int main(int argc, char **argv){
-  // TODO lookup yypush_parse
-  if(argc != 2){
-    printf("No file, abort\n");
-    return 1;
+
+  struct arguments arguments;
+
+  arguments.output_file = 0;
+  arguments.llvm_ir = false;
+
+  argp_parse (&argp, argc, argv, 0, 0, &arguments);
+
+  if(!arguments.output_file){
+    arguments.output_file = new std::string(getModuleName(arguments.input_file));
   }
 
   LLVMInitializeNativeTarget();
@@ -24,9 +32,9 @@ int main(int argc, char **argv){
 
 
   char *cwd = get_current_dir_name();
-  auto co = compile(argv[1]);
+  auto co = compile(arguments.input_file);
   chdir(cwd); // Compile will change cwd, so go back for mod generating.
-  auto cc = codegen(co->codes, getModuleName(argv[1]), false, false);
+  auto cc = codegen(co->codes, *arguments.output_file, arguments.llvm_ir, false);
 
 
   llvm::ExecutionEngine *EE = llvm::EngineBuilder(std::unique_ptr<llvm::Module>(cc->module)).create();
