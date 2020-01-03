@@ -477,9 +477,20 @@ void compile(Statement *stmt, CC *cc){
   if(t == typeid(MethodCall).hash_code()){
     // it's basically a function call
     MethodCall *mc = (MethodCall*) stmt;
-    compile(mc->e, cc);
+
+
+    Expression *e = mc->e;
+
+    Type *tmpe = e->exprType;
+
+    while(PointerType *p = dynamic_cast<PointerType*>(tmpe)){
+      tmpe = p->base;
+      e = new PointerAccessExpr(e);
+    }
+
+    compile(e, cc);
     mc->expr->begin();
-    mc->expr->insert(mc->expr->begin(), new PointerExpr(mc->e));
+    mc->expr->insert(mc->expr->begin(), new PointerExpr(e));
     compile((*mc->expr)[0], cc);
     mc->fce = new FunctionCallExpr(mc->f->sign->name, mc->expr);
     return;
@@ -614,7 +625,13 @@ Type *resolveType(Expression *expr, CC *cc){
     MethodCall *mc = (MethodCall*) expr;
     compile(mc->e, cc);
 
-    auto t = (StructType*) resolveType(mc->e, cc);
+    auto tmpe  = resolveType(mc->e, cc);
+
+    while(PointerType *p = dynamic_cast<PointerType*>(tmpe)){
+      tmpe = p->base;
+    }
+
+    auto t = (StructType*) tmpe; 
 
     auto st = cc->getStruct(t->name);
 

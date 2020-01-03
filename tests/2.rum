@@ -9,7 +9,13 @@ MyStruct.print := () -> void{
 }
 
 main := ()->int{
+
   m: MyStruct;
   m.print();
+
+  n: *MyStruct;
+  n = &m;
+  n.print();
+
   return 0;
 }
