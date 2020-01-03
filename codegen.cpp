@@ -6,6 +6,7 @@
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/InstrTypes.h>
+#include <llvm/IR/Instruction.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/PassManager.h>
@@ -178,6 +179,10 @@ llvm::Function* funcGen(FunctionDefine *fd, CC *cc){
 
   // TODO we should raise an error for return-less functions
   // cc->builder->CreateBr(endblock);
+  if(cc->builder->GetInsertPoint()->getPrevNonDebugInstruction()->getOpcode() != llvm::Instruction::Br){
+    cc->builder->CreateBr(endblock);
+  }
+
   cc->builder->SetInsertPoint(endblock);
 
   handleDefer(cc);
@@ -585,7 +590,6 @@ llvm::Value* memberAlloca(MemberExpr *e, CC *cc){
   indices[1] = member_index;
 
   llvm::Value *member_ptr = cc->builder->CreateInBoundsGEP(st, alloc, indices, "memberptr");
-  printf("reached here\n");
   return member_ptr;
 }
 
