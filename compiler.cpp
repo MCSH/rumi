@@ -548,7 +548,14 @@ Type *resolveType(Expression *expr, CC *cc){
 
   if(t == typeid(MemberExpr).hash_code()){
     auto *me = (MemberExpr*) expr;
-    auto t = (StructType*) resolveType(me->e, cc);
+    // TODO check to see if it's a pointer
+    auto tmpe = resolveType(me->e, cc);
+
+    while(PointerType*p = dynamic_cast<PointerType*>(tmpe)){
+      tmpe = p->base;
+    }
+    
+    auto t = (StructType*) tmpe;
     auto ss = cc->getStruct(t->name);
 
     // error when ss not found

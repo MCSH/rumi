@@ -5,7 +5,7 @@ MyStruct : struct{
 }
 
 MyStruct.print := () -> void{
-  printf("Mystruct with id=%d\n", (*self).id);
+  printf("Mystruct with id=%d\n", self.id);
 }
 
 main := ()->int{

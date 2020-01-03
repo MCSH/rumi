@@ -550,7 +550,14 @@ llvm::Value* stringvalueGen(StringValue *sv, CC *cc){
 llvm::Value* memberAlloca(MemberExpr *e, CC *cc){
   int member_ind = 0; // TODO figure this out
 
-  auto t = (StructType*) e->e->exprType;
+  // maybe it's not StructType
+  auto tmpe = e->e->exprType;
+
+  while(PointerType* p = dynamic_cast<PointerType*>(tmpe)){
+    tmpe = p->base;
+  }
+
+  auto t = (StructType*) tmpe;
   auto ss = cc->getStructStruct(t->name);
   auto st = (llvm::StructType*)cc->getStructType(t->name);
 
@@ -563,13 +570,22 @@ llvm::Value* memberAlloca(MemberExpr *e, CC *cc){
 
   llvm::Value* member_index = llvm::ConstantInt::get(cc->context, llvm::APInt(32, member_ind, true));
 
-  auto alloc = getAlloca(e->e, cc);
+  llvm::Value * alloc;
+
+  if(typeid(*e->e->exprType).hash_code()==typeid(PointerType).hash_code()){
+    // it's a pointer
+    alloc = exprGen(e->e, cc);
+  } else {
+    alloc = getAlloca(e->e, cc);
+  }
+
 
   std::vector<llvm::Value *> indices(2);
   indices[0] = llvm::ConstantInt::get(cc->context, llvm::APInt(32, 0, true));
   indices[1] = member_index;
 
   llvm::Value *member_ptr = cc->builder->CreateInBoundsGEP(st, alloc, indices, "memberptr");
+  printf("reached here\n");
   return member_ptr;
 }
 
