@@ -135,6 +135,10 @@ class VoidType: public Type{
     return Compatibility::OK; // TODO check
   }
 
+  virtual std::string displayName(){
+    return "void";
+  }
+
   virtual VoidType* clone(){
     return new VoidType(*this);
   }
@@ -184,6 +188,28 @@ public:
   }
 };
 
+class InterfaceType: public Type{
+public:
+  std::string *name;
+  InterfaceType(std::string *name):name(name){}
+
+  virtual InterfaceType* clone(){
+    return new InterfaceType(new std::string(*name));
+  }
+
+  virtual Compatibility compatible(Type *t){
+    // handled in cast compiler.cpp
+    return UNCOMPATIBLE;
+  }
+
+  virtual std::string displayName(){
+    return "interface " + *name;
+  }
+
+  virtual ~InterfaceType(){
+    delete name;
+  }
+};
 
 class PointerType:public Type{
 public:

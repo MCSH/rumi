@@ -32,7 +32,7 @@ std::vector<Statement *> *mainProgramNode;
 %token RETURN
 %token SIZEOF
 %token IMPORT
-%token INT ANY STRING STRUCT VOID
+%token INT ANY STRING STRUCT VOID INTERFACE
 %token U8 U16 U32 U64
 %token S8 S16 S32 S64
 %token F64 F32
@@ -50,12 +50,12 @@ std::vector<Statement *> *mainProgramNode;
 
 %type <stmt> return_stmt stmt variable_decl variable_assign if_stmt while_stmt
 %type <stmt> top_level function_define arg_decl vararg_decl struct_stmt import_stmt
-%type <stmt> defer_stmt compile_stmt member_define
+%type <stmt> defer_stmt compile_stmt member_define interface_stmt
 
 %type <functionSignature> function_signature 
 %type <codeBlock> function_body 
 
-%type <arr> program top_levels stmts args_decl args_decl_list struct_members_decl type_array type_arg
+%type <arr> program top_levels stmts args_decl args_decl_list struct_members_decl type_array type_arg interface_members_decl
 %type <arrE> args args_list
 
 %left '+' '-'
@@ -85,6 +85,7 @@ top_level
 : function_define
 | function_signature ';' {$$=$1;}
 | struct_stmt
+| interface_stmt
 | import_stmt
 | compile_stmt
 | member_define
@@ -120,6 +121,15 @@ import_stmt
 
 struct_stmt
 : ID ':' STRUCT '{' struct_members_decl '}' {$$=new StructStatement($1, $5);}
+;
+
+interface_stmt
+: ID ':' INTERFACE '{' interface_members_decl '}' {$$=new InterfaceStatement($1, $5);}
+;
+
+interface_members_decl
+: interface_members_decl function_signature ';' {$$=$1; $1->push_back($2);}
+| empty {$$=new std::vector<Statement *>();}
 ;
 
 struct_members_decl

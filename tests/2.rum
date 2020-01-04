@@ -8,6 +8,22 @@ MyStruct.print := () -> void{
   printf("Mystruct with id=%d\n", self.id);
 }
 
+My2Struct: struct{
+  name: string = "hi";
+}
+
+My2Struct.print := () -> void{
+  printf("This is hi from %s\n", self.name);
+}
+
+Printable : interface {
+  print := () -> void;
+}
+
+SomeInterface : interface{
+  addConst := (c: int)-> void; // Variable names must be provided for now, can be turned optional later
+}
+
 main := ()->int{
 
   m: MyStruct;
@@ -16,6 +32,10 @@ main := ()->int{
   n: *MyStruct;
   n = &m;
   n.print();
+
+  p: *Printable; // it doesn't make sense to have non-pointer interface, we could make it a default pointer TODO
+  p = &m;
+  p.print();
 
   return 0;
 }

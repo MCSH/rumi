@@ -9,6 +9,7 @@ public:
   // Type *returnType; // TODO move this to function define?
   std::map<std::string, Type *> vars;
   std::map<std::string, StructStatement *> structs;
+  std::map<std::string, InterfaceStatement *> interfaces;
   std::map<std::string, FunctionSignature *> functions;
   FunctionDefine *currentFunction;
 
@@ -21,6 +22,12 @@ public:
     // TODO check for name collision
     // TODO maybe register as var?
     structs[*name] = ss;
+  }
+
+  void newInterface(std::string *name, InterfaceStatement *is){
+    // TODO check for name collision
+    // TODO maybe register as var?
+    interfaces[*name] = is;
   }
 
   void newFunction(std::string *name, FunctionSignature *fs){
@@ -70,6 +77,16 @@ public:
         return p->second;
     }
     return global.structs[*name];
+  }
+
+  InterfaceStatement *getInterface(std::string *name){
+    for(auto i = blocks.rbegin(); i!=blocks.rend(); i++){
+      auto vars = (*i)->interfaces;
+      auto p = vars.find(*name);
+      if(p!=vars.end())
+        return p->second;
+    }
+    return global.interfaces[*name];
   }
 
   FunctionSignature *getFunction(std::string *name){

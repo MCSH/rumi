@@ -136,7 +136,7 @@ public:
     }
   }
 
-  Type *fType;
+  Type *fType=0;
 
   Type *getType();
 
@@ -554,5 +554,27 @@ public:
     for (auto e : *expr)
       delete e;
     delete expr;
+  }
+};
+
+
+class InterfaceStatement: public Statement{
+public:
+  std::string *name;
+  std::vector<FunctionSignature *> *members;
+
+  InterfaceStatement(std::string *n, std::vector<Statement *> *m): name(n){
+    members = new std::vector<FunctionSignature*>();
+    for(auto i: *m){
+      members->push_back((FunctionSignature *)i);
+    }
+    delete m;
+  }
+
+  virtual ~InterfaceStatement(){
+    delete name;
+    for(auto i: *members)
+      delete i;
+    delete members;
   }
 };

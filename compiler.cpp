@@ -134,6 +134,71 @@ Expression *castCompile(Type *exprType, Type *baseType, Expression *e, CC *cc, N
     exit(1);
   }
 
+  // check for interfaces
+  // resolve pointers.... augh
+  Type *bt = baseType;
+  int blevel = 0;
+  int elevel = 0;
+  Type *et = exprType;
+
+  while(PointerType *pt = dynamic_cast<PointerType*>(bt)){
+    bt = pt->base;
+    blevel++;
+  }
+
+  while(PointerType *pt = dynamic_cast<PointerType*>(et)){
+    et = pt->base;
+    elevel++;
+  }
+
+  if(blevel == elevel)
+  if(InterfaceType *it = dynamic_cast<InterfaceType*>(bt)){
+    if(StructType *st = dynamic_cast<StructType*>(et)){
+      // check for conversion manually
+      // TODO
+      InterfaceStatement *is = cc->getInterface(it->name);
+      StructStatement *ss = cc->getStruct(st->name);
+      if(!is){
+        printf("Undefined interface %s on line %d\n", it->name->c_str(), n->lineno);
+        exit(1);
+      }
+      if(!ss){
+        printf("Undefined struct %s on line %d\n", st->name->c_str(), n->lineno);
+        exit(1);
+      }
+      for(auto m: *is->members){
+        // check to see if struct has the same thing
+        auto n = ss->methods[*m->name];
+        if(!n){
+          printf("Struct %s doesn't implement %s (%s) of interface %s on line %d\n",
+                 st->displayName().c_str(), m->name->c_str(),
+                 m->fType->displayName().c_str(),
+                 it->displayName().c_str(), n->lineno);
+          exit(1);
+        }
+        // TODO n without the first type
+        FunctionType *nt = (FunctionType*)n->sign->fType->clone();
+        nt->args->erase(nt->args->begin());
+        if(m->fType->compatible(nt)!=OK){
+          printf("Struct %s doesn't implement %s (%s) of interface %s on line %d\n",
+                 st->displayName().c_str(), m->name->c_str(),
+                 m->fType->displayName().c_str(),
+                 it->displayName().c_str(), n->lineno);
+          printf("%s implemented %s with type %s\n", st->displayName().c_str(),
+                 m->name->c_str(), n->sign->fType->displayName().c_str());
+          exit(1);
+        }
+        delete nt;
+      }
+      // If we reached here everything is fine, just return the expression
+      // TODO we might want to pointer it later.
+      return e;
+    }
+    // if we reached here, we can't do anything
+  }
+
+  // TODO check the other way, interface to struct
+
   if(c == UNCOMPATIBLE){
     printf("Uncompatible type conversion between %s and %s\n",
            exprType->displayName().c_str(),
@@ -254,8 +319,36 @@ void variableDeclCompile(VariableDecl *vd,CC *cc){
 
   vd->t = type; // Just to ensure it is there, for use in codegen.
 
+  // pointer level, how many pointers there are
+  int level = 0;
+  Type *tt = vd->t;
+  while(PointerType *pt = dynamic_cast<PointerType*>(tt)){
+    tt = pt->base;
+    level++;
+  }
+
+  // handle structs and interfaces
+  if(typeid(*tt).hash_code() == typeid(StructType).hash_code()){
+    StructType *st = (StructType*)tt;
+    if(StructStatement *ss = cc->getStruct(st->name)){
+      // nothing to worry about, keep going.
+    } else if(InterfaceStatement *is = cc->getInterface(st->name)){
+      // replace with interface
+      // TODO memory leak
+      tt = new InterfaceType(is->name);
+      while(level--)
+        tt = new PointerType(tt);
+
+      vd->t = tt;
+    } else {
+      // Struct or Interface not found
+      printf("Unknown type %s on line %d\n", st->name->c_str(), vd->lineno);
+      exit(1);
+    }
+  }
+
   // Add to block
-  cc->getBlock()->newVar(vd->name, type);
+  cc->getBlock()->newVar(vd->name, vd->t);
 }
 
 void compile(Statement *stmt, CC *cc){
@@ -496,6 +589,17 @@ void compile(Statement *stmt, CC *cc){
     return;
   }
 
+  if(t == typeid(InterfaceStatement).hash_code()){
+    // Register it like a struct
+    auto is = (InterfaceStatement*) stmt;
+    for(FunctionSignature *fs: *is->members){
+      compile(fs, cc);
+    }
+
+    cc->getBlock()->newInterface(is->name, is);
+    return;
+  }
+
   printf("Undefined compile for statement %s at compiler::compile, lineno: %d\n", typeid(*stmt).name(), stmt->lineno);
   exit(1);
   
@@ -634,6 +738,13 @@ Type *resolveType(Expression *expr, CC *cc){
     auto t = (StructType*) tmpe; 
 
     auto st = cc->getStruct(t->name);
+
+    // TODO it might be an interface
+
+    if(!st){
+      printf("V-Tables are not implemented yet\n");
+      exit(1);
+    }
 
     FunctionDefine *f = st->methods[*mc->name];
 
