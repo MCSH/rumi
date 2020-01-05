@@ -790,14 +790,14 @@ llvm::Type *floatTypeGen(FloatType *ft, CC *cc){
   return nullptr;
 }
 
-void exitCallback(void*c){
-  exit(1);
+void exitCallback(void*c, int status){
+  exit(status);
 }
 
 void import_compiler(llvm::ExecutionEngine *EE, CC *cc){
   // Setup the compiler object
 
-  // == compiler$exit := (c: compiler)-> void ==
+  // == compiler$exit := (c: compiler, status: int)-> void ==
   {
     // Get the current function and create a replacement
     llvm::Function *f = EE->FindFunctionNamed("compiler$exit");
@@ -824,7 +824,10 @@ void import_compiler(llvm::ExecutionEngine *EE, CC *cc){
     auto inargs = n->args();
 
     // Set the first argument to the first incoming arguments, compiler
-    args->push_back(inargs.begin());
+    // args->push_back(inargs.begin());
+
+    for(auto &arg: inargs)
+      args->push_back(&arg);
 
     /*
       // nullptr, removed in favor of inargs[0]

@@ -7,4 +7,4 @@
 compiler : struct {
 }
 
-compiler.exit := ()->void{}
+compiler.exit := (status: int)->void{}

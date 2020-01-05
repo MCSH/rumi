@@ -12,7 +12,7 @@ main := () -> int{
 @compile
 test := (c: *compiler) -> int{
   printf("Calling exit in test\n");
-  c.exit();
+  c.exit(100);
   printf("okay\n"); // This will never print
   return 0;
 }
