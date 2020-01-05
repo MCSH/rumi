@@ -41,6 +41,7 @@ class CodegenContext {
   }
  public:
 
+  bool import_compiler = false;
   llvm::LLVMContext context;
   //std::unique_ptr<llvm::Module> module;
   llvm::Module *module;

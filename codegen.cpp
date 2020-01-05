@@ -1,10 +1,15 @@
 #include "codegen.h"
 #include "node.h"
 #include "type.h"
+#include <bits/stdint-uintn.h>
 #include <cstdio>
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Constant.h>
+#include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/GlobalVariable.h>
+#include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Instructions.h>
@@ -16,6 +21,7 @@
 #include <string>
 
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
+#include "llvm/ExecutionEngine/MCJIT.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
 // TODO improve all the typeid hash_coding.
 // TODO improve error handling
@@ -784,6 +790,57 @@ llvm::Type *floatTypeGen(FloatType *ft, CC *cc){
   return nullptr;
 }
 
+void exitCallback(void*c){
+  exit(1);
+}
+
+void import_compiler(llvm::ExecutionEngine *EE, CC *cc){
+  // Setup the compiler object
+
+  // == compiler$exit := (c: compiler)-> void ==
+  {
+    // Get the current function and create a replacement
+    llvm::Function *f = EE->FindFunctionNamed("compiler$exit");
+    llvm::Function *n = llvm::Function::Create(
+        f->getFunctionType(), llvm::Function::ExternalLinkage,
+        "compiler$exit_replace", *cc->module);
+
+    // Creaete a basic block
+    auto bb = llvm::BasicBlock::Create(cc->context, "entry", n);
+    llvm::IRBuilder<> builder(bb, bb->begin());
+    builder.SetInsertPoint(bb);
+
+    // Cast the callback function to int, and then the int to function pointer
+    // inside llvm
+    auto fp = builder.CreateIntToPtr(
+        llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context),
+                               (uint64_t)&exitCallback, false),
+        f->getFunctionType()->getPointerTo());
+
+    // Set up the args
+    std::vector<llvm::Value *> *args;
+    args = new std::vector<llvm::Value *>();
+
+    auto inargs = n->args();
+
+    // Set the first argument to the first incoming arguments, compiler
+    args->push_back(inargs.begin());
+
+    /*
+      // nullptr, removed in favor of inargs[0]
+    args->push_back(builder.CreateIntToPtr(
+        llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), 0, true),
+        llvm::Type::getInt64Ty(cc->context)->getPointerTo()));
+    */
+    builder.CreateCall(fp, *args);
+    builder.CreateRetVoid();
+
+    f->replaceAllUsesWith(n);
+    n->takeName(f);
+    f->eraseFromParent();
+  }
+}
+
 void compileGen(CompileStatement *stmt, CC *cc){
   // TODO
   if(stmt->name->compare("compile")==0){
@@ -795,24 +852,61 @@ void compileGen(CompileStatement *stmt, CC *cc){
     }
 
     // TODO ensure return type of int
-    
     llvm::Function *f = funcGen(df, cc);
+
+    auto args = df->sign->args;
 
     llvm::ExecutionEngine *EE = llvm::EngineBuilder(std::unique_ptr<llvm::Module>(cc->module)).create();
 
-    std::vector<llvm::GenericValue> noargs;
-    llvm::GenericValue gv = EE->runFunction(f, noargs);
+    // Set up compiler objects
+    if(cc->import_compiler)
+      import_compiler(EE, cc);
 
-    int retval = gv.IntVal.getLimitedValue();
+    bool ran = false;
 
-    if(retval){
-      printf("Compiel directive %s exited with value %d on line %d\n",
+    int retval = 0;
+
+    if (args->size() == 1) {
+      if (PointerType *pt = dynamic_cast<PointerType *>((*args)[0]->t)) {
+        if (StructType *st = dynamic_cast<StructType *>(pt->base)) {
+          if (st->name->compare("compiler") == 0) {
+            // Set it to compler.
+            int (*mainf)(void*) = (int (*)(void*))EE->getFunctionAddress(*df->sign->name);
+            retval = mainf(0);
+            ran = true;
+          } else
+            printf("arg 1's struct should be named compiler\n");
+        } else
+          printf("arg 1 should be a pointer to struct\n");
+      } else
+        printf("arg 1 should be a pointer to struct\n");
+    } else if (args->size() == 0) {
+      int (*mainf)() = (int (*)())EE->getFunctionAddress(*df->sign->name);
+      retval = mainf();
+      ran = true;
+    }
+
+    if(!ran){
+      printf("Incorrect number of arguments for compie directive %s on line %d\n",
+             stmt->name->c_str(), stmt->lineno);
+      exit(1);
+    }
+
+    if (retval) {
+      printf("Compile directive %s exited with value %d on line %d\n",
              stmt->name->c_str(), retval, stmt->lineno);
       if (retval != 1) {
         printf("Aborting\n");
         exit(1);
       }
     }
+
+    /*
+    llvm::GenericValue gv = EE->runFunction(f, noargs);
+
+    int retval = gv.IntVal.getLimitedValue();
+    */
+
 
     EE->removeModule(cc->module);
 
@@ -827,6 +921,10 @@ void codegen(Statement* stmt, CC *cc){
 
   if(t == typeid(ImportStatement).hash_code()){
     ImportStatement *is = (ImportStatement*) stmt;
+    if(is->name->compare("compiler") == 0){
+      cc->import_compiler = true;
+    }
+
     for(auto s : *is->stmts)
       codegen(s, cc);
     return;

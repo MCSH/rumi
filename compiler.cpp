@@ -47,6 +47,7 @@ CompileContext* compile(char *fileName){
 
 void importCompile(ImportStatement *is, CC *cc){
   // TODO improve
+
   char *cwd = get_current_dir_name();
   int len = is->name->size()+1;
   int start = 0;
@@ -97,15 +98,16 @@ void importCompile(ImportStatement *is, CC *cc){
     // TODO memory leak
     // free(path);
 
-    strcat(path, "/");
-    strcat(path, fname);
+    strcat(newpath, "/");
+    strcat(newpath, fname);
 
     // printf("No local file %s, trying %s\n", fname, path);
 
-    yyin = fopen(path, "r");
+    yyin = fopen(newpath, "r");
 
-    if(!path){
+    if(!yyin){
       printf("Could not import file \"%s\"\n", fname);
+      printf("tried %s too\n", newpath);
       exit(1);
     }
   }

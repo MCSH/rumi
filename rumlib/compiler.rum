@@ -1,0 +1,10 @@
+/*
+        This file is never compiled, the import compiler statement is handled differently.
+
+        This is just to show the structure generated when you import compiler
+*/
+
+compiler : struct {
+}
+
+compiler.exit := ()->void{}

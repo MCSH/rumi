@@ -1,0 +1,18 @@
+import base
+import compiler
+
+test_f := ()-> void{
+  printf("Hi, here\n");
+}
+
+main := () -> int{
+  return 0;
+}
+
+@compile
+test := (c: *compiler) -> int{
+  printf("Calling exit in test\n");
+  c.exit();
+  printf("okay\n"); // This will never print
+  return 0;
+}

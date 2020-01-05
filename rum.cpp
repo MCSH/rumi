@@ -34,8 +34,6 @@ int main(int argc, char **argv){
 
   chdir(cwd); // Compile will change cwd, so go back for mod generating.
 
-  printf("here\n");
-
   codegen(co->codes, *arguments.output_file, arguments.llvm_ir);
 
   return 0;
