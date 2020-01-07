@@ -753,6 +753,8 @@ void structGen(StructStatement *ss, CC *cc){
   ss->type_counter = cc->struct_type_counter;
   cc->struct_type_counter++;
 
+  std::vector<llvm::Type *> members_t;
+  /*
   std::vector<llvm::Type *> vptr_t;
   // First element is the class number
 
@@ -764,7 +766,6 @@ void structGen(StructStatement *ss, CC *cc){
     vptr_t.push_back(llvm::Type::getInt64PtrTy(cc->context));
   }
   
-  std::vector<llvm::Type *> members_t;
 
   auto vt = llvm::StructType::create(cc->context, vptr_t);
 
@@ -781,6 +782,8 @@ void structGen(StructStatement *ss, CC *cc){
 
   llvm::Type *vptr = vt->getPointerTo();
   members_t.push_back(vptr);
+
+  */
 
   for(auto m: *ss->members){
     members_t.push_back(typeGen(m->t, cc));
