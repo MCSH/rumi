@@ -8,6 +8,7 @@
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/GlobalValue.h>
 #include <llvm/IR/GlobalVariable.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/InstrTypes.h>
@@ -673,7 +674,11 @@ void ifGen(IfStatement *is, CC *cc){
   cc->block.push_back(new CodegenBlockContext(ifB));
   cc->builder->SetInsertPoint(ifB);
   codegen(is->i, cc);
-  cc->builder->CreateBr(mergeB);
+  if (cc->builder->GetInsertPoint()
+          ->getPrevNonDebugInstruction()
+          ->getOpcode() != llvm::Instruction::Br) {
+    cc->builder->CreateBr(mergeB);
+  }
   cc->block.pop_back();
 
   // Else
@@ -682,7 +687,11 @@ void ifGen(IfStatement *is, CC *cc){
     f->getBasicBlockList().push_back(elseB);
     cc->builder->SetInsertPoint(elseB);
     codegen(is->e, cc);
-    cc->builder->CreateBr(mergeB);
+    if (cc->builder->GetInsertPoint()
+            ->getPrevNonDebugInstruction()
+            ->getOpcode() != llvm::Instruction::Br) {
+      cc->builder->CreateBr(mergeB);
+    }
     cc->block.pop_back();
   }
 
@@ -726,7 +735,11 @@ void whileGen(WhileStatement *ws, CC *cc){
   cc->block.push_back(new CodegenBlockContext(whileB));
   cc->builder->SetInsertPoint(whileB);
   codegen(ws->w, cc);
-  cc->builder->CreateBr(condB);
+  if (cc->builder->GetInsertPoint()
+          ->getPrevNonDebugInstruction()
+          ->getOpcode() != llvm::Instruction::Br) {
+    cc->builder->CreateBr(condB);
+  }
   cc->block.pop_back();
 
   // Cont
@@ -736,7 +749,39 @@ void whileGen(WhileStatement *ws, CC *cc){
 
 void structGen(StructStatement *ss, CC *cc){
   // TODO
+
+  ss->type_counter = cc->struct_type_counter;
+  cc->struct_type_counter++;
+
+  std::vector<llvm::Type *> vptr_t;
+  // First element is the class number
+
+  vptr_t.push_back(llvm::Type::getInt64Ty(cc->context));
+
+  for(auto m: ss->methods){
+    // vptr_t.push_back(typeGen(m.second->sign->getType(), cc));
+    // No need to push the actual function pointer, pushing int64 is more than enough, we can cast
+    vptr_t.push_back(llvm::Type::getInt64PtrTy(cc->context));
+  }
+  
   std::vector<llvm::Type *> members_t;
+
+  auto vt = llvm::StructType::create(cc->context, vptr_t);
+
+  // TODO create the global vptr
+
+  std::string vptr_name = "$$_vptr$"+ *ss->name;
+
+  cc->module->getOrInsertGlobal(vptr_name, vt);
+  auto vp = cc->module->getNamedGlobal(vptr_name);
+  vp->setLinkage(llvm::GlobalValue::ExternalLinkage);
+
+  // TODO set the initializer after all methods are registered.
+  //vp->setInitializer(llvm::ConstantStruct::)
+
+  llvm::Type *vptr = vt->getPointerTo();
+  members_t.push_back(vptr);
+
   for(auto m: *ss->members){
     members_t.push_back(typeGen(m->t, cc));
   }

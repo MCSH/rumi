@@ -152,9 +152,10 @@ heap_test := () -> void{
 }
 
 function_var_test := () -> void{
+
   add := (a: int, b: int)->int{
     return a + b;
-    }
+  }
 
   mult := (a: int, b: int)->int{
     return a * b;

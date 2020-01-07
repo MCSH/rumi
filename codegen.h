@@ -41,6 +41,8 @@ class CodegenContext {
   }
  public:
 
+  int struct_type_counter = 1;
+
   bool import_compiler = false;
   llvm::LLVMContext context;
   //std::unique_ptr<llvm::Module> module;

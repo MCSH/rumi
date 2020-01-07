@@ -5,6 +5,7 @@
 #include <unistd.h> // chdir
 #include <libgen.h> // dirname
 
+// TODO functions and methods must be traversed once before compiling just so we have everything on record, for handling of casts and calls, etc.
 
 int yyparse();
 extern "C" FILE *yyin;
@@ -12,12 +13,17 @@ extern "C" FILE *yyin;
 typedef CompileContext CC;
 
 void compile(Statement *stmts, CC* cc);
+void precompile(Statement *stmts, CC* cc);
 Type *resolveType(Expression *exp, CC *cc);
 
 CompileContext *compile(std::vector<Statement *> *stmts){
   CC *cc = new CC();
   
   cc->codes = stmts;
+
+  for(auto s: *stmts){
+    precompile(s, cc);
+  }
 
   for(auto s: *stmts){
     compile(s, cc);
@@ -351,6 +357,17 @@ void variableDeclCompile(VariableDecl *vd,CC *cc){
 
   // Add to block
   cc->getBlock()->newVar(vd->name, vd->t);
+}
+
+void precompile(Statement *stmt, CC *cc){
+  // TODO, handle structs, interfaces, methods, functions and imports
+  /*
+  auto t = typeid(*stmt).hash_code();
+
+  if(t == typeid(ImportStatement).hash_code()){
+    ImportStatement *is = (ImportStatement*)stmt;
+  }
+  */
 }
 
 void compile(Statement *stmt, CC *cc){

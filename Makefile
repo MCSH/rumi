@@ -1,6 +1,6 @@
 
 export RUMI_PATH=$(shell pwd)/rumlib
-NUMTESTS = 3
+NUMTESTS = 4
 OBJS = lex.o parse.o compiler.o type.o
 BASE_HEADS = node.h type.h
 CODE_GEN = lex.cpp parse.cpp parse.hpp

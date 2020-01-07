@@ -292,6 +292,7 @@ public:
   std::vector<VariableDecl *> *members;
   std::map<std::string, FunctionDefine *> methods;
   bool has_initializer = false;
+  int type_counter;
   StructStatement(std::string *name, std::vector<Statement *> *m): name(name){
     members = new std::vector<VariableDecl *>();
     for(auto s: *m)

@@ -173,7 +173,7 @@ stmt
 | if_stmt
 | while_stmt
 | '{' stmts '}' {$$=new CodeBlock($2);}
-| struct_stmt
+// | struct_stmt
 | defer_stmt
 ;
 

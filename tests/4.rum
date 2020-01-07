@@ -1,0 +1,35 @@
+import base
+import compiler
+
+rem := (a: int, b:int)->int{
+  // returns 0 if a is dividable by b, otherwise the remainder
+
+  // Pretend this is hard to calculate!
+
+  return a % b;
+}
+
+main := () -> int{
+  printf("This would print in runtime\n");
+  printf("8 % 4 == %d\n", rem(8,4));
+  return 0;
+}
+
+@compile
+rem_test := ()->int{
+  printf("Running tests for rem\n"); // This will run in compile time
+
+  if(rem(8,4)){
+    printf("rem(8,4) should be 0\n");
+    return 2; // returning a value higher than 1 results in compile error
+  }
+
+  return 0; // This tells the compiler everything is fine
+}
+
+@compile
+rem_test2 := () -> int{
+  printf("Incomplete test, TODO\n"); // This will run in compile time
+
+  return 1; // This will print a compile warning
+}
