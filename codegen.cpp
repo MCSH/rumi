@@ -272,7 +272,8 @@ void variableDeclGen(VariableDecl *vd, CC *cc) {
         auto vd = (*ss->members)[i];
         if(vd->exp){
 
-          llvm::Value* member_index = llvm::ConstantInt::get(cc->context, llvm::APInt(32, i, true));
+          // We add +1 because 0 is vptr
+          llvm::Value* member_index = llvm::ConstantInt::get(cc->context, llvm::APInt(32, i+1, true));
 
           std::vector<llvm::Value *> indices(2);
           indices[0] =
@@ -439,11 +440,13 @@ llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
     if(vd && (ad=dynamic_cast<ArgDecl*>(vd)) && typeid(*ad->t).hash_code()==typeid(FunctionType).hash_code()){
       auto cd = cc->getVariableAlloca(fc->name);
       cf = cc->builder->CreateLoad(cd);
+      is_void = dynamic_cast<VoidType*>(((FunctionType*)ad->t)->returnType);
     }
     else if(vd && typeid(*vd->t).hash_code() == typeid(FunctionType).hash_code()){
       // it's a function variable
       auto cd = cc->getVariableAlloca(fc->name);
       cf = cc->builder->CreateLoad(cd);
+      is_void = dynamic_cast<VoidType*>(((FunctionType*)vd->t)->returnType);
     } else {
       printf("Function not found %s\n", fc->name->c_str());
       printf("line no %d\n", fc->lineno);
@@ -579,6 +582,8 @@ llvm::Value* memberAlloca(MemberExpr *e, CC *cc){
     }
     member_ind++;
   }
+
+  member_ind++; // first one is vptr
 
   llvm::Value* member_index = llvm::ConstantInt::get(cc->context, llvm::APInt(32, member_ind, true));
 
@@ -754,7 +759,7 @@ void structGen(StructStatement *ss, CC *cc){
   cc->struct_type_counter++;
 
   std::vector<llvm::Type *> members_t;
-  /*
+
   std::vector<llvm::Type *> vptr_t;
   // First element is the class number
 
@@ -783,7 +788,6 @@ void structGen(StructStatement *ss, CC *cc){
   llvm::Type *vptr = vt->getPointerTo();
   members_t.push_back(vptr);
 
-  */
 
   for(auto m: *ss->members){
     members_t.push_back(typeGen(m->t, cc));

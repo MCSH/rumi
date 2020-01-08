@@ -28,7 +28,7 @@ public:
 
 class IntValue: public Expression{
 public:
-  std::string *val;
+  std::string *val=0;
   int size;
 
   IntValue(std::string *val): val(val){
