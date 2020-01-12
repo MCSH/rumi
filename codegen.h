@@ -24,10 +24,11 @@ class CodegenBlockContext{
 public:
   std::map<std::string, std::tuple<llvm::AllocaInst *, VariableDecl *>*> variables;
   std::map<std::string, std::tuple<llvm::Type *, StructStatement *>*> structs;
+  std::map<std::string, std::tuple<std::tuple<llvm::Type *, llvm::Type*>*, InterfaceStatement *>*> interfaces;
 
   llvm::BasicBlock *bblock;
-  llvm::BasicBlock *endblock;
-  llvm::AllocaInst *returnAlloca;
+  llvm::BasicBlock *endblock=nullptr;
+  llvm::AllocaInst *returnAlloca=nullptr;
 
   CodegenBlockContext(llvm::BasicBlock *bb):bblock(bb){}
   CodegenBlockContext(){}
@@ -62,6 +63,12 @@ class CodegenContext {
   llvm::Type* getStructType(std::string *name);
   StructStatement *getStructStruct(std::string *name);
   void setStruct(std::string *name, llvm::Type *t, StructStatement *st);
+
+  std::tuple<std::tuple<llvm::Type *, llvm::Type*>*, InterfaceStatement*> *getInterface(std::string *name);
+  llvm::Type* getInterfaceType(std::string *name);
+  llvm::Type* getInterfaceVtableType(std::string *name);
+  InterfaceStatement *getInterfaceStatement(std::string *name);
+  void setInterface(std::string *name, llvm::Type *t, llvm::Type *t2, InterfaceStatement *it);
 
   llvm::BasicBlock *getEndBlock();
   llvm::AllocaInst *getReturnAlloca();

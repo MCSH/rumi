@@ -30,6 +30,9 @@
 // TODO check types on function return
 // TODO codegen should not throw any errors.
 
+// TODO current problem with interface methods is improper casting
+// TODO OR it is not handling global vptrs
+
 typedef CodegenContext CC;
 
 CC* init_context();
@@ -42,8 +45,45 @@ llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc, Nod
 CC* codegen(std::vector<Statement *> *statements, std::string outfile, bool print, bool ofile){
   CC *context = init_context();
 
+  CC *cc = context; // Because I'm lazy, fix TODO
+
   for(auto stmt: *statements){
     codegen(stmt, context);
+  }
+
+  // create the vtables
+  for(auto stmt: *statements){
+    if(InterfaceStatement *is = dynamic_cast<InterfaceStatement*>(stmt)){
+
+      for(auto tmp : is->implements){
+        StructStatement *ss = tmp.second;
+
+        std::string vptr_name = "$_" + *ss->name + "$" + *is->name;
+        auto vtype = cc->getInterfaceVtableType(is->name);
+        llvm::Value *vptr = cc->module->getOrInsertGlobal(
+            vptr_name, vtype);
+
+        auto vtable = cc->module->getNamedGlobal(vptr_name);
+
+        std::vector<llvm::Constant*> v;
+
+        for (int i = 0; i < is->members->size(); i++) {
+          auto m = (*is->members)[i];
+
+          llvm::Function *f =
+              cc->module->getFunction((*ss->name) + "$" + (*m->name));
+
+          auto c = llvm::ConstantExpr::getBitCast(f, llvm::Type::getInt64PtrTy(cc->context));
+
+          v.push_back(c);
+
+          // Set it in the vptr?
+        }
+
+        vtable->setInitializer(
+            llvm::ConstantStruct::getAnon(cc->context, v, false));
+      }
+    }
   }
 
   // ostream, assebly annotation writer, preserve order, is for debug
@@ -307,6 +347,55 @@ llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc,
     exit(1);
   }
 
+
+  // check for interfaces
+  // resolve pointers.... augh
+  Type *_bt = baseType;
+  Type *_et = exprType;
+
+  while(PointerType *pt = dynamic_cast<PointerType*>(_bt)){
+    _bt = pt->base;
+  }
+
+  while(PointerType *pt = dynamic_cast<PointerType*>(_et)){
+    _et = pt->base;
+  }
+
+  if(InterfaceType *it = dynamic_cast<InterfaceType*>(_bt)){
+    if(StructType *st = dynamic_cast<StructType*>(_et)){
+      // Create an interface
+      llvm::Type * intType = cc->getInterfaceType(it->name);
+      auto inf = cc->builder->CreateAlloca(intType, 0, "interface");
+
+      // store the poinnter with proper casting
+
+      // We assume that e is a pointer to the struct.
+      std::vector<llvm::Value *> indices(2);
+      indices[0] = llvm::ConstantInt::get(cc->context, llvm::APInt(32, 0, true));
+      indices[1] = llvm::ConstantInt::get(cc->context, llvm::APInt(32, 1, true));
+
+      llvm::Value *ptr = cc->builder->CreateInBoundsGEP(intType, inf, indices, "obj");
+
+      cc->builder->CreateStore(
+          cc->builder->CreateBitCast(e, llvm::Type::getInt64PtrTy(cc->context)),
+          ptr);
+
+      // set the vptr
+      std::vector<llvm::Value *> indices2(2);
+      indices2[0] = llvm::ConstantInt::get(cc->context, llvm::APInt(32, 0, true));
+      indices2[1] = llvm::ConstantInt::get(cc->context, llvm::APInt(32, 0, true));
+
+      llvm::Value *vptr =
+          cc->module->getOrInsertGlobal("$_" + *st->name + "$" + *it->name,
+                                        cc->getInterfaceVtableType(it->name));
+      llvm::Value *vptrptr = cc->builder->CreateInBoundsGEP(intType, inf, indices2, "vptr");
+      cc->builder->CreateStore(vptr, vptrptr); // TODO might cause errors
+
+      return cc->builder->CreateLoad(inf);
+    }
+  }
+
+
   if(c == UNCOMPATIBLE){
     printf("Uncompatible type conversion between %s and %s\n",
            exprType->displayName().c_str(),
@@ -459,6 +548,7 @@ llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
     cf = calleeF;
   }
 
+  // There is another function call in the interface method call function
   std::vector<llvm::Value *> argsV;
   for(auto e: *fc->expr){
     if(e->exprType && typeid(*e->exprType).hash_code() == typeid(ArrayType).hash_code()){
@@ -752,6 +842,30 @@ void whileGen(WhileStatement *ws, CC *cc){
   cc->builder->SetInsertPoint(mergeB);
 }
 
+void interfaceGen(InterfaceStatement *is, CC *cc){
+  // TODO
+
+  // Create a vtable struct
+  std::vector<llvm::Type *> vptr_t;
+
+  for(auto m: *is->members){
+    vptr_t.push_back(llvm::Type::getInt64PtrTy(cc->context));
+  }
+
+  auto vt = llvm::StructType::create(cc->context, vptr_t, (*is->name)+ "$_interface_vptr");
+
+  // TODO include pointers to subinterfaces
+
+  // create interface object
+  std::vector<llvm::Type *> intf;
+  intf.push_back(vt->getPointerTo());
+  intf.push_back(llvm::Type::getInt64PtrTy(cc->context));
+
+  auto it = llvm::StructType::create(cc->context, intf, (*is->name));
+
+  cc->setInterface(is->name, it, vt, is);
+}
+
 void structGen(StructStatement *ss, CC *cc){
   // TODO
 
@@ -765,16 +879,9 @@ void structGen(StructStatement *ss, CC *cc){
 
   vptr_t.push_back(llvm::Type::getInt64Ty(cc->context));
 
-  for(auto m: ss->methods){
-    // vptr_t.push_back(typeGen(m.second->sign->getType(), cc));
-    // No need to push the actual function pointer, pushing int64 is more than enough, we can cast
-    vptr_t.push_back(llvm::Type::getInt64PtrTy(cc->context));
-  }
-  
-
   auto vt = llvm::StructType::create(cc->context, vptr_t);
 
-  // TODO create the global vptr
+  // create the global vptr
 
   std::string vptr_name = "$$_vptr$"+ *ss->name;
 
@@ -783,7 +890,10 @@ void structGen(StructStatement *ss, CC *cc){
   vp->setLinkage(llvm::GlobalValue::ExternalLinkage);
 
   // TODO set the initializer after all methods are registered.
-  //vp->setInitializer(llvm::ConstantStruct::)
+  std::vector<llvm::Constant *> v;
+  v.push_back(llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context),
+                                     ss->type_counter, false));
+  vp->setInitializer(llvm::ConstantStruct::getAnon(cc->context, v, false));
 
   llvm::Type *vptr = vt->getPointerTo();
   members_t.push_back(vptr);
@@ -800,6 +910,10 @@ void structGen(StructStatement *ss, CC *cc){
 
 void deferGen(DeferStatement* ds, CC *cc){
   cc->defered.back()->push_back(ds->s);
+}
+
+llvm::Type *interfaceType(InterfaceType *it, CC *cc){
+  return cc->getInterfaceType(it->name);
 }
 
 llvm::Type *structType(StructType *st, CC *cc){
@@ -971,6 +1085,100 @@ void compileGen(CompileStatement *stmt, CC *cc){
   }
 }
 
+llvm::Value *interfaceMethodCall(MethodCall *mce, CC *cc){
+
+  llvm::Value *i = getAlloca(mce->e, cc);
+
+  // find the method index
+  InterfaceType *it = (InterfaceType*)mce->e->exprType;
+  InterfaceStatement *is = cc->getInterfaceStatement(it->name);
+
+  int ind = 0;
+
+  // We are sure that it exists because otherwise compile would raise an error
+  FunctionSignature *ff;
+  for(ind; ind < is->members->size(); ind++){
+    auto m = (*is->members)[ind];
+    if(m->name->compare(*mce->name)==0){
+      // we found the match
+      ff = m;
+      break;
+    }
+  }
+
+  // get the vtable
+  llvm::Type *iv = cc->getInterfaceType(it->name);
+  llvm::Type * vt = cc->getInterfaceVtableType(it->name);
+
+  std::vector<llvm::Value *> indices(2);
+  indices[0] = llvm::ConstantInt::get(cc->context, llvm::APInt(32, 0, true));
+  indices[1] = llvm::ConstantInt::get(cc->context, llvm::APInt(32, 0, true));
+  llvm::Value *vtable =
+      cc->builder->CreateInBoundsGEP(iv, i, indices, "vtable");
+
+  // get the method pointer
+  indices[1] = llvm::ConstantInt::get(cc->context, llvm::APInt(32, ind, true));
+  llvm::Value *f =
+    cc->builder->CreateInBoundsGEP(vt, cc->builder->CreateLoad(vtable), indices, "fptr");
+
+  // I think we should cast f
+
+  // change the function type when calling it
+  FunctionType *ft = (FunctionType*)ff->fType->clone();
+
+  // when calling the function, pass the pointer not the whole object
+  
+  ft->args->insert(ft->args->begin(), new PointerType(new IntType(64)));
+
+  f = cc->builder->CreateBitCast(f, typeGen(ft, cc)->getPointerTo());
+
+  // Replace the mce->expr[0] with the pointer to the struct
+
+  indices[1] = llvm::ConstantInt::get(cc->context, llvm::APInt(32, 1, true));
+  llvm::Value *sptr =
+      cc->builder->CreateInBoundsGEP(iv, i, indices, "sptr");
+
+  // call the method
+
+  f = cc->builder->CreateLoad(f);
+
+
+  std::vector<llvm::Value *> argsV;
+  argsV.push_back(cc->builder->CreateLoad(sptr));
+
+  mce->expr->erase(mce->expr->begin());
+  
+  for(auto e: *mce->expr){
+    if(e->exprType && typeid(*e->exprType).hash_code() == typeid(ArrayType).hash_code()){
+      // For Arrays, send the pointer to the first element
+
+      ArrayType *at = (ArrayType*) e->exprType;
+
+      auto t = typeGen(at, cc);
+      auto alloc = getAlloca(e, cc);
+
+      if(at->count){
+        argsV.push_back(arrayToPointer(t, alloc, cc));
+      }
+      else if(at->exp){
+        argsV.push_back(alloc);
+      }
+      else{
+        argsV.push_back(cc->builder->CreateLoad(alloc));
+      }
+    } else {
+      argsV.push_back(exprGen(e, cc));
+    }
+  }
+
+  bool is_void = dynamic_cast<VoidType*>(ff->returnT);
+  if(is_void){
+    cc->builder->CreateCall(f, argsV);
+    return 0;
+  }
+  return cc->builder->CreateCall(f, argsV, "calltmp");
+}
+
 void codegen(Statement* stmt, CC *cc){
   auto t = typeid(*stmt).hash_code();
 
@@ -1021,6 +1229,9 @@ void codegen(Statement* stmt, CC *cc){
   if(t == typeid(StructStatement).hash_code())
     return structGen((StructStatement *) stmt, cc);
 
+  if(t == typeid(InterfaceStatement).hash_code())
+    return interfaceGen((InterfaceStatement*)stmt, cc);
+
   if(t == typeid(DeferStatement).hash_code())
     return deferGen((DeferStatement*) stmt, cc);
 
@@ -1030,8 +1241,13 @@ void codegen(Statement* stmt, CC *cc){
   if(t == typeid(MemberStatement).hash_code())
     return codegen(((MemberStatement*)stmt)->f, cc);
 
-  if(t == typeid(MethodCall).hash_code())
-    return codegen(((MethodCall*)stmt)->fce, cc);
+  if(t == typeid(MethodCall).hash_code()){
+    MethodCall *mce = (MethodCall*) stmt;
+    if(mce->f) 
+      return codegen(((MethodCall*)stmt)->fce, cc);
+    interfaceMethodCall(mce, cc);
+    return;
+  }
 
   printf("Unknown codegen for class of type %s\n", typeid(*stmt).name());
   exit(1);
@@ -1079,8 +1295,12 @@ llvm::Value* exprGen(Expression *exp, CC *cc){
     return exprGen(new IntValue(size), cc);
   }
 
-  if(t == typeid(MethodCall).hash_code())
-    return exprGen(((MethodCall*)exp)->fce, cc);
+  if(t == typeid(MethodCall).hash_code()){
+    MethodCall *mce = (MethodCall*)exp;
+    if(mce->f)
+      return exprGen(((MethodCall*)exp)->fce, cc);
+    return interfaceMethodCall(mce, cc);
+  }
 
   printf("Unknown exprgen for class of type %s\n", typeid(*exp).name());
   exit(1);
@@ -1105,6 +1325,9 @@ llvm::Type* typeGen(Type *type, CC *cc){
 
   if(t == typeid(StructType).hash_code())
     return structType((StructType*)type, cc);
+
+  if(t == typeid(InterfaceType).hash_code())
+    return interfaceType((InterfaceType*)type, cc);
 
   if(t == typeid(FloatType).hash_code())
     return floatTypeGen((FloatType*) type, cc);
@@ -1233,6 +1456,55 @@ StructStatement *CodegenContext::getStructStruct(std::string *name) {
     return nullptr;
   std::tie(std::ignore, s) = *tup;
   return s;
+}
+
+std::tuple<std::tuple<llvm::Type *, llvm::Type *> *, InterfaceStatement *> *
+CodegenContext::getInterface(std::string *name){
+  for (auto i = block.rbegin(); i != block.rend(); i++) {
+    auto vars = (*i)->interfaces;
+    auto p = vars.find(*name);
+    if (p != vars.end())
+      return p->second;
+  }
+
+  return global.interfaces[*name];
+}
+
+llvm::Type* CodegenContext::getInterfaceType(std::string *name){
+  llvm::Type *t;
+  auto tup = this->getInterface(name); 
+  if(!tup)
+    return nullptr;
+  std::tuple<llvm::Type*, llvm::Type*> *tmp;
+  std::tie(tmp, std::ignore) = *tup;
+  std::tie(t, std::ignore) = *tmp;
+  return t;
+}
+
+llvm::Type* CodegenContext::getInterfaceVtableType(std::string *name){
+  llvm::Type *t;
+  auto tup = this->getInterface(name); 
+  if(!tup)
+    return nullptr;
+  std::tuple<llvm::Type*, llvm::Type*> *tmp;
+  std::tie(tmp, std::ignore) = *tup;
+  std::tie(std::ignore, t) = *tmp;
+  return t;
+}
+
+InterfaceStatement *CodegenContext::getInterfaceStatement(std::string *name) {
+  InterfaceStatement *s;
+  auto tup = this->getInterface(name);
+  if(!tup)
+    return nullptr;
+  std::tie(std::ignore, s) = *tup;
+  return s;
+}
+
+void CodegenContext::setInterface(std::string *name, llvm::Type *t, llvm::Type *t2,
+                               InterfaceStatement *st) {
+  CodegenBlockContext *b = this->currentBlock();
+  b->interfaces[*name] = new std::tuple<std::tuple<llvm::Type*, llvm::Type*>*, InterfaceStatement*>(new std::tuple<llvm::Type*, llvm::Type*>(t, t2), st);
 }
 
 llvm::BasicBlock *CodegenContext::getEndBlock(){

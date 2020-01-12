@@ -159,9 +159,15 @@ Expression *castCompile(Type *exprType, Type *baseType, Expression *e, CC *cc, N
     elevel++;
   }
 
-  if(blevel == elevel)
+  if(blevel + 1 == elevel)
   if(InterfaceType *it = dynamic_cast<InterfaceType*>(bt)){
     if(StructType *st = dynamic_cast<StructType*>(et)){
+      // TODO change this later
+      if(elevel != 1){
+        printf("We don't support pointer of pointer operations between struct and interfaces, on line %d\n", n->lineno);
+        exit(1);
+      }
+      
       // check for conversion manually
       // TODO
       InterfaceStatement *is = cc->getInterface(it->name);
@@ -174,6 +180,9 @@ Expression *castCompile(Type *exprType, Type *baseType, Expression *e, CC *cc, N
         printf("Undefined struct %s on line %d\n", st->name->c_str(), n->lineno);
         exit(1);
       }
+
+      is->implements[*ss->name] = ss;
+
       for(auto m: *is->members){
         // check to see if struct has the same thing
         auto n = ss->methods[*m->name];
@@ -604,7 +613,12 @@ void compile(Statement *stmt, CC *cc){
     mc->expr->begin();
     mc->expr->insert(mc->expr->begin(), new PointerExpr(e));
     compile((*mc->expr)[0], cc);
-    mc->fce = new FunctionCallExpr(mc->f->sign->name, mc->expr);
+    if(mc->f){
+      // This is a method call on structs
+      mc->fce = new FunctionCallExpr(mc->f->sign->name, mc->expr);
+    } else {
+      // This is a method call on interfaces, we have to handle in codegen
+    }
     return;
   }
 
@@ -761,14 +775,31 @@ Type *resolveType(Expression *expr, CC *cc){
     // TODO it might be an interface
 
     if(!st){
-      printf("V-Tables are not implemented yet\n");
+      auto it = cc->getInterface(t->name);
+      if(!it){
+        // This will never happen
+        printf("Unknown type %s on line %d\n", t->name, mc->lineno);
+        printf("This should not happen\n");
+        exit(1);
+      }
+      int ind = 0;
+      for(auto f : *it->members){
+        if(f->name->compare(*mc->name)==0){
+          mc->f = 0;
+          mc->methodInd = ind;
+          return f->returnT;
+        }
+        ind++;
+      }
+
+      printf("Interface %s doesn't have any method named %s, on line %d\n", t->name->c_str(), mc->name->c_str(), mc->lineno);
       exit(1);
     }
 
     FunctionDefine *f = st->methods[*mc->name];
 
     if(!f){
-      printf("Struct %s doesn't have any method named %s\n", t->name->c_str(), mc->name->c_str());
+      printf("Struct %s doesn't have any method named %s, on line %d\n", t->name->c_str(), mc->name->c_str(), mc->lineno);
       exit(1);
     }
 

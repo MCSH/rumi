@@ -1,6 +1,7 @@
 #pragma once
 #include "type.h"
 #include <algorithm>
+#include <functional>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -543,6 +544,8 @@ public:
   FunctionCallExpr *fce;
   FunctionDefine *f;
 
+  int methodInd; // used for interfaces
+
   MethodCall(Expression *e, std::string *n, std::vector<Expression *> *expr): e(e), name(n), expr(expr){
     if(!expr){
       this->expr = new std::vector<Expression*>();
@@ -563,6 +566,8 @@ class InterfaceStatement: public Statement{
 public:
   std::string *name;
   std::vector<FunctionSignature *> *members;
+
+  std::map<std::string, StructStatement*> implements;
 
   InterfaceStatement(std::string *n, std::vector<Statement *> *m): name(n){
     members = new std::vector<FunctionSignature*>();
