@@ -40,7 +40,7 @@ void codegen(Statement* stmt, CC *context);
 llvm::Value *getAlloca(Expression *expr, CC *cc);
 llvm::Value* exprGen(Expression *exp, CC *cc);
 llvm::Type* typeGen(Type*t, CC *cc);
-llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc, Node *n, bool expl);
+llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc, Node *n, bool expl, llvm::AllocaInst *alloc=nullptr);
 
 CC* codegen(std::vector<Statement *> *statements, std::string outfile, bool print, bool ofile){
   CC *context = init_context();
@@ -331,7 +331,7 @@ void variableDeclGen(VariableDecl *vd, CC *cc) {
 }
 
 llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc,
-                     Node *n, bool expl) {
+                     Node *n, bool expl, llvm::AllocaInst *alloc) {
   // Node n is wanted only for line no
   // Converting the third value, which is of the first type to second type.
   Compatibility c = baseType->compatible(exprType);
@@ -365,7 +365,9 @@ llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc,
     if(StructType *st = dynamic_cast<StructType*>(_et)){
       // Create an interface
       llvm::Type * intType = cc->getInterfaceType(it->name);
-      auto inf = cc->builder->CreateAlloca(intType, 0, "interface");
+
+      if(!alloc)
+        alloc = cc->builder->CreateAlloca(intType, 0, "interface");
 
       // store the poinnter with proper casting
 
@@ -374,7 +376,7 @@ llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc,
       indices[0] = llvm::ConstantInt::get(cc->context, llvm::APInt(32, 0, true));
       indices[1] = llvm::ConstantInt::get(cc->context, llvm::APInt(32, 1, true));
 
-      llvm::Value *ptr = cc->builder->CreateInBoundsGEP(intType, inf, indices, "obj");
+      llvm::Value *ptr = cc->builder->CreateInBoundsGEP(intType, alloc, indices, "obj");
 
       cc->builder->CreateStore(
           cc->builder->CreateBitCast(e, llvm::Type::getInt64PtrTy(cc->context)),
@@ -388,10 +390,11 @@ llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc,
       llvm::Value *vptr =
           cc->module->getOrInsertGlobal("$_" + *st->name + "$" + *it->name,
                                         cc->getInterfaceVtableType(it->name));
-      llvm::Value *vptrptr = cc->builder->CreateInBoundsGEP(intType, inf, indices2, "vptr");
+      llvm::Value *vptrptr = cc->builder->CreateInBoundsGEP(intType, alloc, indices2, "vptr");
       cc->builder->CreateStore(vptr, vptrptr); // TODO might cause errors
 
-      return cc->builder->CreateLoad(inf);
+      //return cc->builder->CreateLoad(inf);
+      return nullptr;
     }
   }
 
@@ -491,8 +494,9 @@ void variableAssignGen(VariableAssign *va, CC *cc){
   // TODO this shouldn't be here, we are checking it in compiler
   auto baseType = va->base->exprType;
   auto exprType = va->exp->exprType;
-  e = castGen(exprType, baseType, e, cc, va, false);
-  cc->builder->CreateStore(e, alloc);
+  e = castGen(exprType, baseType, e, cc, va, false, alloc);
+  if(e)
+    cc->builder->CreateStore(e, alloc);
 }
 
 llvm::Value* variableExprGen(VariableExpr *ve, CC *cc){
