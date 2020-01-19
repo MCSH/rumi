@@ -33,8 +33,12 @@ main := ()->int{
   n = &m;
   n.print();
 
+  s: My2Struct;
+
   p: Printable;
   p = &m;
+  p.print();
+  p = &s;
   p.print();
 
   return 0;

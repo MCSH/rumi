@@ -1,4 +1,4 @@
 
 printf := (T: string, s: ...any)->void;
 
-malloc := (s: u64) -> *u8;
+malloc := (s: u64) -> *any;

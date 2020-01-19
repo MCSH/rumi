@@ -519,8 +519,16 @@ void compile(Statement *stmt, CC *cc){
   if(t == typeid(MemberExpr).hash_code()){
     MemberExpr *me = (MemberExpr*) stmt;
     compile(me->e, cc);
-    compile(me->e, cc); // TODO repetition
     // TODO check to see if mem is in the struct
+    auto tmpe = resolveType(me->e, cc);
+
+    int level = 0;
+
+    while(PointerType*p = dynamic_cast<PointerType*>(tmpe)){
+      tmpe = p->base;
+      level ++;
+    }
+    me->level = level;
     return;
   }
 
@@ -689,7 +697,9 @@ Type *resolveType(Expression *expr, CC *cc){
   }
 
   if(t == typeid(PointerAccessExpr).hash_code()){
-    PointerType *pt = (PointerType *) resolveType(((PointerAccessExpr*)expr)->exp, cc);
+    PointerAccessExpr *pae = (PointerAccessExpr*) expr;
+    PointerType *pt = (PointerType *) resolveType(pae->exp, cc);
+    printf("The type is %s\n", typeid(*pae->exp).name());
     expr->exprType = pt->base->clone();
     return expr->exprType;
   }

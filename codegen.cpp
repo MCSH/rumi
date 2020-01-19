@@ -657,7 +657,9 @@ llvm::Value* stringvalueGen(StringValue *sv, CC *cc){
 }
 
 llvm::Value* memberAlloca(MemberExpr *e, CC *cc){
-  int member_ind = 0; // TODO figure this out
+  int member_ind = 0;
+
+  // TODO level
 
   // maybe it's not StructType
   auto tmpe = e->e->exprType;
@@ -683,13 +685,11 @@ llvm::Value* memberAlloca(MemberExpr *e, CC *cc){
 
   llvm::Value * alloc;
 
-  if(typeid(*e->e->exprType).hash_code()==typeid(PointerType).hash_code()){
-    // it's a pointer
-    alloc = exprGen(e->e, cc);
-  } else {
-    alloc = getAlloca(e->e, cc);
-  }
+  alloc = getAlloca(e->e, cc);
 
+  for(int i = 0; i < e->level; i++){
+    alloc = cc->builder->CreateLoad(alloc, "paccess");
+  }
 
   std::vector<llvm::Value *> indices(2);
   indices[0] = llvm::ConstantInt::get(cc->context, llvm::APInt(32, 0, true));
@@ -738,8 +738,7 @@ llvm::Value* pointerAccessExprAlloca(PointerAccessExpr* expr, CC *cc){
 }
 
 llvm::Value* memberExprGen(MemberExpr *e, CC *cc){
-  // TODO
-  auto member_ptr = memberAlloca(e, cc);
+  auto member_ptr = memberAlloca(e, cc); // Level is handled there
   llvm::Value *loaded_member = cc->builder->CreateLoad(member_ptr, "loadtmp");
   return loaded_member;
 }
@@ -902,12 +901,14 @@ void structGen(StructStatement *ss, CC *cc){
   llvm::Type *vptr = vt->getPointerTo();
   members_t.push_back(vptr);
 
+  auto s = llvm::StructType::create(cc->context, members_t, *ss->name); // TODO check params
 
   for(auto m: *ss->members){
     members_t.push_back(typeGen(m->t, cc));
   }
 
-  auto s = llvm::StructType::create(cc->context, members_t, *ss->name); // TODO check params
+  s->setBody(members_t);
+
   // TODO set the compiler context
   cc->setStruct(ss->name, s, ss);
 }
@@ -1322,7 +1323,7 @@ llvm::Type* typeGen(Type *type, CC *cc){
     return llvm::PointerType::getUnqual(llvm::Type::getInt8Ty(cc->context));
 
   if(t == typeid(AnyType).hash_code())
-    return llvm::Type::getVoidTy(cc->context);
+    return llvm::Type::getInt64PtrTy(cc->context);
 
   if(t == typeid(VoidType).hash_code())
     return llvm::Type::getVoidTy(cc->context);
@@ -1338,7 +1339,15 @@ llvm::Type* typeGen(Type *type, CC *cc){
 
   if(t == typeid(PointerType).hash_code()){
     PointerType *pt = (PointerType*)type;
-    return llvm::PointerType::getUnqual(typeGen(pt->base, cc));
+    auto baseType = typeGen(pt->base, cc);
+    if(!baseType){
+      // Type is not generated yet, it should be a struct I assume
+
+      StructType *st = (StructType*)pt->base;
+      baseType = cc->module->getTypeByName(*st->name);
+    }
+
+    return llvm::PointerType::getUnqual(baseType);
   }
 
   if(t == typeid(ArrayType).hash_code()){

@@ -312,6 +312,7 @@ class MemberExpr: public Expression{
 public:
   Expression *e;
   std::string *mem;
+  int level=0;
   MemberExpr(Expression *e, std::string *mem): mem(mem), e(e){}
 
   virtual ~MemberExpr(){

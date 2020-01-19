@@ -14,5 +14,8 @@ Compatibility PointerType::compatible(Type *t) {
 
   PointerType *pt = (PointerType *)t;
 
+  if(typeid(*pt->base).hash_code() == typeid(AnyType).hash_code())
+    return Compatibility::ImpCast;
+
   return base->compatible(pt->base);
 }
