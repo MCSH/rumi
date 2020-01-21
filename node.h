@@ -7,6 +7,10 @@
 #include <vector>
 #include <map>
 
+#include <llvm/IR/Value.h>
+
+class CodegenContext;
+
 class Node{
 public:
   int lineno;
@@ -20,11 +24,16 @@ public:
 };
 
 class Statement: public Node{
+public:
+  virtual void codegen(CodegenContext *cc)=0;
 };
 
 class Expression: public Statement{
 public:
   Type *exprType = 0;
+  virtual llvm::Value *exprGen(CodegenContext *cc)=0;
+  virtual llvm::Value *getAlloca(CodegenContext *cc)=0; // TODO maybe extend Expression for this because most don't have it
+  virtual void codegen(CodegenContext *cc){} // Almost all of expressions have empty codegen
 };
 
 class IntValue: public Expression{
@@ -41,6 +50,8 @@ public:
     if(val)
       delete val;
   }
+  virtual llvm::Value *exprGen(CodegenContext *cc);
+  virtual llvm::Value *getAlloca(CodegenContext *cc){}
 };
 
 class StringValue: public Expression{
@@ -75,6 +86,8 @@ public:
   virtual ~StringValue(){
     delete val;
   }
+  virtual llvm::Value *exprGen(CodegenContext *cc);
+  virtual llvm::Value *getAlloca(CodegenContext *cc){}
 };
 
 class ReturnStatement: public Statement{
@@ -89,6 +102,8 @@ public:
   virtual ~ReturnStatement(){
     delete exp;
   }
+  virtual void codegen(CodegenContext *cc);
+  virtual llvm::Value *getAlloca(CodegenContext *cc){}
 };
 
 
@@ -105,6 +120,7 @@ public:
     delete t;
     delete exp;
   }
+  virtual void codegen(CodegenContext *cc);
 };
 
 class ArgDecl: public VariableDecl{
@@ -150,6 +166,8 @@ public:
     }
     delete args;
   }
+  virtual void codegen(CodegenContext *cc);
+  llvm::Function *signgen(CodegenContext *cc);
 };
 
 class CodeBlock: public Statement{
@@ -165,6 +183,7 @@ public:
 
     delete stmts;
   }
+  virtual void codegen(CodegenContext *cc);
 };
 
 class FunctionDefine: public Statement{
@@ -179,6 +198,8 @@ public:
     delete sign;
     delete body;
   }
+  llvm::Function *funcgen(CodegenContext *cc);
+  virtual void codegen(CodegenContext *cc);
 };
 
 class VariableExpr: public Expression{
@@ -191,6 +212,8 @@ public:
   virtual ~VariableExpr(){
     delete name;
   }
+  virtual llvm::Value *exprGen(CodegenContext *cc);
+  virtual llvm::Value *getAlloca(CodegenContext *cc);
 };
 
 class VariableAssign: public Statement{
@@ -204,6 +227,7 @@ public:
     delete base;
     delete exp;
   }
+  virtual void codegen(CodegenContext *cc);
 };
 
 
@@ -223,6 +247,9 @@ public:
       delete e;
     delete expr;
   }
+  virtual llvm::Value *exprGen(CodegenContext *cc);
+  virtual llvm::Value *getAlloca(CodegenContext *cc){}
+  void codegen(CodegenContext *cc);
 };
 
 enum Operation{
@@ -243,6 +270,8 @@ public:
     delete lhs;
     delete rhs;
   }
+  virtual llvm::Value *exprGen(CodegenContext *cc);
+  virtual llvm::Value *getAlloca(CodegenContext *cc){}
 };
 
 class IfStatement: public Statement{
@@ -258,6 +287,7 @@ public:
     if(e) delete e;
     delete exp;
   }
+  virtual void codegen(CodegenContext *cc);
 };
 
 
@@ -273,6 +303,7 @@ public:
     delete w;
     delete exp;
   }
+  virtual void codegen(CodegenContext *cc);
 };
 
 class DeferStatement: public Statement{
@@ -285,6 +316,7 @@ public:
   virtual ~DeferStatement(){
     delete s;
   }
+  virtual void codegen(CodegenContext *cc);
 };
 
 class StructStatement: public Statement{
@@ -306,6 +338,7 @@ public:
       delete s;
     delete members;
   }
+  virtual void codegen(CodegenContext *cc);
 };
 
 class MemberExpr: public Expression{
@@ -319,6 +352,8 @@ public:
     delete e;
     delete mem;
   }
+  virtual llvm::Value *exprGen(CodegenContext *cc);
+  virtual llvm::Value *getAlloca(CodegenContext *cc);
 };
 
 class ArrayExpr: public Expression{
@@ -331,6 +366,8 @@ public:
     delete e;
     delete mem;
   }
+  virtual llvm::Value *exprGen(CodegenContext *cc);
+  virtual llvm::Value *getAlloca(CodegenContext *cc);
 };
 
 class CastExpr: public Expression{
@@ -344,6 +381,8 @@ public:
     delete t;
     delete exp;
   }
+  virtual llvm::Value *exprGen(CodegenContext *cc);
+  virtual llvm::Value *getAlloca(CodegenContext *cc){}
 };
 
 class PointerExpr: public Expression{
@@ -354,6 +393,8 @@ public:
   virtual ~PointerExpr(){
     delete exp;
   }
+  virtual llvm::Value *exprGen(CodegenContext *cc);
+  virtual llvm::Value *getAlloca(CodegenContext *cc){}
 };
 
 class PointerAccessExpr: public Expression{
@@ -364,55 +405,8 @@ public:
   virtual ~PointerAccessExpr(){
     delete exp;
   }
-};
-
-class ArrayType: public Type{
-public:
-  Type *base = 0;
-  int count = 0;
-  Expression *exp = 0;
-
-  ArrayType(Type *b, Expression *e): base(b), exp(e){}
-  ArrayType(Type *b, int count): base(b), count(count){}
-  ArrayType(Type *b): base(b){}
-
-  virtual ArrayType *clone(){
-    if(count){
-      return new ArrayType(base->clone(), count);
-    }
-    if(exp)
-      return new ArrayType(base->clone(), exp);
-    return new ArrayType(base->clone());
-  }
-
-  virtual Compatibility compatible(Type *t){
-    auto tid = typeid(*t).hash_code();
-    if(tid!= typeid(ArrayType).hash_code() && tid!=typeid(PointerType).hash_code())
-      return Compatibility::UNCOMPATIBLE;
-
-    if(tid == typeid(PointerType).hash_code())
-      return base->compatible(((PointerType*)t)->base);
-
-    auto at = (ArrayType*) t;
-
-    // TODO check for size, etc
-
-    return base->compatible(at->base);
-  }
-
-  virtual std::string displayName(){
-    if(count)
-      return "Array of " + base->displayName() + " of size " + std::to_string(count);
-    if(exp)
-      return "Array of " + base->displayName() + " of unknown size at runtime";
-    return "Array of " + base->displayName();
-  }
-
-  virtual ~ArrayType(){
-    delete base;
-    if(exp)
-      delete exp;
-  }
+  virtual llvm::Value *exprGen(CodegenContext *cc);
+  virtual llvm::Value *getAlloca(CodegenContext *cc);
 };
 
 class SizeofExpr: public Expression{
@@ -424,79 +418,18 @@ public:
   virtual ~SizeofExpr(){
     delete t;
   }
+  virtual llvm::Value *exprGen(CodegenContext *cc);
+  virtual llvm::Value *getAlloca(CodegenContext *cc){}
 };
 
 class TypeNode: public Expression{
 public:
   Type *exprType;
   TypeNode(Type *exprType): exprType(exprType){}
+  virtual llvm::Value *exprGen(CodegenContext *cc){}
+  virtual llvm::Value *getAlloca(CodegenContext *cc){}
 };
 
-class FunctionType: public Type{
-public:
-  Type *returnType;
-  std::vector<Type*> *args;
-  FunctionType(std::vector<Statement *> *args, Type* returnType): returnType(returnType){
-    this->args = new std::vector<Type*>();
-    for(auto a: *args){
-      TypeNode *tn = (TypeNode *) a;
-      this->args->push_back(tn->exprType->clone());
-      delete tn;
-    }
-    delete args;
-  }
-
-  FunctionType(std::vector<Type *> *args, Type *returnType): returnType(returnType), args(args){}
-
-  virtual FunctionType *clone(){
-    // TODO
-    std::vector<Type *> *nargs = new std::vector<Type *>();
-
-    for(auto a: *args){
-      nargs->push_back(a->clone());
-    }
-
-    return new FunctionType(nargs, returnType->clone());
-  }
-
-
-  virtual std::string displayName(){
-
-    std::string argsName = "";
-    for(auto arg: *args){
-      argsName = argsName + arg->displayName() + ", ";
-    }
-
-    return "Function of type ("+argsName+")->"+returnType->displayName();
-  }
-
-  virtual Compatibility compatible(Type *t){
-    if(typeid(*t).hash_code()!= typeid(FunctionType).hash_code())
-      return Compatibility::UNCOMPATIBLE;
-
-    // TODO this could be improved
-
-    auto ft = (FunctionType*) t;
-
-    if(ft->args->size() != args->size())
-      return Compatibility::UNCOMPATIBLE;
-
-    Compatibility ans = returnType->compatible(ft->returnType);
-
-    for(int i = 0 ; i < args->size(); i ++){
-      Type *tmp = (*args)[i];
-      Type *tmp2 = (*ft->args)[i];
-      ans = std::max(ans, tmp->compatible(tmp2));
-    }
-    
-    return ans;
-  }
-
-  virtual ~FunctionType(){
-    delete returnType;
-    delete args;
-  }
-};
 
 class ImportStatement: public Statement{
 public:
@@ -508,6 +441,7 @@ public:
     if(stmts)
       delete stmts;
   }
+  virtual void codegen(CodegenContext *cc);
 };
 
 
@@ -520,6 +454,7 @@ public:
     delete name;
     delete s;
   }
+  virtual void codegen(CodegenContext *cc);
 };
 
 class MemberStatement: public Statement{
@@ -534,6 +469,8 @@ public:
     delete name;
     delete f;
   }
+
+  virtual void codegen(CodegenContext *cc);
 };
 
 class MethodCall: public Expression{
@@ -560,6 +497,9 @@ public:
       delete e;
     delete expr;
   }
+  virtual llvm::Value *exprGen(CodegenContext *cc);
+  virtual llvm::Value *getAlloca(CodegenContext *cc){}
+  void codegen(CodegenContext *cc);
 };
 
 
@@ -584,4 +524,5 @@ public:
       delete i;
     delete members;
   }
+  virtual void codegen(CodegenContext *cc);
 };

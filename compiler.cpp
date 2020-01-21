@@ -13,7 +13,6 @@ extern "C" FILE *yyin;
 typedef CompileContext CC;
 
 void compile(Statement *stmts, CC* cc);
-void precompile(Statement *stmts, CC* cc);
 Type *resolveType(Expression *exp, CC *cc);
 
 CompileContext *compile(std::vector<Statement *> *stmts){
@@ -21,9 +20,11 @@ CompileContext *compile(std::vector<Statement *> *stmts){
   
   cc->codes = stmts;
 
+  /*
   for(auto s: *stmts){
-    precompile(s, cc);
+    // precompile(s, cc);
   }
+  */
 
   for(auto s: *stmts){
     compile(s, cc);
@@ -368,17 +369,6 @@ void variableDeclCompile(VariableDecl *vd,CC *cc){
   cc->getBlock()->newVar(vd->name, vd->t);
 }
 
-void precompile(Statement *stmt, CC *cc){
-  // TODO, handle structs, interfaces, methods, functions and imports
-  /*
-  auto t = typeid(*stmt).hash_code();
-
-  if(t == typeid(ImportStatement).hash_code()){
-    ImportStatement *is = (ImportStatement*)stmt;
-  }
-  */
-}
-
 void compile(Statement *stmt, CC *cc){
   auto t = typeid(*stmt).hash_code();
 
@@ -699,7 +689,6 @@ Type *resolveType(Expression *expr, CC *cc){
   if(t == typeid(PointerAccessExpr).hash_code()){
     PointerAccessExpr *pae = (PointerAccessExpr*) expr;
     PointerType *pt = (PointerType *) resolveType(pae->exp, cc);
-    printf("The type is %s\n", typeid(*pae->exp).name());
     expr->exprType = pt->base->clone();
     return expr->exprType;
   }

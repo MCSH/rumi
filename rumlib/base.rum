@@ -2,3 +2,16 @@
 printf := (T: string, s: ...any)->void;
 
 malloc := (s: u64) -> *any;
+
+/*
+Iteration : interface {
+  next : () -> Iteration;
+}
+
+Iterable : interface {
+  get_first : () -> Iteration;
+  start_iter : () -> void;
+  next : () -> Iterable;
+}
+
+*/

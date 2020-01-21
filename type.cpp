@@ -19,3 +19,14 @@ Compatibility PointerType::compatible(Type *t) {
 
   return base->compatible(pt->base);
 }
+
+FunctionType::FunctionType(std::vector<Statement *> *args, Type *returnType)
+    : returnType(returnType) {
+  this->args = new std::vector<Type *>();
+  for (auto a : *args) {
+    TypeNode *tn = (TypeNode *)a;
+    this->args->push_back(tn->exprType->clone());
+    delete tn;
+  }
+  delete args;
+}

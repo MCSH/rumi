@@ -36,10 +36,6 @@
 typedef CodegenContext CC;
 
 CC* init_context();
-void codegen(Statement* stmt, CC *context);
-llvm::Value *getAlloca(Expression *expr, CC *cc);
-llvm::Value* exprGen(Expression *exp, CC *cc);
-llvm::Type* typeGen(Type*t, CC *cc);
 llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc, Node *n, bool expl, llvm::AllocaInst *alloc=nullptr);
 
 CC* codegen(std::vector<Statement *> *statements, std::string outfile, bool print, bool ofile){
@@ -48,7 +44,7 @@ CC* codegen(std::vector<Statement *> *statements, std::string outfile, bool prin
   CC *cc = context; // Because I'm lazy, fix TODO
 
   for(auto stmt: *statements){
-    codegen(stmt, context);
+    stmt->codegen(context);
   }
 
   // create the vtables
@@ -116,9 +112,13 @@ CC* init_context(){
   return cc;
 }
 
-llvm::Function* funcSignGen(FunctionSignature *fs, CC *cc){
+void FunctionSignature::codegen(CC *cc){
+  signgen(cc);
+}
+
+llvm::Function* FunctionSignature::signgen(CC *cc){
   // TODO
-  auto fargs = fs->args;
+  auto fargs = this->args;
   std::vector<llvm::Type *> args;
   bool has_varargs = false;
   for(auto arg: *fargs){
@@ -126,21 +126,21 @@ llvm::Function* funcSignGen(FunctionSignature *fs, CC *cc){
       has_varargs = arg->vardiac; // Only the last one matters.
       break;
     }
-    args.push_back(typeGen(arg->t, cc));
+    args.push_back(arg->t->typeGen(cc));
   }
   // TODO vargs, somehow
 
-  auto type = typeGen(fs->returnT, cc);
+  auto type = this->returnT->typeGen(cc);
 
   llvm::FunctionType *fT = llvm::FunctionType::get(type, args, has_varargs);
 
   llvm::Function* f;
 
-  if(fs->isLocal){
+  if(this->isLocal){
     // TODO choose the best linkage
-    f = llvm::Function::Create(fT, llvm::Function::PrivateLinkage, *fs->name, *cc->module);
+    f = llvm::Function::Create(fT, llvm::Function::PrivateLinkage, *this->name, *cc->module);
   } else {
-    f = llvm::Function::Create(fT, llvm::Function::ExternalLinkage, *fs->name, *cc->module);
+    f = llvm::Function::Create(fT, llvm::Function::ExternalLinkage, *this->name, *cc->module);
   }
 
   return f;
@@ -150,7 +150,7 @@ void handleDefer(CC *cc){
   // TODO fix
   auto defered = cc->defered.back();
   for(auto i = defered->rbegin(); i != defered->rend(); i++){
-    codegen(*i, cc);
+    (*i)->codegen(cc);
   }
   // TODO memory leak
   defered->clear();
@@ -158,13 +158,17 @@ void handleDefer(CC *cc){
   cc->defered.pop_back();
 }
 
-llvm::Function* funcGen(FunctionDefine *fd, CC *cc){
+void FunctionDefine::codegen(CC *cc){
+  funcgen(cc);
+}
+
+llvm::Function* FunctionDefine::funcgen(CC *cc){
   // TODO
 
   cc->defered.push_back(new std::vector<Statement*>());
 
-  auto f = funcSignGen(fd->sign, cc);
-  auto fargs = fd->sign->args;
+  auto f = this->sign->signgen(cc);
+  auto fargs = this->sign->args;
 
   unsigned idx = 0;
   for(auto &arg: f->args()){
@@ -183,20 +187,20 @@ llvm::Function* funcGen(FunctionDefine *fd, CC *cc){
   auto cbc = cc->block.back();
   cbc->endblock = endblock;
 
-  bool isVoid = typeid(*fd->sign->returnT).hash_code() == typeid(VoidType).hash_code();
+  bool isVoid = typeid(*this->sign->returnT).hash_code() == typeid(VoidType).hash_code();
 
   llvm::AllocaInst *ra;
 
   // TODO check for void
   if(!isVoid){
-    ra  = cc->builder->CreateAlloca(typeGen(fd->sign->returnT, cc), 0,
+    ra  = cc->builder->CreateAlloca(this->sign->returnT->typeGen(cc), 0,
                                         "returnval");
     cbc->returnAlloca = ra;
   }
 
   // stackrestore at end, before returns
   llvm::Value *ss = nullptr;
-  if(fd->dynamicStack){
+  if(this->dynamicStack){
     ss = cc->builder->CreateCall(llvm::Intrinsic::getDeclaration(
         cc->module, llvm::Intrinsic::stacksave));
     std::vector<llvm::Value *> a;
@@ -213,15 +217,15 @@ llvm::Function* funcGen(FunctionDefine *fd, CC *cc){
     // TODO is it redundent to convert arg to alloca and store?
     // TODO varargs
     auto a = (*fargs)[i]; // This argument
-    llvm::AllocaInst *alloc = cc->builder->CreateAlloca(typeGen(a->t, cc), 0, *a->name);
+    llvm::AllocaInst *alloc = cc->builder->CreateAlloca(a->t->typeGen(cc), 0, *a->name);
     cc->setVariable(a->name, alloc, a);
     cc->builder->CreateStore(&arg, alloc);
     i++;
   }
 
   // generate body
-  for(auto s: *fd->body->stmts){
-    codegen(s, cc);
+  for(auto s: *this->body->stmts){
+    s->codegen(cc);
   }
 
   // TODO we should raise an error for return-less functions
@@ -243,7 +247,7 @@ llvm::Function* funcGen(FunctionDefine *fd, CC *cc){
 
   cc->block.pop_back();
 
-  if(fd->sign->name->compare("main") == 0){
+  if(this->sign->name->compare("main") == 0){
     cc->mainF = f;
   }
 
@@ -252,41 +256,41 @@ llvm::Function* funcGen(FunctionDefine *fd, CC *cc){
   return f;
 }
 
-void retGen(ReturnStatement* rt, CC *cc){
+void ReturnStatement::codegen(CC *cc){
   // TODO check void
-  if(rt->exp){
-    cc->builder->CreateStore(exprGen(rt->exp, cc), cc->getReturnAlloca());
+  if(exp){
+    cc->builder->CreateStore(exp->exprGen(cc), cc->getReturnAlloca());
   }
   // No special thing needed for void
   cc->builder->CreateBr(cc->getEndBlock());
 }
 
-llvm::Value* intValueGen(IntValue* i, CC *cc){
+llvm::Value* IntValue::exprGen(CC *cc){
   // TODO Check max size
-  int value = i->size;
-  if(i->val)
-    value = atoi(i->val->c_str());
+  int value = this->size;
+  if(this->val)
+    value = atoi(this->val->c_str());
   // TODO check params?
   return llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), value, true);
 }
 
-void variableDeclGen(VariableDecl *vd, CC *cc) {
+void VariableDecl::codegen(CodegenContext *cc){
   // TODO maybe we need the block first for allocation?
-  auto t = typeGen(vd->t, cc);
+  auto t = this->t->typeGen(cc);
   if (!t) {
-    printf("Unknown type %s\n", ((StructType *)vd->t)->name->c_str());
+    printf("Unknown type %s\n", ((StructType *)this->t)->name->c_str());
     exit(1);
   }
 
   auto bblock = cc->block.back()->bblock;
 
-  if (auto at = dynamic_cast<ArrayType *>(vd->t)) {
+  if (auto at = dynamic_cast<ArrayType *>(this->t)) {
     if (at->exp) {
       // stacksave/stackrestore? TODO
-      auto count = exprGen(at->exp, cc);
-      count = castGen(at->exp->exprType, at->base, count, cc, vd, true);
-      auto alloc = cc->builder->CreateAlloca(t, 0, count, vd->name->c_str());
-      cc->setVariable(vd->name, alloc, vd);
+      auto count = at->exp->exprGen(cc);
+      count = castGen(at->exp->exprType, at->base, count, cc, this, true);
+      auto alloc = cc->builder->CreateAlloca(t, 0, count, this->name->c_str());
+      cc->setVariable(this->name, alloc, this);
       return;
     }
   }
@@ -295,18 +299,18 @@ void variableDeclGen(VariableDecl *vd, CC *cc) {
   // TODO handle global
   llvm::IRBuilder<> TmpB(bblock, bblock->begin());
 
-  llvm::AllocaInst *alloc = TmpB.CreateAlloca(t, 0, vd->name->c_str());
-  cc->setVariable(vd->name, alloc, vd);
+  llvm::AllocaInst *alloc = TmpB.CreateAlloca(t, 0, this->name->c_str());
+  cc->setVariable(this->name, alloc, this);
 
   // TODO if not array, handle array with exp seperately
-  if (vd->exp) {
+  if (this->exp) {
     // set variable to expr
-    auto exp = exprGen(vd->exp, cc);
+    auto exp = this->exp->exprGen(cc);
     cc->builder->CreateStore(exp, alloc);
   }
 
-  if(typeid(*vd->t).hash_code() == typeid(StructType).hash_code()){
-    StructStatement *ss = cc->getStructStruct(((StructType*)vd->t)->name);
+  if(typeid(*this->t).hash_code() == typeid(StructType).hash_code()){
+    StructStatement *ss = cc->getStructStruct(((StructType*)this->t)->name);
     if(ss->has_initializer){
       for(int i=0; i < ss->members->size(); i++){
         auto vd = (*ss->members)[i];
@@ -323,7 +327,7 @@ void variableDeclGen(VariableDecl *vd, CC *cc) {
           llvm::Value *member_ptr =
               cc->builder->CreateInBoundsGEP(t, alloc, indices, "memberptr");
 
-          cc->builder->CreateStore(exprGen(vd->exp, cc), member_ptr);
+          cc->builder->CreateStore(vd->exp->exprGen(cc), member_ptr);
         }
       }
     }
@@ -420,32 +424,32 @@ llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CC *cc,
 
   if (et == inttype && bt == inttype){
     IntType *it = (IntType *)exprType;
-    return cc->builder->CreateIntCast(e, typeGen(baseType, cc), it->isSigned);
+    return cc->builder->CreateIntCast(e, baseType->typeGen(cc), it->isSigned);
   }
 
   if(et == floattype && bt == floattype){
     // TODO
-    return cc->builder->CreateFPCast(e, typeGen(baseType, cc));
+    return cc->builder->CreateFPCast(e, baseType->typeGen(cc));
   }
 
   if (et == inttype && bt == floattype) {
     IntType *it = (IntType *)exprType;
     if (it->isSigned)
-      return cc->builder->CreateSIToFP(e, typeGen(baseType, cc));
+      return cc->builder->CreateSIToFP(e, baseType->typeGen(cc));
     else
-      return cc->builder->CreateUIToFP(e, typeGen(baseType, cc));
+      return cc->builder->CreateUIToFP(e, baseType->typeGen(cc));
   }
 
   if (et == floattype && bt == inttype) {
     IntType *it = (IntType *)exprType;
     if (it->isSigned)
-      return cc->builder->CreateFPToSI(e, typeGen(baseType, cc));
+      return cc->builder->CreateFPToSI(e, baseType->typeGen(cc));
     else
-      return cc->builder->CreateFPToUI(e, typeGen(baseType, cc));
+      return cc->builder->CreateFPToUI(e, baseType->typeGen(cc));
   }
   cc->builder->getDoubleTy()->getPrimitiveSizeInBits();
   if(et == pointertype && bt == pointertype){
-    return cc->builder->CreateBitOrPointerCast(e, typeGen(baseType, cc));
+    return cc->builder->CreateBitOrPointerCast(e, baseType->typeGen(cc));
   }
 
   // TODO implement other conversions.
@@ -463,54 +467,54 @@ llvm::Value* arrayToPointer(llvm::Type* t, llvm::Value * alloc, CC *cc){
   return cc->builder->CreateInBoundsGEP(t, alloc, indices, "arrptr");
 }
 
-void variableAssignGen(VariableAssign *va, CC *cc){
-  llvm::AllocaInst *alloc = (llvm::AllocaInst *) getAlloca(va->base, cc);
+void VariableAssign::codegen(CC *cc){
+  llvm::AllocaInst *alloc = (llvm::AllocaInst *) base->getAlloca(cc);
   
   if(!alloc){
-    if(typeid(*va->base).hash_code()==typeid(VariableExpr).hash_code()){
-      printf("Unknown variable %s\nThis is a compiler bug reported from codegen::variableAssignGen", ((VariableExpr*)va->base)->name->c_str());
+    if(typeid(*base).hash_code()==typeid(VariableExpr).hash_code()){
+      printf("Unknown variable %s\nThis is a compiler bug reported from codegen::variableAssignGen", ((VariableExpr*)base)->name->c_str());
     } else {
       printf("I don't know what is happening, we are on variableAssigngen\n");
     }
     exit(1);
   }
 
-  if(typeid(*va->exp->exprType).hash_code()==typeid(ArrayType).hash_code()){
+  if(typeid(*exp->exprType).hash_code()==typeid(ArrayType).hash_code()){
     // TODO check?
-    auto art = (ArrayType*) va->exp->exprType;
+    auto art = (ArrayType*) exp->exprType;
     // auto arrayAlloc = cc->builder->CreateLoad(getAlloca(va->exp, cc));
-    auto arrayAlloc = getAlloca(va->exp, cc);
+    auto arrayAlloc = exp->getAlloca(cc);
     // auto at = typeGen(art->base, cc);
-    auto at = typeGen(art, cc);
+    auto at = art->typeGen(cc);
     auto ptr = arrayToPointer(at, arrayAlloc, cc);
     cc->builder->CreateStore(ptr, alloc);
     return ;
   }
 
 
-  auto e = exprGen(va->exp, cc);
+  auto e = exp->exprGen(cc);
 
   // Type check
   // TODO this shouldn't be here, we are checking it in compiler
-  auto baseType = va->base->exprType;
-  auto exprType = va->exp->exprType;
-  e = castGen(exprType, baseType, e, cc, va, false, alloc);
+  auto baseType = base->exprType;
+  auto exprType = exp->exprType;
+  e = castGen(exprType, baseType, e, cc, this, false, alloc);
   if(e)
     cc->builder->CreateStore(e, alloc);
 }
 
-llvm::Value* variableExprGen(VariableExpr *ve, CC *cc){
-  llvm::AllocaInst *alloc = cc->getVariableAlloca(ve->name);
+llvm::Value* VariableExpr::exprGen(CC *cc){
+  llvm::AllocaInst *alloc = cc->getVariableAlloca(this->name);
   if(!alloc){
     // is it a function?
 
-    llvm::Function *f = cc->module->getFunction(*ve->name);
+    llvm::Function *f = cc->module->getFunction(*this->name);
     if(f){
       // We have a function
       return f;
     }
 
-    printf("Unknown variable %s\n", ve->name->c_str());
+    printf("Unknown variable %s\n", this->name->c_str());
     printf("This is a compiler bug reported in codegen::variableExprGen\n");
     exit(1);
   }
@@ -520,29 +524,29 @@ llvm::Value* variableExprGen(VariableExpr *ve, CC *cc){
   return load;
 }
 
-llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
+llvm::Value* FunctionCallExpr::exprGen(CC *cc){
   // TODO args, function resolve could be improved!
-  llvm::Function *calleeF = cc->module->getFunction(fc->name->c_str());
+  llvm::Function *calleeF = cc->module->getFunction(this->name->c_str());
   llvm::Value *cf;
   bool is_void;
   if (!calleeF) {
     // maybe it's a function variable
-    auto vd = cc->getVariableDecl(fc->name);
+    auto vd = cc->getVariableDecl(this->name);
     ArgDecl* ad;
 
     if(vd && (ad=dynamic_cast<ArgDecl*>(vd)) && typeid(*ad->t).hash_code()==typeid(FunctionType).hash_code()){
-      auto cd = cc->getVariableAlloca(fc->name);
+      auto cd = cc->getVariableAlloca(this->name);
       cf = cc->builder->CreateLoad(cd);
       is_void = dynamic_cast<VoidType*>(((FunctionType*)ad->t)->returnType);
     }
     else if(vd && typeid(*vd->t).hash_code() == typeid(FunctionType).hash_code()){
       // it's a function variable
-      auto cd = cc->getVariableAlloca(fc->name);
+      auto cd = cc->getVariableAlloca(this->name);
       cf = cc->builder->CreateLoad(cd);
       is_void = dynamic_cast<VoidType*>(((FunctionType*)vd->t)->returnType);
     } else {
-      printf("Function not found %s\n", fc->name->c_str());
-      printf("line no %d\n", fc->lineno);
+      printf("Function not found %s\n", this->name->c_str());
+      printf("line no %d\n", this->lineno);
       printf("This is a compiler bug, reported from "
              "codegen::functionCallExprGen\n");
       exit(1);
@@ -554,14 +558,14 @@ llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
 
   // There is another function call in the interface method call function
   std::vector<llvm::Value *> argsV;
-  for(auto e: *fc->expr){
+  for(auto e: *this->expr){
     if(e->exprType && typeid(*e->exprType).hash_code() == typeid(ArrayType).hash_code()){
       // For Arrays, send the pointer to the first element
 
       ArrayType *at = (ArrayType*) e->exprType;
 
-      auto t = typeGen(at, cc);
-      auto alloc = getAlloca(e, cc);
+      auto t = at->typeGen(cc);
+      auto alloc = e->getAlloca(cc);
 
       if(at->count){
         argsV.push_back(arrayToPointer(t, alloc, cc));
@@ -573,7 +577,7 @@ llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
         argsV.push_back(cc->builder->CreateLoad(alloc));
       }
     } else {
-      argsV.push_back(exprGen(e, cc));
+      argsV.push_back(e->exprGen(cc));
     }
   }
 
@@ -582,12 +586,12 @@ llvm::Value* functionCallExprGen(FunctionCallExpr *fc, CC *cc){
   return cc->builder->CreateCall(cf, argsV, "calltmp");
 }
 
-llvm::Value* binaryOpExprGen(BinaryOperation *bo, CC *cc){
-  auto *lhs = exprGen(bo->lhs, cc);
-  auto *rhs = exprGen(bo->rhs, cc);
+llvm::Value* BinaryOperation::exprGen(CC *cc){
+  auto *lhs = this->lhs->exprGen(cc);
+  auto *rhs = this->rhs->exprGen(cc);
 
-  auto lt = typeid(*bo->lhs->exprType).hash_code();
-  auto rt = typeid(*bo->rhs->exprType).hash_code();
+  auto lt = typeid(*this->lhs->exprType).hash_code();
+  auto rt = typeid(*this->rhs->exprType).hash_code();
 
   auto it = typeid(IntType).hash_code();
   auto ft = typeid(FloatType).hash_code();
@@ -598,7 +602,7 @@ llvm::Value* binaryOpExprGen(BinaryOperation *bo, CC *cc){
   if((lt == it || lt == ft) && (rt== it || rt == ft)){
     llvm::Instruction::BinaryOps instr;
 
-    switch (bo->op) {
+    switch (this->op) {
     case Operation::PLUS:
       instr = llvm::Instruction::Add;
       break;
@@ -620,7 +624,7 @@ llvm::Value* binaryOpExprGen(BinaryOperation *bo, CC *cc){
   }
 
   if(((pt == lt && rt == it) || (pt == it && rt == pt)) &&
-     (bo->op == PLUS || bo->op == SUB)){
+     (this->op == PLUS || this->op == SUB)){
     // TODO handle the type in compiler?
     // TODO handling pointer
 
@@ -630,39 +634,39 @@ llvm::Value* binaryOpExprGen(BinaryOperation *bo, CC *cc){
       lhs = rhs;
       rhs = tmp;
 
-      auto tmp2 = bo->lhs;
-      bo->lhs = bo->rhs;
-      bo->rhs = tmp2;
+      auto tmp2 = this->lhs;
+      this->lhs = this->rhs;
+      this->rhs = tmp2;
     }
 
     // TODO cast rhs to i64 (or 32 dep on arch)
 
-    if(bo->op == SUB){
+    if(this->op == SUB){
       auto mone = llvm::ConstantInt::get(cc->context, llvm::APInt(64, -1, false));
       rhs = cc->builder->CreateBinOp(llvm::Instruction::Mul, rhs, mone);
     }
 
-    auto t = typeGen(bo->lhs->exprType, cc);
+    auto t = this->lhs->exprType->typeGen(cc);
 
     std::vector<llvm::Value *> indices(1);
     indices[0] = rhs;
     return cc->builder->CreateInBoundsGEP(t->getPointerElementType(), lhs, indices, "ptrarrptr");
   }
 
-  printf("Can't run the expression on types %s and %s on line %d\n", bo->lhs->exprType->displayName().c_str(), bo->rhs->exprType->displayName().c_str(), bo->lineno);
+  printf("Can't run the expression on types %s and %s on line %d\n", this->lhs->exprType->displayName().c_str(), this->rhs->exprType->displayName().c_str(), this->lineno);
 }
 
-llvm::Value* stringvalueGen(StringValue *sv, CC *cc){
-  return cc->builder->CreateGlobalStringPtr(*sv->val);
+llvm::Value* StringValue::exprGen(CC *cc){
+  return cc->builder->CreateGlobalStringPtr(*this->val);
 }
 
-llvm::Value* memberAlloca(MemberExpr *e, CC *cc){
+llvm::Value* MemberExpr::getAlloca(CC *cc){
   int member_ind = 0;
 
   // TODO level
 
   // maybe it's not StructType
-  auto tmpe = e->e->exprType;
+  auto tmpe = this->e->exprType;
 
   while(PointerType* p = dynamic_cast<PointerType*>(tmpe)){
     tmpe = p->base;
@@ -673,7 +677,7 @@ llvm::Value* memberAlloca(MemberExpr *e, CC *cc){
   auto st = (llvm::StructType*)cc->getStructType(t->name);
 
   for(auto m: *ss->members){
-    if(m->name->compare(*e->mem) == 0){
+    if(m->name->compare(*this->mem) == 0){
       break;
     }
     member_ind++;
@@ -685,9 +689,9 @@ llvm::Value* memberAlloca(MemberExpr *e, CC *cc){
 
   llvm::Value * alloc;
 
-  alloc = getAlloca(e->e, cc);
+  alloc = this->e->getAlloca(cc);
 
-  for(int i = 0; i < e->level; i++){
+  for(int i = 0; i < this->level; i++){
     alloc = cc->builder->CreateLoad(alloc, "paccess");
   }
 
@@ -699,15 +703,15 @@ llvm::Value* memberAlloca(MemberExpr *e, CC *cc){
   return member_ptr;
 }
 
-llvm::Value* arrayAlloca(ArrayExpr* ae, CC *cc){
-  ArrayType *at = (ArrayType*)ae->e->exprType;
+llvm::Value* ArrayExpr::getAlloca(CC *cc){
+  ArrayType *at = (ArrayType*)this->e->exprType;
 
   // check for count member
   if (at->count) {
-    auto t = typeGen(ae->e->exprType, cc);
-    auto alloc = getAlloca(ae->e, cc);
+    auto t = this->e->exprType->typeGen(cc);
+    auto alloc = this->e->getAlloca(cc);
     // TODO check alloc here and everywhere else!
-    auto ind = exprGen(ae->mem, cc);
+    auto ind = this->mem->exprGen(cc);
 
     std::vector<llvm::Value *> indices(2);
     indices[0] = llvm::ConstantInt::get(cc->context, llvm::APInt(64, 0, true));
@@ -715,53 +719,53 @@ llvm::Value* arrayAlloca(ArrayExpr* ae, CC *cc){
     return cc->builder->CreateInBoundsGEP(t, alloc, indices, "arrptr");
   } else if(at->exp){
     // This is basically a pointer
-    auto t = typeGen(ae->e->exprType, cc);
-    auto alloc = getAlloca(ae->e, cc);
+    auto t = this->e->exprType->typeGen(cc);
+    auto alloc = this->e->getAlloca(cc);
     std::vector<llvm::Value *> indices(1);
-    indices[0] = exprGen(ae->mem, cc);
+    indices[0] = this->mem->exprGen(cc);
     auto tmp = cc->builder->CreateInBoundsGEP(t, alloc, indices, "ptrarrptr");
     return tmp;
   } else {
     // I have no clue how this is working, but it does.
-    auto t = typeGen(ae->e->exprType, cc);
-    auto alloc = getAlloca(ae->e, cc);
+    auto t = this->e->exprType->typeGen(cc);
+    auto alloc = this->e->getAlloca(cc);
     alloc = cc->builder->CreateLoad(alloc);
     std::vector<llvm::Value *> indices(1);
-    indices[0] = exprGen(ae->mem, cc);
+    indices[0] = this->mem->exprGen(cc);
     return cc->builder->CreateInBoundsGEP(t->getPointerElementType(), alloc, indices, "ptrarrptr");
   }
 }
 
-llvm::Value* pointerAccessExprAlloca(PointerAccessExpr* expr, CC *cc){
-  auto load = exprGen(expr->exp, cc);
+llvm::Value* PointerAccessExpr::getAlloca(CC *cc){
+  auto load = this->exp->exprGen(cc);
   return load;
 }
 
-llvm::Value* memberExprGen(MemberExpr *e, CC *cc){
-  auto member_ptr = memberAlloca(e, cc); // Level is handled there
+llvm::Value* MemberExpr::exprGen(CC *cc){
+  auto member_ptr = this->getAlloca(cc); // Level is handled there
   llvm::Value *loaded_member = cc->builder->CreateLoad(member_ptr, "loadtmp");
   return loaded_member;
 }
 
-llvm::Value* arrayExprGen(ArrayExpr *e, CC *cc){
-  auto member_ptr = arrayAlloca(e, cc);
+llvm::Value* ArrayExpr::exprGen(CodegenContext *cc){
+  auto member_ptr = this->getAlloca(cc);
   llvm::Value *loaded_member = cc->builder->CreateLoad(member_ptr, "loadtmp");
   return loaded_member;
 }
 
-void ifGen(IfStatement *is, CC *cc){
+void IfStatement::codegen(CC *cc){
   llvm::Function *f = cc->builder->GetInsertBlock()->getParent();
 
   llvm::BasicBlock *ifB = llvm::BasicBlock::Create(cc->context, "if", f),
     *elseB,
     *mergeB = llvm::BasicBlock::Create(cc->context, "ifcont");
 
-  if(is->e)
+  if(this->e)
     elseB = llvm::BasicBlock::Create(cc->context, "else");
   else
     elseB = mergeB;
 
-  llvm::Value *cond = exprGen(is->exp, cc);
+  llvm::Value *cond = this->exp->exprGen(cc);
 
   cond = cc->builder->CreateICmpNE(cond, llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), 0, false), // TODO, maybe improve?
     "ifcond");
@@ -771,7 +775,7 @@ void ifGen(IfStatement *is, CC *cc){
   // If Body
   cc->block.push_back(new CodegenBlockContext(ifB));
   cc->builder->SetInsertPoint(ifB);
-  codegen(is->i, cc);
+  this->i->codegen(cc);
   if (cc->builder->GetInsertPoint()
           ->getPrevNonDebugInstruction()
           ->getOpcode() != llvm::Instruction::Br) {
@@ -780,11 +784,11 @@ void ifGen(IfStatement *is, CC *cc){
   cc->block.pop_back();
 
   // Else
-  if(is->e){
+  if(this->e){
     cc->block.push_back(new CodegenBlockContext(elseB));
     f->getBasicBlockList().push_back(elseB);
     cc->builder->SetInsertPoint(elseB);
-    codegen(is->e, cc);
+    this->e->codegen(cc);
     if (cc->builder->GetInsertPoint()
             ->getPrevNonDebugInstruction()
             ->getOpcode() != llvm::Instruction::Br) {
@@ -797,18 +801,18 @@ void ifGen(IfStatement *is, CC *cc){
   cc->builder->SetInsertPoint(mergeB);
 }
 
-void blockGen(CodeBlock *cb, CC *cc){
+void CodeBlock::codegen(CC *cc){
   // TODO
   cc->defered.push_back(new std::vector<Statement*>());
 
-  for(auto s: *cb->stmts){
-    codegen(s, cc);
+  for(auto s: *this->stmts){
+    s->codegen(cc);
   }
 
   handleDefer(cc);
 }
 
-void whileGen(WhileStatement *ws, CC *cc){
+void WhileStatement::codegen(CC *cc){
   // TODO
 
   llvm::Function *f = cc->builder->GetInsertBlock()->getParent();
@@ -823,7 +827,7 @@ void whileGen(WhileStatement *ws, CC *cc){
   // While cond
   cc->block.push_back(new CodegenBlockContext(condB));
   cc->builder->SetInsertPoint(condB);
-  llvm::Value *cond = exprGen(ws->exp, cc);
+  llvm::Value *cond = this->exp->exprGen(cc);
   cond = cc->builder->CreateICmpNE(cond, llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), 0, false), "whilecond"); // TODO improve?
   cc->builder->CreateCondBr(cond, whileB, mergeB);
   cc->block.pop_back();
@@ -832,7 +836,7 @@ void whileGen(WhileStatement *ws, CC *cc){
   f->getBasicBlockList().push_back(whileB);
   cc->block.push_back(new CodegenBlockContext(whileB));
   cc->builder->SetInsertPoint(whileB);
-  codegen(ws->w, cc);
+  this->w->codegen(cc);
   if (cc->builder->GetInsertPoint()
           ->getPrevNonDebugInstruction()
           ->getOpcode() != llvm::Instruction::Br) {
@@ -845,17 +849,17 @@ void whileGen(WhileStatement *ws, CC *cc){
   cc->builder->SetInsertPoint(mergeB);
 }
 
-void interfaceGen(InterfaceStatement *is, CC *cc){
+void InterfaceStatement::codegen(CC *cc){
   // TODO
 
   // Create a vtable struct
   std::vector<llvm::Type *> vptr_t;
 
-  for(auto m: *is->members){
+  for(auto m: *this->members){
     vptr_t.push_back(llvm::Type::getInt64PtrTy(cc->context));
   }
 
-  auto vt = llvm::StructType::create(cc->context, vptr_t, (*is->name)+ "$_interface_vptr");
+  auto vt = llvm::StructType::create(cc->context, vptr_t, (*this->name)+ "$_interface_vptr");
 
   // TODO include pointers to subinterfaces
 
@@ -864,15 +868,15 @@ void interfaceGen(InterfaceStatement *is, CC *cc){
   intf.push_back(vt->getPointerTo());
   intf.push_back(llvm::Type::getInt64PtrTy(cc->context));
 
-  auto it = llvm::StructType::create(cc->context, intf, (*is->name));
+  auto it = llvm::StructType::create(cc->context, intf, (*this->name));
 
-  cc->setInterface(is->name, it, vt, is);
+  cc->setInterface(this->name, it, vt, this);
 }
 
-void structGen(StructStatement *ss, CC *cc){
+void StructStatement::codegen(CC *cc){
   // TODO
 
-  ss->type_counter = cc->struct_type_counter;
+  this->type_counter = cc->struct_type_counter;
   cc->struct_type_counter++;
 
   std::vector<llvm::Type *> members_t;
@@ -886,7 +890,7 @@ void structGen(StructStatement *ss, CC *cc){
 
   // create the global vptr
 
-  std::string vptr_name = "$$_vptr$"+ *ss->name;
+  std::string vptr_name = "$$_vptr$"+ *this->name;
 
   cc->module->getOrInsertGlobal(vptr_name, vt);
   auto vp = cc->module->getNamedGlobal(vptr_name);
@@ -895,38 +899,38 @@ void structGen(StructStatement *ss, CC *cc){
   // TODO set the initializer after all methods are registered.
   std::vector<llvm::Constant *> v;
   v.push_back(llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context),
-                                     ss->type_counter, false));
+                                     this->type_counter, false));
   vp->setInitializer(llvm::ConstantStruct::getAnon(cc->context, v, false));
 
   llvm::Type *vptr = vt->getPointerTo();
   members_t.push_back(vptr);
 
-  auto s = llvm::StructType::create(cc->context, members_t, *ss->name); // TODO check params
+  auto s = llvm::StructType::create(cc->context, members_t, *this->name); // TODO check params
 
-  for(auto m: *ss->members){
-    members_t.push_back(typeGen(m->t, cc));
+  for(auto m: *this->members){
+    members_t.push_back(m->t->typeGen(cc));
   }
 
   s->setBody(members_t);
 
   // TODO set the compiler context
-  cc->setStruct(ss->name, s, ss);
+  cc->setStruct(this->name, s, this);
 }
 
-void deferGen(DeferStatement* ds, CC *cc){
-  cc->defered.back()->push_back(ds->s);
+void DeferStatement::codegen(CC *cc){
+  cc->defered.back()->push_back(s);
 }
 
-llvm::Type *interfaceType(InterfaceType *it, CC *cc){
-  return cc->getInterfaceType(it->name);
+llvm::Type *InterfaceType::typeGen(CC *cc){
+  return cc->getInterfaceType(name);
 }
 
-llvm::Type *structType(StructType *st, CC *cc){
-  return cc->getStructType(st->name);
+llvm::Type *StructType::typeGen(CC *cc){
+  return cc->getStructType(this->name);
 }
 
-llvm::Type *intTypeGen(IntType *it, CC *cc){
-  switch(it->size){
+llvm::Type *IntType::typeGen(CC *cc){
+  switch(this->size){
   case 0:
     /// TODO do it based on sys arch
     return llvm::Type::getInt64Ty(cc->context);
@@ -945,8 +949,8 @@ llvm::Type *intTypeGen(IntType *it, CC *cc){
   return nullptr;
 }
 
-llvm::Type *floatTypeGen(FloatType *ft, CC *cc){
-  switch(ft->size){
+llvm::Type *FloatType::typeGen(CC *cc){
+  switch(size){
   case 0:
     // TODO do it based on sys arch
     return llvm::Type::getFloatTy(cc->context);
@@ -1015,18 +1019,18 @@ void import_compiler(llvm::ExecutionEngine *EE, CC *cc){
   }
 }
 
-void compileGen(CompileStatement *stmt, CC *cc){
+void CompileStatement::codegen(CC *cc){
   // TODO
-  if(stmt->name->compare("compile")==0){
+  if(this->name->compare("compile")==0){
     // Compile the main statement
     // Ensure it's a function
     FunctionDefine *df;
-    if(!(df=dynamic_cast<FunctionDefine*>(stmt->s))){
-      printf("@compile directive must be used with a function, line %d.\n", stmt->lineno);
+    if(!(df=dynamic_cast<FunctionDefine*>(this->s))){
+      printf("@compile directive must be used with a function, line %d.\n", this->lineno);
     }
 
     // TODO ensure return type of int
-    llvm::Function *f = funcGen(df, cc);
+    llvm::Function *f = df->funcgen(cc);
 
     auto args = df->sign->args;
 
@@ -1062,13 +1066,13 @@ void compileGen(CompileStatement *stmt, CC *cc){
 
     if(!ran){
       printf("Incorrect number of arguments for compie directive %s on line %d\n",
-             stmt->name->c_str(), stmt->lineno);
+             this->name->c_str(), this->lineno);
       exit(1);
     }
 
     if (retval) {
       printf("Compile directive %s exited with value %d on line %d\n",
-             stmt->name->c_str(), retval, stmt->lineno);
+             this->name->c_str(), retval, this->lineno);
       if (retval != 1) {
         printf("Aborting\n");
         exit(1);
@@ -1085,14 +1089,14 @@ void compileGen(CompileStatement *stmt, CC *cc){
     EE->removeModule(cc->module);
 
   } else {
-    printf("Unknown compile directive %s on line %d\naborting\n", stmt->name->c_str(), stmt->lineno);
+    printf("Unknown compile directive %s on line %d\naborting\n", this->name->c_str(), this->lineno);
     exit(1);
   }
 }
 
 llvm::Value *interfaceMethodCall(MethodCall *mce, CC *cc){
 
-  llvm::Value *i = getAlloca(mce->e, cc);
+  llvm::Value *i = mce->e->getAlloca(cc);
 
   // find the method index
   InterfaceType *it = (InterfaceType*)mce->e->exprType;
@@ -1135,7 +1139,7 @@ llvm::Value *interfaceMethodCall(MethodCall *mce, CC *cc){
   
   ft->args->insert(ft->args->begin(), new PointerType(new IntType(64)));
 
-  f = cc->builder->CreateBitCast(f, typeGen(ft, cc)->getPointerTo());
+  f = cc->builder->CreateBitCast(f, ft->typeGen(cc)->getPointerTo());
 
   // Replace the mce->expr[0] with the pointer to the struct
 
@@ -1159,8 +1163,8 @@ llvm::Value *interfaceMethodCall(MethodCall *mce, CC *cc){
 
       ArrayType *at = (ArrayType*) e->exprType;
 
-      auto t = typeGen(at, cc);
-      auto alloc = getAlloca(e, cc);
+      auto t = at->typeGen(cc);
+      auto alloc = e->getAlloca(cc);
 
       if(at->count){
         argsV.push_back(arrayToPointer(t, alloc, cc));
@@ -1172,7 +1176,7 @@ llvm::Value *interfaceMethodCall(MethodCall *mce, CC *cc){
         argsV.push_back(cc->builder->CreateLoad(alloc));
       }
     } else {
-      argsV.push_back(exprGen(e, cc));
+      argsV.push_back(e->exprGen(cc));
     }
   }
 
@@ -1184,219 +1188,105 @@ llvm::Value *interfaceMethodCall(MethodCall *mce, CC *cc){
   return cc->builder->CreateCall(f, argsV, "calltmp");
 }
 
-void codegen(Statement* stmt, CC *cc){
-  auto t = typeid(*stmt).hash_code();
-
-  if(t == typeid(ImportStatement).hash_code()){
-    ImportStatement *is = (ImportStatement*) stmt;
-    if(is->name->compare("compiler") == 0){
-      cc->import_compiler = true;
-    }
-
-    for(auto s : *is->stmts)
-      codegen(s, cc);
-    return;
+void ImportStatement::codegen(CC *cc){
+  if (name->compare("compiler") == 0) {
+    cc->import_compiler = true;
   }
 
-  if(t == typeid(FunctionDefine).hash_code()){
-    funcGen((FunctionDefine*)stmt, cc);
-    return;
-  }
-
-  if(t == typeid(FunctionSignature).hash_code()){
-    funcSignGen((FunctionSignature*)stmt, cc);
-    return;
-  }
-
-  if(t == typeid(FunctionCallExpr).hash_code()){
-    functionCallExprGen((FunctionCallExpr*) stmt, cc);
-    return;
-  }
-
-  if(t == typeid(ReturnStatement).hash_code())
-    return retGen((ReturnStatement*)stmt, cc);
-
-  if(t == typeid(VariableAssign).hash_code())
-    return variableAssignGen((VariableAssign*) stmt, cc);
-
-  if(t == typeid(VariableDecl).hash_code())
-    return variableDeclGen((VariableDecl *) stmt, cc);
-
-  if(t == typeid(IfStatement).hash_code())
-    return ifGen((IfStatement*) stmt, cc);
-
-  if(t == typeid(CodeBlock).hash_code())
-    return blockGen((CodeBlock*) stmt, cc);
-
-  if(t == typeid(WhileStatement).hash_code())
-    return whileGen((WhileStatement*) stmt, cc);
-
-  if(t == typeid(StructStatement).hash_code())
-    return structGen((StructStatement *) stmt, cc);
-
-  if(t == typeid(InterfaceStatement).hash_code())
-    return interfaceGen((InterfaceStatement*)stmt, cc);
-
-  if(t == typeid(DeferStatement).hash_code())
-    return deferGen((DeferStatement*) stmt, cc);
-
-  if(t == typeid(CompileStatement).hash_code())
-    return compileGen((CompileStatement*)stmt, cc);
-
-  if(t == typeid(MemberStatement).hash_code())
-    return codegen(((MemberStatement*)stmt)->f, cc);
-
-  if(t == typeid(MethodCall).hash_code()){
-    MethodCall *mce = (MethodCall*) stmt;
-    if(mce->f) 
-      return codegen(((MethodCall*)stmt)->fce, cc);
-    interfaceMethodCall(mce, cc);
-    return;
-  }
-
-  printf("Unknown codegen for class of type %s\n", typeid(*stmt).name());
-  exit(1);
+  for (auto s : *stmts)
+    s->codegen(cc);
 }
 
-llvm::Value* exprGen(Expression *exp, CC *cc){
-  auto t = typeid(*exp).hash_code();
-
-  if(t == typeid(IntValue).hash_code())
-    return intValueGen((IntValue*) exp, cc);
-  if(t == typeid(VariableExpr).hash_code())
-    return variableExprGen((VariableExpr*)exp, cc);
-  if(t == typeid(FunctionCallExpr).hash_code())
-    return functionCallExprGen((FunctionCallExpr*) exp, cc);
-  if(t == typeid(BinaryOperation).hash_code())
-    return binaryOpExprGen((BinaryOperation *) exp, cc);
-  if(t == typeid(StringValue).hash_code())
-    return stringvalueGen((StringValue *) exp, cc);
-  if(t == typeid(MemberExpr).hash_code())
-    return memberExprGen((MemberExpr *) exp, cc);
-  if(t == typeid(ArrayExpr).hash_code())
-    return arrayExprGen((ArrayExpr *) exp, cc);
-  if(t == typeid(CastExpr).hash_code()){
-    CastExpr * ce = (CastExpr*)exp;
-    auto targetType = ce->exp->exprType;
-    auto baseType = ce->t;
-    return castGen(targetType, baseType, exprGen(ce->exp, cc), cc, ce, true);
-  }
-  if(t == typeid(PointerExpr).hash_code()){
-    PointerExpr *pe = (PointerExpr*) exp;
-    return getAlloca(pe->exp, cc);
-  }
-
-  if(t == typeid(PointerAccessExpr).hash_code()){
-    auto pae = (PointerAccessExpr*) exp;
-    auto load = cc->builder->CreateLoad(exprGen(pae->exp, cc), "ptra");
-    return load;
-  }
-
-  if(t == typeid(SizeofExpr).hash_code()){
-    auto se = (SizeofExpr*) exp;
-    auto dl = cc->module->getDataLayout();
-    auto size = dl.getTypeAllocSize(typeGen(se->t, cc)); 
-    // TODO memory leak
-    return exprGen(new IntValue(size), cc);
-  }
-
-  if(t == typeid(MethodCall).hash_code()){
-    MethodCall *mce = (MethodCall*)exp;
-    if(mce->f)
-      return exprGen(((MethodCall*)exp)->fce, cc);
-    return interfaceMethodCall(mce, cc);
-  }
-
-  printf("Unknown exprgen for class of type %s\n", typeid(*exp).name());
-  exit(1);
-  return NULL;
+void FunctionCallExpr::codegen(CC *cc){
+  exprGen(cc);
 }
 
-llvm::Type* typeGen(Type *type, CC *cc){
-  auto t = typeid(*type).hash_code();
+void MemberStatement::codegen(CC *cc){
+  f->codegen(cc);
+}
 
-  if(t == typeid(IntType).hash_code())
-    return intTypeGen((IntType*)type, cc);
+void MethodCall::codegen(CC *cc){
+  if(f)
+    return fce->codegen(cc);
+  interfaceMethodCall(this, cc);
+}
 
-  // TODO, improve?
-  if(t == typeid(StringType).hash_code())
-    return llvm::PointerType::getUnqual(llvm::Type::getInt8Ty(cc->context));
+llvm::Value *CastExpr::exprGen(CC *cc){
+  auto targetType = this->exp->exprType;
+  auto baseType = this->t;
+  return castGen(targetType, baseType, this->exp->exprGen(cc), cc, this, true);
+}
 
-  if(t == typeid(AnyType).hash_code())
-    return llvm::Type::getInt64PtrTy(cc->context);
+llvm::Value *PointerExpr::exprGen(CC *cc){
+    return exp->getAlloca(cc);
+}
 
-  if(t == typeid(VoidType).hash_code())
-    return llvm::Type::getVoidTy(cc->context);
+llvm::Value *PointerAccessExpr::exprGen(CC *cc){
+    return cc->builder->CreateLoad(exp->exprGen(cc), "ptra");
+}
 
-  if(t == typeid(StructType).hash_code())
-    return structType((StructType*)type, cc);
+llvm::Value *SizeofExpr::exprGen(CC *cc){
+  auto dl = cc->module->getDataLayout();
+  auto size = dl.getTypeAllocSize(this->t->typeGen(cc));
+  // TODO memory leak
+  return (new IntValue(size))->exprGen(cc);
+}
 
-  if(t == typeid(InterfaceType).hash_code())
-    return interfaceType((InterfaceType*)type, cc);
+llvm::Value *MethodCall::exprGen(CC *cc){
+  if (f)
+    return fce->exprGen(cc);
+  return interfaceMethodCall(this, cc);
+}
 
-  if(t == typeid(FloatType).hash_code())
-    return floatTypeGen((FloatType*) type, cc);
+llvm::Type *StringType::typeGen(CC *cc){
+  // Improve?
+  return llvm::PointerType::getUnqual(llvm::Type::getInt8Ty(cc->context));
+}
 
-  if(t == typeid(PointerType).hash_code()){
-    PointerType *pt = (PointerType*)type;
-    auto baseType = typeGen(pt->base, cc);
-    if(!baseType){
-      // Type is not generated yet, it should be a struct I assume
+llvm::Type *AnyType::typeGen(CC *cc){
+  return llvm::Type::getInt64PtrTy(cc->context);
+}
 
-      StructType *st = (StructType*)pt->base;
-      baseType = cc->module->getTypeByName(*st->name);
-    }
+llvm::Type *VoidType::typeGen(CC *cc){
+  return llvm::Type::getVoidTy(cc->context);
+}
 
-    return llvm::PointerType::getUnqual(baseType);
+llvm::Type *PointerType::typeGen(CC *cc) {
+  auto baseType = this->base->typeGen(cc);
+  if (!baseType) {
+    // Type is not generated yet, it should be a struct I assume
+
+    StructType *st = (StructType *)this->base;
+    baseType = cc->module->getTypeByName(*st->name);
   }
 
-  if(t == typeid(ArrayType).hash_code()){
-    ArrayType *at = (ArrayType*)type;
+  return llvm::PointerType::getUnqual(baseType);
+}
 
-    // check for count
-    if(at->count)
-      return llvm::ArrayType::get(typeGen(at->base, cc), at->count);
-    else if(at->exp)
-      return typeGen(at->base, cc);
-    else
-      return llvm::PointerType::getUnqual(typeGen(at->base, cc));
-  }
+llvm::Type *ArrayType::typeGen(CC *cc) {
+  // check for count
+  if (this->count)
+    return llvm::ArrayType::get(this->base->typeGen(cc), this->count);
+  else if (this->exp)
+    return this->base->typeGen(cc);
+  else
+    return llvm::PointerType::getUnqual(this->base->typeGen(cc));
+}
 
-  if(t == typeid(FunctionType).hash_code()){
-    FunctionType *ft = (FunctionType*) type;
-    std::vector<llvm::Type *> params;
+llvm::Type *FunctionType::typeGen(CC *cc){
+  std::vector<llvm::Type *> params;
 
-    for(auto arg: *ft->args)
-      params.push_back(typeGen(arg, cc));
+    for(auto arg: *this->args)
+      params.push_back(arg->typeGen(cc));
 
     // TODO this should be a poitner by default
 
-    return llvm::PointerType::getUnqual(llvm::FunctionType::get(typeGen(ft->returnType, cc), params,false)); // TODO varargs
-  }
+    return llvm::PointerType::getUnqual(llvm::FunctionType::get(this->returnType->typeGen(cc), params,false)); // TODO varargs
 
-  printf("Unknown typeGen for a class of type %s\n", typeid(*type).name());
-  exit(1);
-  return NULL;
 }
 
-llvm::Value *getAlloca(Expression *expr, CC *cc){
-  auto t = typeid(*expr).hash_code();
-
-  if(t == typeid(VariableExpr).hash_code())
-    return cc->getVariableAlloca(((VariableExpr*) expr)->name);
-
-  if(t == typeid(MemberExpr).hash_code())
-    return memberAlloca((MemberExpr *)expr, cc);
-
-  if(t == typeid(ArrayExpr).hash_code())
-    return arrayAlloca((ArrayExpr*)expr, cc);
-
-  if(t == typeid(PointerAccessExpr).hash_code())
-    return pointerAccessExprAlloca((PointerAccessExpr*) expr, cc);
-  
-  printf("Unknown getAlloca for a class of type %s\n", typeid(*expr).name());
-  exit(1);
-  return NULL;
+llvm::Value *VariableExpr::getAlloca(CC *cc){
+    return cc->getVariableAlloca(name);
 }
 
 std::tuple<llvm::AllocaInst *, VariableDecl *> *
