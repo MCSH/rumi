@@ -10,6 +10,7 @@
 #include <llvm/IR/Value.h>
 
 class CodegenContext;
+class CompileContext;
 
 class Node{
 public:
@@ -21,6 +22,8 @@ public:
 
   virtual ~Node(){
   }
+
+  virtual void compile(CompileContext *cc)=0;
 };
 
 class Statement: public Node{
@@ -34,6 +37,7 @@ public:
   virtual llvm::Value *exprGen(CodegenContext *cc)=0;
   virtual llvm::Value *getAlloca(CodegenContext *cc)=0; // TODO maybe extend Expression for this because most don't have it
   virtual void codegen(CodegenContext *cc){} // Almost all of expressions have empty codegen
+  virtual Type *resolveType(CompileContext *cc)=0;
 };
 
 class IntValue: public Expression{
@@ -52,6 +56,8 @@ public:
   }
   virtual llvm::Value *exprGen(CodegenContext *cc);
   virtual llvm::Value *getAlloca(CodegenContext *cc){}
+  virtual void compile(CompileContext *cc);
+  virtual Type *resolveType(CompileContext *cc);
 };
 
 class StringValue: public Expression{
@@ -88,6 +94,8 @@ public:
   }
   virtual llvm::Value *exprGen(CodegenContext *cc);
   virtual llvm::Value *getAlloca(CodegenContext *cc){}
+  virtual void compile(CompileContext *cc);
+  virtual Type *resolveType(CompileContext *cc);
 };
 
 class ReturnStatement: public Statement{
@@ -104,6 +112,7 @@ public:
   }
   virtual void codegen(CodegenContext *cc);
   virtual llvm::Value *getAlloca(CodegenContext *cc){}
+  virtual void compile(CompileContext *cc);
 };
 
 
@@ -121,6 +130,7 @@ public:
     delete exp;
   }
   virtual void codegen(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
 };
 
 class ArgDecl: public VariableDecl{
@@ -135,6 +145,7 @@ public:
     delete name;
     delete t;
   }
+  virtual void compile(CompileContext *cc){}
 };
 
 class FunctionSignature: public Statement{
@@ -168,6 +179,7 @@ public:
   }
   virtual void codegen(CodegenContext *cc);
   llvm::Function *signgen(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
 };
 
 class CodeBlock: public Statement{
@@ -184,6 +196,7 @@ public:
     delete stmts;
   }
   virtual void codegen(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
 };
 
 class FunctionDefine: public Statement{
@@ -200,6 +213,7 @@ public:
   }
   llvm::Function *funcgen(CodegenContext *cc);
   virtual void codegen(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
 };
 
 class VariableExpr: public Expression{
@@ -214,6 +228,8 @@ public:
   }
   virtual llvm::Value *exprGen(CodegenContext *cc);
   virtual llvm::Value *getAlloca(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
+  virtual Type *resolveType(CompileContext *cc);
 };
 
 class VariableAssign: public Statement{
@@ -228,6 +244,7 @@ public:
     delete exp;
   }
   virtual void codegen(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
 };
 
 
@@ -250,6 +267,8 @@ public:
   virtual llvm::Value *exprGen(CodegenContext *cc);
   virtual llvm::Value *getAlloca(CodegenContext *cc){}
   void codegen(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
+  virtual Type *resolveType(CompileContext *cc);
 };
 
 enum Operation{
@@ -272,6 +291,8 @@ public:
   }
   virtual llvm::Value *exprGen(CodegenContext *cc);
   virtual llvm::Value *getAlloca(CodegenContext *cc){}
+  virtual void compile(CompileContext *cc);
+  virtual Type *resolveType(CompileContext *cc);
 };
 
 class IfStatement: public Statement{
@@ -288,6 +309,7 @@ public:
     delete exp;
   }
   virtual void codegen(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
 };
 
 
@@ -304,6 +326,7 @@ public:
     delete exp;
   }
   virtual void codegen(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
 };
 
 class DeferStatement: public Statement{
@@ -317,6 +340,7 @@ public:
     delete s;
   }
   virtual void codegen(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
 };
 
 class StructStatement: public Statement{
@@ -339,6 +363,7 @@ public:
     delete members;
   }
   virtual void codegen(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
 };
 
 class MemberExpr: public Expression{
@@ -354,6 +379,8 @@ public:
   }
   virtual llvm::Value *exprGen(CodegenContext *cc);
   virtual llvm::Value *getAlloca(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
+  virtual Type *resolveType(CompileContext *cc);
 };
 
 class ArrayExpr: public Expression{
@@ -368,6 +395,8 @@ public:
   }
   virtual llvm::Value *exprGen(CodegenContext *cc);
   virtual llvm::Value *getAlloca(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
+  virtual Type *resolveType(CompileContext *cc);
 };
 
 class CastExpr: public Expression{
@@ -383,6 +412,8 @@ public:
   }
   virtual llvm::Value *exprGen(CodegenContext *cc);
   virtual llvm::Value *getAlloca(CodegenContext *cc){}
+  virtual void compile(CompileContext *cc);
+  virtual Type *resolveType(CompileContext *cc);
 };
 
 class PointerExpr: public Expression{
@@ -395,6 +426,8 @@ public:
   }
   virtual llvm::Value *exprGen(CodegenContext *cc);
   virtual llvm::Value *getAlloca(CodegenContext *cc){}
+  virtual void compile(CompileContext *cc);
+  virtual Type *resolveType(CompileContext *cc);
 };
 
 class PointerAccessExpr: public Expression{
@@ -407,6 +440,8 @@ public:
   }
   virtual llvm::Value *exprGen(CodegenContext *cc);
   virtual llvm::Value *getAlloca(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
+  virtual Type *resolveType(CompileContext *cc);
 };
 
 class SizeofExpr: public Expression{
@@ -420,6 +455,8 @@ public:
   }
   virtual llvm::Value *exprGen(CodegenContext *cc);
   virtual llvm::Value *getAlloca(CodegenContext *cc){}
+  virtual void compile(CompileContext *cc);
+  virtual Type *resolveType(CompileContext *cc);
 };
 
 class TypeNode: public Expression{
@@ -428,6 +465,8 @@ public:
   TypeNode(Type *exprType): exprType(exprType){}
   virtual llvm::Value *exprGen(CodegenContext *cc){}
   virtual llvm::Value *getAlloca(CodegenContext *cc){}
+  virtual void compile(CompileContext *cc){}
+  virtual Type *resolveType(CompileContext *cc){}
 };
 
 
@@ -442,6 +481,7 @@ public:
       delete stmts;
   }
   virtual void codegen(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
 };
 
 
@@ -455,6 +495,7 @@ public:
     delete s;
   }
   virtual void codegen(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
 };
 
 class MemberStatement: public Statement{
@@ -471,6 +512,7 @@ public:
   }
 
   virtual void codegen(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
 };
 
 class MethodCall: public Expression{
@@ -500,6 +542,8 @@ public:
   virtual llvm::Value *exprGen(CodegenContext *cc);
   virtual llvm::Value *getAlloca(CodegenContext *cc){}
   void codegen(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
+  virtual Type *resolveType(CompileContext *cc);
 };
 
 
@@ -525,4 +569,5 @@ public:
     delete members;
   }
   virtual void codegen(CodegenContext *cc);
+  virtual void compile(CompileContext *cc);
 };

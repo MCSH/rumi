@@ -7,13 +7,15 @@
 
 // TODO functions and methods must be traversed once before compiling just so we have everything on record, for handling of casts and calls, etc.
 
+// TODO call resolvetype inside the expressions's compile?!
+
 int yyparse();
 extern "C" FILE *yyin;
 
 typedef CompileContext CC;
 
-void compile(Statement *stmts, CC* cc);
-Type *resolveType(Expression *exp, CC *cc);
+//void compile(Statement *stmts, CC* cc);
+//Type *resolveType(Expression *exp, CC *cc);
 
 CompileContext *compile(std::vector<Statement *> *stmts){
   CC *cc = new CC();
@@ -27,15 +29,15 @@ CompileContext *compile(std::vector<Statement *> *stmts){
   */
 
   for(auto s: *stmts){
-    compile(s, cc);
+    s->compile(cc);
   }
 
   return cc;
 }
 
-std::vector<Statement *>* compile(std::vector<Statement *> *stmts, CC *cc){
+std::vector<Statement *>* array_compile(std::vector<Statement *> *stmts, CC *cc){
   for(auto s: *stmts)
-    compile(s, cc);
+    s->compile(cc);
 
   return stmts;
 }
@@ -52,9 +54,10 @@ CompileContext* compile(char *fileName){
   return compile(p);
 }
 
-void importCompile(ImportStatement *is, CC *cc){
+void ImportStatement::compile(CC *cc){
   // TODO improve
 
+  ImportStatement *is = this; // TODO because I'm lazy
   char *cwd = get_current_dir_name();
   int len = is->name->size()+1;
   int start = 0;
@@ -123,7 +126,7 @@ void importCompile(ImportStatement *is, CC *cc){
   yyparse();
   auto p = mainProgramNode;
 
-  p = compile(p, cc);
+  p = array_compile(p, cc);
   // merge me with the mainProgram
   is->stmts = p;
   chdir(cwd); // Compile will change cwd, so go back for mod generating.
@@ -256,7 +259,8 @@ void functionSignCompile(FunctionSignature *fs, CC *cc){
   cc->getParentBlock()->newFunction(fs->name, fs);
 }
 
-void functionDefineCompile(FunctionDefine *fd, CC *cc){
+void FunctionDefine::compile(CC *cc){
+  FunctionDefine *fd = this; // TODO because I'm lazy
   cc->blocks.push_back(new BlockContext());
 
   functionSignCompile(fd->sign, cc);
@@ -264,39 +268,43 @@ void functionDefineCompile(FunctionDefine *fd, CC *cc){
   cc->getBlock()->currentFunction = fd;
 
   for(auto s: *fd->body->stmts){
-    compile(s, cc);
+    s->compile(cc);
   }
 
   cc->blocks.pop_back();
 }
 
-void returnStmtCompile(ReturnStatement *rs, CC *cc){
+void ReturnStatement::compile(CC *cc){
   // TODO handle void?
+
+  auto rs = this; // TODO lazy
 
   if(!rs->exp)
     return;
 
-  compile(rs->exp, cc);
+  rs->exp->compile(cc);
 
   // return type
-  Type *t = resolveType(rs->exp, cc);
+  Type *t = rs->exp->resolveType(cc);
   Type *ft = cc->getCurrentFunction()->sign->returnT;
 
   // check the return type using castcompile
   rs->exp = castCompile(t, ft, rs->exp, cc, rs, false);
 }
 
-void structCompile(StructStatement *ss, CC *cc){
+void StructStatement::compile(CC *cc){
+  auto ss = this; // TODO lazy
   cc->getBlock()->newStruct(ss->name, ss);
   // TODO do we want to do anything with the members?
   for(VariableDecl *s: *ss->members){
-    compile(s, cc);
+    s->compile(cc);
     if(s->exp)
       ss->has_initializer = true;
   }
 }
 
-void variableDeclCompile(VariableDecl *vd,CC *cc){
+void VariableDecl::compile(CC *cc){
+  auto vd = this; // TODO lazy
   Type *type;
   // check for arrays
   if (vd->t) {
@@ -308,7 +316,7 @@ void variableDeclCompile(VariableDecl *vd,CC *cc){
           at->exp = nullptr;
         } else {
           cc->getCurrentFunction()->dynamicStack = true;
-          compile(at->exp, cc);
+          at->exp->compile(cc);
         }
       }
     }
@@ -316,8 +324,8 @@ void variableDeclCompile(VariableDecl *vd,CC *cc){
   // check exp type
   if(vd->exp){
     if(vd->t){
-      compile(vd->exp, cc);
-      auto etype = resolveType(vd->exp, cc);
+      vd->exp->compile(cc);
+      auto etype = vd->exp->resolveType(cc);
       auto c = vd->t->compatible(etype);
       if(c==OK || c==ImpCast){
         delete etype; // TODO problematic, remove in case of segfault
@@ -328,8 +336,8 @@ void variableDeclCompile(VariableDecl *vd,CC *cc){
       }
       type = vd->t;
     } else {
-      compile(vd->exp, cc);
-      type = resolveType(vd->exp, cc);
+      vd->exp->compile(cc);
+      type = vd->exp->resolveType(cc);
     }
   } else {
     type = vd->t;
@@ -369,446 +377,396 @@ void variableDeclCompile(VariableDecl *vd,CC *cc){
   cc->getBlock()->newVar(vd->name, vd->t);
 }
 
-void compile(Statement *stmt, CC *cc){
-  auto t = typeid(*stmt).hash_code();
-
-  // TODO check resolve_type if it's an expression.
-  // TODO this shouldn't be here if we call the resolveType of every expression ourselves.
-  if(Expression *exp = dynamic_cast<Expression*>(stmt)){
-    resolveType(exp, cc);
-  }
-
-  if(t == typeid(ImportStatement).hash_code())
-    return importCompile((ImportStatement*) stmt, cc);
-
-  if(t == typeid(FunctionDefine).hash_code())
-    return functionDefineCompile((FunctionDefine*) stmt, cc);
-
-  if(t == typeid(FunctionSignature).hash_code()){
+void FunctionSignature::compile(CC *cc){
     cc->blocks.push_back(new BlockContext());
-    functionSignCompile((FunctionSignature *) stmt, cc);
+
+    functionSignCompile(this, cc); // TODO super lazy
+
     BlockContext *bc = cc->blocks.back();
     cc->blocks.pop_back();
     delete bc;
     return;
-  }
-
-  if(t == typeid(FunctionCallExpr).hash_code()){
-    // TODO
-    // TODO ensure type matches
-    auto *fce= (FunctionCallExpr*) stmt;
-
-    // check function exists
-    auto fs = cc->getFunction(fce->name);
-    if(!fs){
-      // it could be a function variable
-      auto fv = cc->getVariableType(fce->name);
-
-      if(!fv || typeid(*fv).hash_code()!=typeid(FunctionType).hash_code()){
-        printf("Function not found %s\n", fce->name->c_str());
-        exit(1);
-      }
-    }
-
-    // generate arguments
-    if(!fce->expr)
-      fce->expr = new std::vector<Expression *>();
-
-    for(auto e: *fce->expr)
-      compile(e, cc);
-    return;
-  }
-
-  if(t == typeid(ReturnStatement).hash_code())
-    return returnStmtCompile((ReturnStatement*) stmt, cc);
-
-  if(t == typeid(VariableAssign).hash_code()){
-    VariableAssign *va = (VariableAssign*) stmt;
-    compile(va->base, cc);
-    compile(va->exp, cc);
-
-    // TODO move the cast to here.
-    auto baseType = resolveType(va->base, cc);
-    auto exprType = resolveType(va->exp, cc);
-    va->exp = castCompile(exprType, baseType, va->exp, cc, va, false);
-    // TODO
-    return;
-  }
-
-  if(t == typeid(VariableDecl).hash_code()){
-    return variableDeclCompile((VariableDecl*) stmt, cc);
-  }
-
-  if(t == typeid(IfStatement).hash_code()){
-    // TODO
-    // TODO check the expression type?
-    IfStatement *is = (IfStatement *) stmt;
-    compile(is->exp, cc);
-    compile(is->i, cc);
-    if(is->e)
-      compile(is->e, cc);
-    return;
-  }
-
-  if(t == typeid(CodeBlock).hash_code()){
-    cc->blocks.push_back(new BlockContext());
-    CodeBlock *cb = (CodeBlock *)stmt;
-    for(auto s: *cb->stmts){
-      compile(s, cc);
-    }
-    cc->blocks.pop_back();
-    return;
-  }
-
-  if(t == typeid(WhileStatement).hash_code()){
-    // TODO
-    // TODO check the expression type?
-    WhileStatement *ws = (WhileStatement*) stmt;
-    compile(ws->exp, cc);
-    compile(ws->w, cc);
-    return;
-  }
-
-  if(t == typeid(StructStatement).hash_code()){
-    structCompile((StructStatement*)stmt, cc);
-    // TODO
-    return;
-  }
-
-  if(t == typeid(IntValue).hash_code()){
-    // TODO check max size
-    // TODO should we move atoi here?
-    return;
-  }
-
-  if(t == typeid(VariableExpr).hash_code()){
-    auto ve = (VariableExpr*) stmt;
-    // check to see if var is defined.
-    if(!cc->getVariableType(ve->name)){
-      printf("Unknown variable %s in line %d\n", ve->name->c_str(), ve->lineno);
-      exit(1);
-    }
-    return;
-  }
-
-  if(t == typeid(BinaryOperation).hash_code()){
-    auto bo = (BinaryOperation *) stmt;
-    compile(bo->lhs, cc);
-    compile(bo->rhs, cc);
-    // TODO check to see if the op is valid on this type.
-    // TODO
-    // TODO I'd rather handle the op identification here, but it needs discussion
-    return;
-  }
-
-  if(t == typeid(StringValue).hash_code()){
-    // TODO
-    return;
-  }
-
-  if(t == typeid(MemberExpr).hash_code()){
-    MemberExpr *me = (MemberExpr*) stmt;
-    compile(me->e, cc);
-    // TODO check to see if mem is in the struct
-    auto tmpe = resolveType(me->e, cc);
-
-    int level = 0;
-
-    while(PointerType*p = dynamic_cast<PointerType*>(tmpe)){
-      tmpe = p->base;
-      level ++;
-    }
-    me->level = level;
-    return;
-  }
-
-  if(t == typeid(ArrayExpr).hash_code()){
-    ArrayExpr *ae = (ArrayExpr*) stmt;
-    compile(ae->e, cc);
-    compile(ae->mem, cc);
-    // TODO check to see if ae->e is array
-    // TODO check to see if ae->mem is number
-    return;
-  }
-
-  if(t == typeid(PointerAccessExpr).hash_code()){
-    // TODO
-    PointerAccessExpr *pae = (PointerAccessExpr*)stmt;
-    compile(pae->exp, cc);
-    return;
-  }
-
-  if(t == typeid(PointerExpr).hash_code()){
-    // TODO
-    return;
-  }
-
-  if(t == typeid(CastExpr).hash_code()){
-    // TODO
-    // TODO use cast compile
-    CastExpr *ce = (CastExpr*) stmt;
-    compile(ce->exp, cc);
-    return;
-  }
-
-  if(t == typeid(DeferStatement).hash_code()){
-    // TODO Maybe we should handle defer here instead of codegen?
-    DeferStatement *ds = (DeferStatement*) stmt;
-    compile(ds->s, cc);
-    return;
-  }
-
-  if(t == typeid(SizeofExpr).hash_code()){
-    // TODO no compilation?
-    return;
-  }
-
-  if(t == typeid(CompileStatement).hash_code()){
-    // First, compile the top_level
-    CompileStatement *s = (CompileStatement*)stmt;
-    compile(s->s, cc);
-
-    // Now set it to be run
-    cc->compiles.push_back(s);
-    return;
-  }
-
-  if(t == typeid(MemberStatement).hash_code()){
-    // Resolve the struct,
-    // Add to it's methods
-    MemberStatement *m = (MemberStatement*)stmt;
-    StructStatement *s = cc->getStruct(m->name);
-    if(!s){
-      printf("Struct %s not found on line %d\n", m->name->c_str(), m->lineno);
-      exit(1);
-    }
-    std::string methodName(*m->f->sign->name);
-    *m->f->sign->name = (*m->name)+"$"+(*m->f->sign->name);
-    Type *selfT = new StructType(new std::string(m->name->c_str()));
-    selfT = new PointerType(selfT);
-    ArgDecl *self = new ArgDecl(new std::string("self"), selfT, false);
-    m->f->sign->args->insert(m->f->sign->args->begin(), self);
-    compile(m->f, cc);
-    s->methods[methodName] = m->f;
-    return;
-  }
-
-  if(t == typeid(MethodCall).hash_code()){
-    // it's basically a function call
-    MethodCall *mc = (MethodCall*) stmt;
-
-
-    Expression *e = mc->e;
-
-    Type *tmpe = e->exprType;
-
-    while(PointerType *p = dynamic_cast<PointerType*>(tmpe)){
-      tmpe = p->base;
-      e = new PointerAccessExpr(e);
-    }
-
-    compile(e, cc);
-    mc->expr->begin();
-    mc->expr->insert(mc->expr->begin(), new PointerExpr(e));
-    compile((*mc->expr)[0], cc);
-    if(mc->f){
-      // This is a method call on structs
-      mc->fce = new FunctionCallExpr(mc->f->sign->name, mc->expr);
-    } else {
-      // This is a method call on interfaces, we have to handle in codegen
-    }
-    return;
-  }
-
-  if(t == typeid(InterfaceStatement).hash_code()){
-    // Register it like a struct
-    auto is = (InterfaceStatement*) stmt;
-    for(FunctionSignature *fs: *is->members){
-      compile(fs, cc);
-    }
-
-    cc->getBlock()->newInterface(is->name, is);
-    return;
-  }
-
-  printf("Undefined compile for statement %s at compiler::compile, lineno: %d\n", typeid(*stmt).name(), stmt->lineno);
-  exit(1);
-  
 }
 
-Type *resolveType(Expression *expr, CC *cc){
-  // Don't compute it twice.
-  if(expr->exprType)
-    return expr->exprType;
+void FunctionCallExpr::compile(CompileContext *cc){
+  resolveType(cc);
+  auto fce = this; // TODO lazy
 
-  auto t = typeid(*expr).hash_code();
+  // check function exists
+  auto fs = cc->getFunction(fce->name);
+  if (!fs) {
+    // it could be a function variable
+    auto fv = cc->getVariableType(fce->name);
 
-  if(t == typeid(IntValue).hash_code()){
-    expr->exprType = new IntType();
-    return expr->exprType;
-  }
-
-  if(t == typeid(StringValue).hash_code()){
-    expr->exprType = new StringType();
-    return expr->exprType;
-  }
-
-  if(t == typeid(VariableExpr).hash_code()){
-    VariableExpr * ve= (VariableExpr*) expr;
-    Type *t = cc->getVariableType(ve->name);
-    if (!t) {
-      printf("Undefined variable %s at line %d\n", ve->name->c_str(),
-             ve->lineno);
+    if (!fv || typeid(*fv).hash_code() != typeid(FunctionType).hash_code()) {
+      printf("Function not found %s\n", fce->name->c_str());
       exit(1);
     }
-    expr->exprType = t->clone();
-    return expr->exprType;
   }
 
-  if(t == typeid(BinaryOperation).hash_code()){
-    BinaryOperation *bo = (BinaryOperation*) expr;
-    // TODO complete this
-    // 1 + 2.0 -> float
-    expr->exprType = resolveType(bo->lhs, cc)->clone();
-    return expr->exprType;
+  // generate arguments
+  if (!fce->expr)
+    fce->expr = new std::vector<Expression *>();
+
+  for (auto e : *fce->expr)
+    e->compile(cc);
+}
+
+void VariableAssign::compile(CC *cc){
+  auto va = this;
+  va->base->compile(cc);
+  va->exp->compile(cc);
+
+  // TODO move the cast to here.
+  auto baseType = va->base->resolveType(cc);
+  auto exprType = va->exp->resolveType(cc);
+  va->exp = castCompile(exprType, baseType, va->exp, cc, va, false);
+  // TODO
+  return;
+}
+
+void IfStatement::compile(CompileContext *cc){
+  auto is = this; // TODO lazy
+  is->exp->compile(cc);
+  is->i->compile(cc);
+  if (is->e)
+    is->e->compile(cc);
+}
+
+void CodeBlock::compile(CompileContext *cc){
+  auto cb = this; // TODO lazy
+  cc->blocks.push_back(new BlockContext());
+  for (auto s : *cb->stmts) {
+    s->compile(cc);
+  }
+  cc->blocks.pop_back();
+}
+
+void WhileStatement::compile(CC *cc){
+  auto ws = this; // TODO lazy
+  ws->exp->compile(cc);
+  ws->w->compile(cc);
+  return;
+}
+
+void IntValue::compile(CC *cc){
+  resolveType(cc);
+  // TODO check max size
+  // TODO should we move atoi here?
+}
+
+void VariableExpr::compile(CC *cc){
+  resolveType(cc);
+  if (!cc->getVariableType(name)) {
+    printf("Unknown variable %s in line %d\n", name->c_str(), lineno);
+    exit(1);
+  }
+}
+
+void BinaryOperation::compile(CC *cc){
+  resolveType(cc);
+  lhs->compile(cc);
+  rhs->compile(cc);
+  // TODO check to see if the op is valid on this type.
+  // TODO
+  // TODO I'd rather handle the op identification here, but it needs discussion
+}
+
+void StringValue::compile(CC *cc){
+  resolveType(cc);
+  // TODO
+}
+
+void MemberExpr::compile(CC *cc){
+  resolveType(cc);
+  e->compile(cc);
+  // TODO check to see if mem is in the struct
+  auto tmpe = e->resolveType(cc);
+
+  int level = 0;
+
+  while (PointerType *p = dynamic_cast<PointerType *>(tmpe)) {
+    tmpe = p->base;
+    level++;
+  }
+  this->level = level;
+}
+
+void ArrayExpr::compile(CC *cc){
+  resolveType(cc);
+  e->compile(cc);
+  mem->compile(cc);
+  // TODO check to see if ae->e is array
+  // TODO check to see if ae->mem is number
+}
+
+void PointerAccessExpr::compile(CC *cc){
+  resolveType(cc);
+    exp->compile(cc);
+}
+
+void PointerExpr::compile(CC *cc){
+  resolveType(cc);
+  // TODO
+}
+
+void CastExpr::compile(CC *cc){
+  resolveType(cc);
+  // TODO use cast compile
+  exp->compile(cc);
+}
+
+void DeferStatement::compile(CC *cc){
+  // TODO Maybe we should handle defer here instead of codegen?
+  s->compile(cc);
+}
+
+void SizeofExpr::compile(CC *cc){
+  resolveType(cc);
+  // TODO nothing?
+}
+
+void CompileStatement::compile(CompileContext *cc){
+  s->compile(cc);
+
+  // Now set it to be run
+  cc->compiles.push_back(this);
+}
+
+void MemberStatement::compile(CC *cc){
+  // Resolve the struct,
+  // Add to it's methods
+  MemberStatement *m = this; // TODO lazy
+  StructStatement *s = cc->getStruct(m->name);
+  if (!s) {
+    printf("Struct %s not found on line %d\n", m->name->c_str(), m->lineno);
+    exit(1);
+  }
+  std::string methodName(*m->f->sign->name);
+  *m->f->sign->name = (*m->name) + "$" + (*m->f->sign->name);
+  Type *selfT = new StructType(new std::string(m->name->c_str()));
+  selfT = new PointerType(selfT);
+  ArgDecl *self = new ArgDecl(new std::string("self"), selfT, false);
+  m->f->sign->args->insert(m->f->sign->args->begin(), self);
+  m->f->compile(cc);
+  s->methods[methodName] = m->f;
+}
+
+void MethodCall::compile(CompileContext *cc){
+  resolveType(cc);
+  // it's basically a function call
+  MethodCall *mc = this;
+
+  Expression *e = mc->e;
+
+  Type *tmpe = e->exprType;
+
+  while (PointerType *p = dynamic_cast<PointerType *>(tmpe)) {
+    tmpe = p->base;
+    e = new PointerAccessExpr(e);
   }
 
-  if(t == typeid(CastExpr).hash_code()){
-    auto ce = (CastExpr*) expr;
-    resolveType(ce->exp, cc); // TODO maybe even healthcheck?
-    expr->exprType = ce->t->clone();
-    return expr->exprType;
+  e->compile(cc);
+  mc->expr->begin();
+  mc->expr->insert(mc->expr->begin(), new PointerExpr(e));
+  (*mc->expr)[0]->compile(cc);
+  if (mc->f) {
+    // This is a method call on structs
+    mc->fce = new FunctionCallExpr(mc->f->sign->name, mc->expr);
+  } else {
+    // This is a method call on interfaces, we have to handle in codegen
+  }
+}
+
+void InterfaceStatement::compile(CC *cc){
+  // Register it like a struct
+  auto is = this; // TODO lazy
+  for (FunctionSignature *fs : *is->members) {
+    fs->compile(cc);
   }
 
-  if(t == typeid(PointerExpr).hash_code()){
-    PointerExpr *pe = (PointerExpr*)expr;
-    expr->exprType = new PointerType(resolveType(pe->exp, cc)->clone());
-    return expr->exprType;
-  }
+  cc->getBlock()->newInterface(is->name, is);
+}
 
-  if(t == typeid(PointerAccessExpr).hash_code()){
-    PointerAccessExpr *pae = (PointerAccessExpr*) expr;
-    PointerType *pt = (PointerType *) resolveType(pae->exp, cc);
-    expr->exprType = pt->base->clone();
-    return expr->exprType;
-  }
+Type *IntValue::resolveType(CompileContext *cc){
+  if(exprType)
+    return exprType;
+  exprType = new IntType();
+  return exprType;
+}
 
-  if(t == typeid(MemberExpr).hash_code()){
-    auto *me = (MemberExpr*) expr;
-    // TODO check to see if it's a pointer
-    auto tmpe = resolveType(me->e, cc);
+Type *StringValue::resolveType(CompileContext *cc){
+  if(exprType)
+    return exprType;
+  exprType = new StringType();
+  return exprType;
+}
 
-    while(PointerType*p = dynamic_cast<PointerType*>(tmpe)){
-      tmpe = p->base;
-    }
-    
-    auto t = (StructType*) tmpe;
-    auto ss = cc->getStruct(t->name);
-
-    // error when ss not found
-    if(!ss){
-      printf("Struct %s was not found, line %d\n", t->name->c_str(), expr->lineno);
+Type *VariableExpr::resolveType(CompileContext *cc){
+  if(exprType)
+    return exprType;
+  Type *t = cc->getVariableType(name);
+  if(!t){
+      printf("Undefined variable %s at line %d\n", name->c_str(),
+             lineno);
       exit(1);
-    }
+  }
+  exprType = t->clone();
+  return exprType;
+}
 
-    for(auto m: *ss->members){
-      if(m->name->compare(*me->mem) == 0){
-        expr->exprType = m->t->clone();
-        return expr->exprType;
-      }
-    }
-    printf("Member type not found, memberExprType on line %d\n", me->lineno);
+Type *BinaryOperation::resolveType(CompileContext *cc){
+  if(exprType)
+    return exprType;
+  // TODO improve!
+  exprType =lhs->resolveType(cc)->clone();
+  return exprType;
+}
+
+Type *CastExpr::resolveType(CompileContext *cc){
+  if(exprType)
+    return exprType;
+  exp->resolveType(cc); // TODO maybe even healthcheck?
+  exprType = t->clone();
+  return exprType;
+}
+
+Type *PointerExpr::resolveType(CompileContext *cc){
+  if(exprType)
+    return exprType;
+  exprType = new PointerType(exp->resolveType(cc)->clone());
+  return exprType;
+}
+
+Type *PointerAccessExpr::resolveType(CompileContext *cc){
+  if(exprType)
+    return exprType;
+  PointerType *pt = (PointerType *)exp->resolveType(cc);
+  exprType = pt->base->clone();
+  return exprType;
+}
+
+Type *MemberExpr::resolveType(CompileContext *cc){
+  if(exprType)
+    return exprType;
+  // TODO check to see if it's a pointer
+  auto tmpe = this->e->resolveType(cc);
+
+  while (PointerType *p = dynamic_cast<PointerType *>(tmpe)) {
+    tmpe = p->base;
+  }
+
+  auto t = (StructType *)tmpe;
+  auto ss = cc->getStruct(t->name);
+
+  // error when ss not found
+  if (!ss) {
+    printf("Struct %s was not found, line %d\n", t->name->c_str(),
+           this->lineno);
     exit(1);
   }
 
-  if(t == typeid(ArrayExpr).hash_code()){
-    auto *ae = (ArrayExpr*) expr;
-    auto t = resolveType(ae->e, cc);
-    // TODO check to see if it is an array
-    auto bt = (ArrayType*) t;
-    expr->exprType = bt->base->clone();
-    return expr->exprType;
-  }
-
-  if(t == typeid(FunctionCallExpr).hash_code()){
-    FunctionCallExpr *fce = (FunctionCallExpr *) expr;
-    // TODO check for clone
-    auto f = cc->getFunction(fce->name);
-    if(!f){
-      // maybe it's a function variable
-      auto f = cc->getVariableType(fce->name);
-
-      // verify it is of function type:
-      if(f && typeid(*f).hash_code() == typeid(FunctionType).hash_code()){
-        // It's okay
-        expr->exprType = ((FunctionType*)f)->returnType->clone();
-        return expr->exprType;
-      }
-      
-      printf("Unknown function %s at line %d\n",
-             fce->name->c_str(), fce->lineno);
-      exit(1);
+  for (auto m : *ss->members) {
+    if (m->name->compare(*this->mem) == 0) {
+      this->exprType = m->t->clone();
+      return this->exprType;
     }
-    expr->exprType = f->returnT->clone();
-    return expr->exprType;
   }
-
-  if(t == typeid(SizeofExpr).hash_code()){
-    return new IntType(); // TODO improve?
-  }
-
-  if(t == typeid(MethodCall).hash_code()){
-    MethodCall *mc = (MethodCall*) expr;
-    compile(mc->e, cc);
-
-    auto tmpe  = resolveType(mc->e, cc);
-
-    while(PointerType *p = dynamic_cast<PointerType*>(tmpe)){
-      tmpe = p->base;
-    }
-
-    auto t = (StructType*) tmpe; 
-
-    auto st = cc->getStruct(t->name);
-
-    // TODO it might be an interface
-
-    if(!st){
-      auto it = cc->getInterface(t->name);
-      if(!it){
-        // This will never happen
-        printf("Unknown type %s on line %d\n", t->name, mc->lineno);
-        printf("This should not happen\n");
-        exit(1);
-      }
-      int ind = 0;
-      for(auto f : *it->members){
-        if(f->name->compare(*mc->name)==0){
-          mc->f = 0;
-          mc->methodInd = ind;
-          return f->returnT;
-        }
-        ind++;
-      }
-
-      printf("Interface %s doesn't have any method named %s, on line %d\n", t->name->c_str(), mc->name->c_str(), mc->lineno);
-      exit(1);
-    }
-
-    FunctionDefine *f = st->methods[*mc->name];
-
-    if(!f){
-      printf("Struct %s doesn't have any method named %s, on line %d\n", t->name->c_str(), mc->name->c_str(), mc->lineno);
-      exit(1);
-    }
-
-    mc->f = f;
-
-    return f->sign->returnT;
-  }
-
-  printf("Undefined resolveType for expression %s at compiler::resolveType\n", typeid(*expr).name());
+  printf("Member type not found, memberExprType on line %d\n", lineno);
   exit(1);
+  return nullptr;
+}
+
+Type *ArrayExpr::resolveType(CC *cc){
+  if(exprType)
+    return exprType;
+  auto t = e->resolveType(cc);
+  auto bt = (ArrayType*)t;
+  exprType = bt->base->clone();
+  return exprType;
+}
+
+Type *FunctionCallExpr::resolveType(CC *cc){
+  if(exprType)
+    return exprType;
+  auto f = cc->getFunction(name);
+  if(!f){
+    // maybe it's a function variable
+    auto f = cc->getVariableType(name);
+
+    // verify it is of function type:
+    if (f && typeid(*f).hash_code() == typeid(FunctionType).hash_code()) {
+      // It's okay
+      exprType = ((FunctionType *)f)->returnType->clone();
+      return exprType;
+    }
+
+    printf("Unknown function %s at line %d\n", name->c_str(), lineno);
+    exit(1);
+  }
+  exprType = f->returnT->clone();
+  return exprType;
+}
+
+Type *SizeofExpr::resolveType(CompileContext *cc){
+  if(exprType)
+    return exprType;
+  exprType = new IntType();
+  return exprType;
+}
+
+Type *MethodCall::resolveType(CompileContext *cc){
+  if(exprType)
+    return exprType;
+  MethodCall *mc = this; // TODO because I'm lazy
+  e->compile(cc);
+
+  auto tmpe = mc->e->resolveType(cc);
+
+  while (PointerType *p = dynamic_cast<PointerType *>(tmpe)) {
+    tmpe = p->base;
+  }
+
+  auto t = (StructType *)tmpe;
+
+  auto st = cc->getStruct(t->name);
+
+  // TODO it might be an interface
+
+  if (!st) {
+    auto it = cc->getInterface(t->name);
+    if (!it) {
+      // This will never happen
+      printf("Unknown type %s on line %d\n", t->name, mc->lineno);
+      printf("This should not happen\n");
+      exit(1);
+    }
+    int ind = 0;
+    for (auto f : *it->members) {
+      if (f->name->compare(*mc->name) == 0) {
+        mc->f = 0;
+        mc->methodInd = ind;
+        return f->returnT;
+      }
+      ind++;
+    }
+
+    printf("Interface %s doesn't have any method named %s, on line %d\n",
+           t->name->c_str(), mc->name->c_str(), mc->lineno);
+    exit(1);
+  }
+
+  FunctionDefine *f = st->methods[*mc->name];
+
+  if (!f) {
+    printf("Struct %s doesn't have any method named %s, on line %d\n",
+           t->name->c_str(), mc->name->c_str(), mc->lineno);
+    exit(1);
+  }
+
+  mc->f = f;
+
+  return f->sign->returnT;
 }
 
 Type *FunctionSignature::getType(){
