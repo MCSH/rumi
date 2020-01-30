@@ -1,7 +1,11 @@
 #pragma once
 #include <fstream>
-#include "node.h"
 #include <map>
+#include "nodes/Type.h"
+#include "nodes/statements/StructStatement.h"
+#include "nodes/statements/InterfaceStatement.h"
+#include "nodes/statements/FunctionSignature.h"
+#include "nodes/statements/CompileStatement.h"
 
     // TODO memory leak
 class BlockContext { // Block Context
@@ -111,3 +115,6 @@ public:
 
 CompileContext *compile(char *fileName);
 
+Expression *castCompile(Type *exprType, Type *baseType, Expression *e, CompileContext *cc, Node *n, bool expl);
+
+std::vector<Statement *>* array_compile(std::vector<Statement *> *stmts, CompileContext *cc);

@@ -1,5 +1,8 @@
 #pragma once
-#include "node.h"
+#include "nodes/statements/VariableDecl.h"
+#include "nodes/statements/StructStatement.h"
+#include "nodes/statements/InterfaceStatement.h"
+#include "nodes/types/PointerType.h"
 #include <llvm/IR/Instructions.h>
 #include <tuple> 
 
@@ -78,3 +81,9 @@ class CodegenContext {
 
 CodegenContext *codegen(std::vector<Statement *> *statements,
                         std::string outfile, bool print, bool ofile=true);
+llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, CodegenContext *cc, Node *n, bool expl, llvm::AllocaInst *alloc=nullptr);
+
+void handleDefer(CodegenContext *cc);
+
+llvm::Value* arrayToPointer(llvm::Type* t, llvm::Value * alloc, CodegenContext *cc);
+

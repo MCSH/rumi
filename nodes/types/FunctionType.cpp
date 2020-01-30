@@ -1,5 +1,5 @@
 #include "FunctionType.h"
-#include "../../node.h"
+#include "../expressions/TypeNode.h"
 #include <llvm/IR/DerivedTypes.h>
 
 FunctionType::FunctionType(std::vector<Statement *> *args, Type *returnType)

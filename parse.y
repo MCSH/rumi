@@ -1,6 +1,6 @@
-%code requires { #include "node.h" }
+%code requires { #include "nodes/nodes.h" }
 %{
-#include "node.h"
+#include "nodes/nodes.h"
 #include <string>
 
 void yyerror(const char *s);

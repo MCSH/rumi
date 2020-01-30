@@ -2,6 +2,7 @@
 #include "ArrayType.h"
 #include "AnyType.h"
 #include "../../Context.h"
+#include "StructType.h"
 
 PointerType *PointerType::clone() { return new PointerType(base->clone()); }
 

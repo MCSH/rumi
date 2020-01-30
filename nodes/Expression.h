@@ -2,6 +2,8 @@
 #include "Type.h"
 #include "Statement.h"
 
+#include <cstdlib>
+
 #include <llvm/IR/Value.h>
 
 class Expression: public Statement{

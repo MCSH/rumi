@@ -16,7 +16,7 @@ CPP = codegen.cpp compiler.cpp $(wildcard nodes/**/*.cpp) lex.cpp parse.cpp
 
 OBJ = $(CPP:%.cpp=$(BUILD_DIR)/%.o)
 
-DEP = $(OBJ.%.o=%.d)
+DEP = $(OBJ:%.o=%.d)
 
 all:	$(BIN) $(BINI)
 
@@ -26,6 +26,7 @@ $(BUILD_DIR)/$(BIN) : $(OBJ)
 	$(CC) $(COMPILER_OBJECT_FLAGS) $^ -o $@
 
 -include $(DEP)
+
 
 $(BUILD_DIR)/%.o : %.cpp
 	mkdir -p $(@D)
