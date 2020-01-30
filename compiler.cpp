@@ -1,6 +1,5 @@
 #include "compiler.h"
 #include "node.h"
-#include "type.h"
 #include <cstring>
 #include <unistd.h> // chdir
 #include <libgen.h> // dirname

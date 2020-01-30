@@ -1,6 +1,5 @@
 #include "codegen.h"
 #include "node.h"
-#include "type.h"
 #include <bits/stdint-uintn.h>
 #include <cstdio>
 #include <llvm/Bitcode/BitcodeWriter.h>
@@ -921,50 +920,6 @@ void DeferStatement::codegen(CC *cc){
   cc->defered.back()->push_back(s);
 }
 
-llvm::Type *InterfaceType::typeGen(CC *cc){
-  return cc->getInterfaceType(name);
-}
-
-llvm::Type *StructType::typeGen(CC *cc){
-  return cc->getStructType(this->name);
-}
-
-llvm::Type *IntType::typeGen(CC *cc){
-  switch(this->size){
-  case 0:
-    /// TODO do it based on sys arch
-    return llvm::Type::getInt64Ty(cc->context);
-  case 8:
-    return llvm::Type::getInt8Ty(cc->context);
-  case 16:
-    return llvm::Type::getInt16Ty(cc->context);
-  case 32:
-    return llvm::Type::getInt32Ty(cc->context);
-  case 64:
-    return llvm::Type::getInt64Ty(cc->context);
-  }
-
-  printf("Something went wrong on intTypeGen\n");
-  exit(1);
-  return nullptr;
-}
-
-llvm::Type *FloatType::typeGen(CC *cc){
-  switch(size){
-  case 0:
-    // TODO do it based on sys arch
-    return llvm::Type::getFloatTy(cc->context);
-  case 32:
-    return llvm::Type::getFloatTy(cc->context);
-  case 64:
-    return llvm::Type::getDoubleTy(cc->context);
-  }
-
-  printf("Something went wrong on floatTypeGen\n");
-  exit(1);
-  return nullptr;
-}
-
 void exitCallback(void*c, int status){
   exit(status);
 }
@@ -1236,53 +1191,6 @@ llvm::Value *MethodCall::exprGen(CC *cc){
   if (f)
     return fce->exprGen(cc);
   return interfaceMethodCall(this, cc);
-}
-
-llvm::Type *StringType::typeGen(CC *cc){
-  // Improve?
-  return llvm::PointerType::getUnqual(llvm::Type::getInt8Ty(cc->context));
-}
-
-llvm::Type *AnyType::typeGen(CC *cc){
-  return llvm::Type::getInt64PtrTy(cc->context);
-}
-
-llvm::Type *VoidType::typeGen(CC *cc){
-  return llvm::Type::getVoidTy(cc->context);
-}
-
-llvm::Type *PointerType::typeGen(CC *cc) {
-  auto baseType = this->base->typeGen(cc);
-  if (!baseType) {
-    // Type is not generated yet, it should be a struct I assume
-
-    StructType *st = (StructType *)this->base;
-    baseType = cc->module->getTypeByName(*st->name);
-  }
-
-  return llvm::PointerType::getUnqual(baseType);
-}
-
-llvm::Type *ArrayType::typeGen(CC *cc) {
-  // check for count
-  if (this->count)
-    return llvm::ArrayType::get(this->base->typeGen(cc), this->count);
-  else if (this->exp)
-    return this->base->typeGen(cc);
-  else
-    return llvm::PointerType::getUnqual(this->base->typeGen(cc));
-}
-
-llvm::Type *FunctionType::typeGen(CC *cc){
-  std::vector<llvm::Type *> params;
-
-    for(auto arg: *this->args)
-      params.push_back(arg->typeGen(cc));
-
-    // TODO this should be a poitner by default
-
-    return llvm::PointerType::getUnqual(llvm::FunctionType::get(this->returnType->typeGen(cc), params,false)); // TODO varargs
-
 }
 
 llvm::Value *VariableExpr::getAlloca(CC *cc){

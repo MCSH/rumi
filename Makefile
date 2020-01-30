@@ -1,50 +1,56 @@
 
 export RUMI_PATH=$(shell pwd)/rumlib
 NUMTESTS = 5
-OBJS = lex.o parse.o compiler.o type.o
-BASE_HEADS = node.h type.h
-CODE_GEN = lex.cpp parse.cpp parse.hpp
 CC = clang++
 COMPILER_BASE_FLAGS = -w -g
 COMPILER_LLVM_FLAGS = `llvm-config --cxxflags --ldflags --system-libs --libs core`
 COMPILER_OBJECT_FLAGS = -c $(COMPILER_BASE_FLAGS)
-COMPILER_OBJECT_LLVM_FLAGS = $(COMPILER_OBJECT_FLAGS) $(COMPILER_LLVM_FLAGS)
-COMPILER_EXEC_FLAGS = $(COMPILER_BASE_FLAGS)
-COMPILER_EXEC_LLVM_FLAGS = $(COMPILER_EXEC_FLAGS) $(COMPILER_LLVM_FLAGS)
+COMPILER_EXEC_LLVM_FLAGS = $(COMPILER_BASE_FLAGS) $(COMPILER_LLVM_FLAGS)
 
-all:	rum rumi
+BIN = rum
+BINI = rumi
 
-rum:	$(OBJS) rum.cpp codegen.o cli.h
-	$(CC) $(COMPILER_EXEC_LLVM_FLAGS) $(OBJS) codegen.o rum.cpp -o rum
+BUILD_DIR = ./build
 
-rumi:	$(OBJS) rumi.cpp cli.h
-	$(CC) $(COMPILER_EXEC_LLVM_FLAGS) $(OBJS) codegen.o rumi.cpp -o rumi
+CPP = codegen.cpp compiler.cpp $(wildcard nodes/**/*.cpp) lex.cpp parse.cpp
 
-compiler.o:	compiler.cpp compiler.h $(BASE_HEADS)
-	$(CC) $(COMPILER_OBJECT_FLAGS) compiler.cpp
+OBJ = $(CPP:%.cpp=$(BUILD_DIR)/%.o)
 
-lex.o:	lex.cpp parse.hpp
-	$(CC) $(COMPILER_OBJECT_FLAGS) lex.cpp
+DEP = $(OBJ.%.o=%.d)
 
-codegen.o:	codegen.cpp codegen.h $(BASE_HEADS)
-	$(CC) $(COMPILER_OBJECT_LLVM_FLAGS) codegen.cpp
+all:	$(BIN) $(BINI)
 
-lex.cpp:	lex.l
+$(BUILD_DIR)/$(BIN) : $(OBJ)
+	mkdir -p $(@D)
+
+	$(CC) $(COMPILER_OBJECT_FLAGS) $^ -o $@
+
+-include $(DEP)
+
+$(BUILD_DIR)/%.o : %.cpp
+	mkdir -p $(@D)
+	$(CC) $(COMPILER_OBJECT_FLAGS) -MMD $< -o $@
+
+.PHONY: clean
+clean:
+	-rm -f $(BUILD_DIR)/$(BIN) $(OBJ) $(DEP) tests/*.o $(BIN) $(BINI) parse.cpp lex.cpp
+
+$(BIN):	$(OBJ) $(BUILD_DIR)/$(BIN).o
+	$(CC) $(COMPILER_EXEC_LLVM_FLAGS) $(OBJ) $(BUILD_DIR)/$(BIN).o -o $(BIN)
+
+$(BINI): $(OBJ) $(BUILD_DIR)/$(BINI).o
+	$(CC) $(COMPILER_EXEC_LLVM_FLAGS) $(OBJ) $(BUILD_DIR)/$(BINI).o -o $(BINI)
+
+lex.cpp: lex.l parse.hpp
 	flex -o lex.cpp lex.l
 
-parse.o: parse.cpp
-	$(CC) $(COMPILER_OBJECT_FLAGS) parse.cpp
+parse.hpp: parse.cpp
 
-type.o: type.cpp type.h
-	$(CC) $(COMPILER_OBJECT_FLAGS) type.cpp
-
-parse.hpp: parse.cpp parse.o
-
-parse.cpp:	parse.y $(BASE_HEADS)
+parse.cpp: parse.y
 	bison -d -l -o parse.cpp parse.y
 
 .PHONY: tests
-tests:	rum rumi
+tests:  rum rumi
 	rm -f tests/*.o || true
 	env | grep RUM
 	number=1 ; while [[ $$number -le $(NUMTESTS) ]] ; do \
@@ -56,7 +62,4 @@ tests:	rum rumi
 		lli tests/$$number.rum.o ; \
 		((number = number + 1)) ; \
 	done
-
-clean:
-	rm -f rum rumi $(OBJS) $(CODE_GEN) codegen.o tests/*.o || true
 

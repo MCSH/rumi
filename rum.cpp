@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
+#include "llvm/Support/TargetSelect.h"
 #include "cli.h"
 
 std::string getModuleName(char *name){
@@ -24,9 +25,9 @@ int main(int argc, char **argv){
     arguments.output_file = new std::string(getModuleName(arguments.input_file));
   }
 
-  LLVMInitializeNativeTarget();
-  LLVMInitializeNativeAsmPrinter();
-  LLVMInitializeNativeAsmParser();
+  llvm::InitializeNativeTarget();
+  llvm::InitializeNativeTargetAsmPrinter();
+  llvm::InitializeNativeTargetAsmParser();
 
   char *cwd = get_current_dir_name();
 

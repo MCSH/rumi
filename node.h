@@ -1,5 +1,6 @@
 #pragma once
-#include "type.h"
+// #include "type.h"
+#include "nodes/nodes.h"
 #include <algorithm>
 #include <functional>
 #include <string>
@@ -11,34 +12,6 @@
 
 class CodegenContext;
 class CompileContext;
-
-class Node{
-public:
-  int lineno;
-  Node(){
-    extern int yylineno;	// defined and maintained in lex.c
-    lineno = yylineno;
-  }
-
-  virtual ~Node(){
-  }
-
-  virtual void compile(CompileContext *cc)=0;
-};
-
-class Statement: public Node{
-public:
-  virtual void codegen(CodegenContext *cc)=0;
-};
-
-class Expression: public Statement{
-public:
-  Type *exprType = 0;
-  virtual llvm::Value *exprGen(CodegenContext *cc)=0;
-  virtual llvm::Value *getAlloca(CodegenContext *cc)=0; // TODO maybe extend Expression for this because most don't have it
-  virtual void codegen(CodegenContext *cc){} // Almost all of expressions have empty codegen
-  virtual Type *resolveType(CompileContext *cc)=0;
-};
 
 class IntValue: public Expression{
 public:
