@@ -6,8 +6,6 @@
 
 // TODO functions and methods must be traversed once before compiling just so we have everything on record, for handling of casts and calls, etc.
 
-// TODO call resolvetype inside the expressions's compile?!
-
 int yyparse();
 extern "C" FILE *yyin;
 

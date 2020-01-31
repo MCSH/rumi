@@ -3,25 +3,12 @@
 #include "nodes/statements/StructStatement.h"
 #include "nodes/statements/InterfaceStatement.h"
 #include "nodes/types/PointerType.h"
-#include <llvm/IR/Instructions.h>
 #include <tuple> 
 
-#include "llvm/Bitcode/BitcodeWriter.h"
-
-#include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
-#include "llvm/IR/PassManager.h"
-#include "llvm/IR/Type.h"
-#include "llvm/IR/Verifier.h"
-
-// #include "llvm/Passes/PassBuilder.h"
-
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/Support/MemoryBuffer.h"
-
 
 class CodegenBlockContext{
 public:

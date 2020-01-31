@@ -1,36 +1,16 @@
 #include "codegen.h"
-#include "nodes/nodes.h"
-#include <bits/stdint-uintn.h>
-#include <cstdio>
-#include <llvm/Bitcode/BitcodeWriter.h>
-#include <llvm/IR/BasicBlock.h>
-#include <llvm/IR/Constant.h>
-#include <llvm/IR/Constants.h>
-#include <llvm/IR/DerivedTypes.h>
-#include <llvm/IR/GlobalValue.h>
-#include <llvm/IR/GlobalVariable.h>
-#include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/InstrTypes.h>
-#include <llvm/IR/Instruction.h>
-#include <llvm/IR/Instructions.h>
-#include <llvm/IR/Intrinsics.h>
-#include <llvm/IR/PassManager.h>
-#include <llvm/IR/Verifier.h>
-#include <llvm/Support/raw_ostream.h>
-#include <memory>
-#include <string>
-
-#include "llvm/ExecutionEngine/ExecutionEngine.h"
-#include "llvm/ExecutionEngine/GenericValue.h"
-#include "llvm/ExecutionEngine/MCJIT.h"
+#include "nodes/types/InterfaceType.h"
+#include "nodes/types/StructType.h"
+#include "nodes/types/InterfaceType.h"
+#include "nodes/types/IntType.h"
+#include "nodes/types/FloatType.h"
+#include "llvm/Bitcode/BitcodeWriter.h"
+#include "llvm/IR/Verifier.h"
 // TODO improve all the typeid hash_coding.
 // TODO improve error handling
 // TODO check types on function call
 // TODO check types on function return
 // TODO codegen should not throw any errors.
-
-// TODO current problem with interface methods is improper casting
-// TODO OR it is not handling global vptrs
 
 typedef CodegenContext CC;
 
