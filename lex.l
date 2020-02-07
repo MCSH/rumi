@@ -19,6 +19,7 @@ int comment_nesting = 0;
 
   /* Symbols */
 ":=" {return DEFINE_AND_ASSIGN;}
+"==" {return EQUAL;}
 "->" {return ARROW;}
 "..." {return TRIPLE_DOTS;}
 "."{WHITESPACE}+"as" {return AS;}
@@ -64,6 +65,8 @@ int comment_nesting = 0;
 
 "f32" {return F32;}
 "f64" {return F64;}
+
+"bool" {return BOOL;}
 
 "return" {return RETURN;}
 "defer" {return DEFER;}

@@ -19,12 +19,6 @@ CompileContext *compile(std::vector<Statement *> *stmts){
   
   cc->codes = stmts;
 
-  /*
-  for(auto s: *stmts){
-    // precompile(s, cc);
-  }
-  */
-
   for(auto s: *stmts){
     s->compile(cc);
   }

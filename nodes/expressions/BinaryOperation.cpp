@@ -21,6 +21,10 @@ llvm::Value *BinaryOperation::exprGen(CodegenContext *cc){
 
   auto pt = typeid(PointerType).hash_code();
 
+  if (op == EQ){
+    return cc->builder->CreateICmpEQ(lhs, rhs);
+  }
+
   // TODO change this based on type somehow?
   if((lt == it || lt == ft) && (rt== it || rt == ft)){
     llvm::Instruction::BinaryOps instr;
@@ -85,6 +89,13 @@ void BinaryOperation::compile(CompileContext *cc){
   resolveType(cc);
   lhs->compile(cc);
   rhs->compile(cc);
+  if(op == EQ){
+    // TODO ensure type mathces
+    if(lhs->exprType->compatible(rhs->exprType) > ExpCast){
+      printf("Can not compare types %s and %s, line %d\n", lhs->exprType->displayName().c_str(), rhs->exprType->displayName().c_str(), lineno);
+      exit(1);
+    }
+  }
   // TODO check to see if the op is valid on this type.
   // TODO
   // TODO I'd rather handle the op identification here, but it needs discussion
@@ -93,6 +104,12 @@ void BinaryOperation::compile(CompileContext *cc){
 Type *BinaryOperation::resolveType(CompileContext *cc){
   if(exprType)
     return exprType;
+
+  if(op == EQ){
+    exprType = new IntType(1);
+    return exprType;
+  }
+
   // TODO improve!
   exprType =lhs->resolveType(cc)->clone();
   return exprType;

@@ -6,6 +6,8 @@ llvm::Type *IntType::typeGen(CodegenContext *cc){
   case 0:
     /// TODO do it based on sys arch
     return llvm::Type::getInt64Ty(cc->context);
+  case 1:
+    return llvm::Type::getInt1Ty(cc->context);
   case 8:
     return llvm::Type::getInt8Ty(cc->context);
   case 16:

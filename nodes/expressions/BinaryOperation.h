@@ -7,6 +7,7 @@ enum Operation{
     SUB = 3,
     DIV = 4,
     MOD = 5,
+    EQ = 6,
 };
 
 class BinaryOperation: public Expression{

@@ -27,12 +27,14 @@ std::vector<Statement *> *mainProgramNode;
 %token <string> DEC SSTRING 
 
 %token AS
+%token EQUAL
 %token DEFINE_AND_ASSIGN
 %token ARROW
 %token RETURN
 %token SIZEOF
 %token IMPORT
 %token INT ANY STRING STRUCT VOID INTERFACE
+%token BOOL
 %token U8 U16 U32 U64
 %token S8 S16 S32 S64
 %token F64 F32
@@ -43,7 +45,7 @@ std::vector<Statement *> *mainProgramNode;
 
 %type <stmt> stype
 
-%type <exp> additive_expr multiplicative_expr unary_expr postfix_expr
+%type <exp> additive_expr multiplicative_expr unary_expr postfix_expr eq_expr
 %type <exp> value expr variable function_call cast_expr pointer_access member_call
 
 // TODO reorder these
@@ -214,8 +216,13 @@ variable
 ;
 
 expr
-: additive_expr
+: eq_expr
 | SIZEOF '(' type ')' {$$=new SizeofExpr($3);}
+;
+
+eq_expr
+: additive_expr
+| additive_expr EQUAL additive_expr {$$=new BinaryOperation($1, Operation::EQ, $3);}
 ;
 
 additive_expr
@@ -335,6 +342,7 @@ int_type
 | S16 {$$=new IntType(16, 1);}
 | S32 {$$=new IntType(32, 1);}
 | S64 {$$=new IntType(64, 1);}
+| BOOL {$$=new IntType(1);}
 ;
 
 %%
