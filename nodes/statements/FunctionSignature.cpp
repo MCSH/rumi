@@ -72,7 +72,7 @@ llvm::Function *FunctionSignature::signgen(CodegenContext *cc){
 }
 
 
-void FunctionSignature::noBlockCompile(CompileContext *cc){
+void FunctionSignature::noBlockCompile(Context *cc){
   auto fs = this; // TODO lazy
   BlockContext *b = cc->getBlock();
 
@@ -94,7 +94,7 @@ void FunctionSignature::noBlockCompile(CompileContext *cc){
   cc->getParentBlock()->newFunction(fs->name, fs);
 }
 
-void FunctionSignature::compile(CompileContext *cc){
+void FunctionSignature::compile(Context *cc){
     cc->blocks.push_back(new BlockContext());
 
     this->noBlockCompile(cc);

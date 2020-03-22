@@ -41,7 +41,7 @@ void InterfaceStatement::codegen(CodegenContext *cc){
   cc->setInterface(this->name, it, vt, this);
 }
 
-void InterfaceStatement::compile(CompileContext *cc){
+void InterfaceStatement::compile(Context *cc){
   // Register it like a struct
   auto is = this; // TODO lazy
   for (FunctionSignature *fs : *is->members) {

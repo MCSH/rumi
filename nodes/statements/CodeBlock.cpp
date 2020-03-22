@@ -20,7 +20,7 @@ void CodeBlock::codegen(CodegenContext *cc){
   handleDefer(cc);
 }
 
-void CodeBlock::compile(CompileContext *cc){
+void CodeBlock::compile(Context *cc){
   auto cb = this; // TODO lazy
   cc->blocks.push_back(new BlockContext());
   for (auto s : *cb->stmts) {

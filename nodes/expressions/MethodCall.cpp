@@ -130,7 +130,7 @@ void MethodCall::codegen(CodegenContext *cc) {
   interfaceMethodCall(this, cc);
 }
 
-void MethodCall::compile(CompileContext *cc) {
+void MethodCall::compile(Context *cc) {
   resolveType(cc);
   // it's basically a function call
   MethodCall *mc = this;
@@ -156,7 +156,7 @@ void MethodCall::compile(CompileContext *cc) {
   }
 }
 
-Type *MethodCall::resolveType(CompileContext *cc) {
+Type *MethodCall::resolveType(Context *cc) {
   if (exprType)
     return exprType;
   MethodCall *mc = this; // TODO because I'm lazy

@@ -13,5 +13,5 @@ public:
     delete name;
     delete t;
   }
-  virtual void compile(CompileContext *cc){}
+  virtual void compile(Context *cc){}
 };

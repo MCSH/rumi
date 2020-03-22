@@ -13,12 +13,12 @@ llvm::Value *SizeofExpr::exprGen(CodegenContext *cc) {
 
 llvm::Value *SizeofExpr::getAlloca(CodegenContext *cc) {}
 
-void SizeofExpr::compile(CompileContext *cc) {
+void SizeofExpr::compile(Context *cc) {
   resolveType(cc);
   // TODO nothing?
 }
 
-Type *SizeofExpr::resolveType(CompileContext *cc) {
+Type *SizeofExpr::resolveType(Context *cc) {
   if (exprType)
     return exprType;
   exprType = new IntType();

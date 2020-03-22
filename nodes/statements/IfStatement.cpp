@@ -56,7 +56,7 @@ void IfStatement::codegen(CodegenContext *cc){
   cc->builder->SetInsertPoint(mergeB);
 }
 
-void IfStatement::compile(CompileContext *cc){
+void IfStatement::compile(Context *cc){
   auto is = this; // TODO lazy
   is->exp->compile(cc);
   is->i->compile(cc);

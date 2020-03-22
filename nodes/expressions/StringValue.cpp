@@ -39,12 +39,12 @@ llvm::Value *StringValue::exprGen(CodegenContext *cc){
 
 llvm::Value *StringValue::getAlloca(CodegenContext *cc){}
 
-void StringValue::compile(CompileContext *cc){
+void StringValue::compile(Context *cc){
   resolveType(cc);
   // TODO
 }
 
-Type *StringValue::resolveType(CompileContext *cc){
+Type *StringValue::resolveType(Context *cc){
   if(exprType)
     return exprType;
   exprType = new StringType();

@@ -1,7 +1,7 @@
 #include "ReturnStatement.h"
 #include "../../Context.h"
 
-void ReturnStatement::compile(CompileContext *cc) {
+void ReturnStatement::compile(Context *cc) {
   // TODO handle void?
 
   if (!exp)

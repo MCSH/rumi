@@ -85,7 +85,7 @@ llvm::Value *FunctionCallExpr::getAlloca(CodegenContext *cc) {}
 
 void FunctionCallExpr::codegen(CodegenContext *cc) { exprGen(cc); }
 
-void FunctionCallExpr::compile(CompileContext *cc) {
+void FunctionCallExpr::compile(Context *cc) {
   resolveType(cc);
   auto fce = this; // TODO lazy
 
@@ -109,7 +109,7 @@ void FunctionCallExpr::compile(CompileContext *cc) {
     e->compile(cc);
 }
 
-Type *FunctionCallExpr::resolveType(CompileContext *cc) {
+Type *FunctionCallExpr::resolveType(Context *cc) {
   if (exprType)
     return exprType;
   auto f = cc->getFunction(name);

@@ -7,12 +7,12 @@ llvm::Value *PointerExpr::exprGen(CodegenContext *cc) {
 }
 llvm::Value *PointerExpr::getAlloca(CodegenContext *cc) {}
 
-void PointerExpr::compile(CompileContext *cc) {
+void PointerExpr::compile(Context *cc) {
   resolveType(cc);
   // TODO
 }
 
-Type *PointerExpr::resolveType(CompileContext *cc) {
+Type *PointerExpr::resolveType(Context *cc) {
   if (exprType)
     return exprType;
   exprType = new PointerType(exp->resolveType(cc)->clone());

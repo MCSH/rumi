@@ -13,10 +13,10 @@ public:
   bool isLocal = false;
 
   FunctionSignature(std::string *val, std::vector<Statement *> *a, Type *t);
-  void noBlockCompile(CompileContext *cc);
+  void noBlockCompile(Context *cc);
   Type *getType();
   virtual ~FunctionSignature();
   virtual void codegen(CodegenContext *cc);
   llvm::Function *signgen(CodegenContext *cc);
-  virtual void compile(CompileContext *cc);
+  virtual void compile(Context *cc);
 };

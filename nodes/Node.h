@@ -2,7 +2,7 @@
 
 // TODO merge these two
 class CodegenContext;
-class CompileContext;
+class Context;
 
 class Node{
 public:
@@ -15,5 +15,5 @@ public:
   virtual ~Node(){
   }
 
-  virtual void compile(CompileContext *cc)=0;
+  virtual void compile(Context *cc)=0;
 };

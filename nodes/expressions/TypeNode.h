@@ -7,6 +7,6 @@ public:
   TypeNode(Type *exprType): exprType(exprType){}
   virtual llvm::Value *exprGen(CodegenContext *cc){}
   virtual llvm::Value *getAlloca(CodegenContext *cc){}
-  virtual void compile(CompileContext *cc){}
-  virtual Type *resolveType(CompileContext *cc){}
+  virtual void compile(Context *cc){}
+  virtual Type *resolveType(Context *cc){}
 };

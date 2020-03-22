@@ -10,5 +10,5 @@ public:
   ImportStatement(std::string *n): name(n){}
   virtual ~ImportStatement();
   virtual void codegen(CodegenContext *cc);
-  virtual void compile(CompileContext *cc);
+  virtual void compile(Context *cc);
 };

@@ -73,7 +73,7 @@ void VariableDecl::codegen(CodegenContext *cc) {
   }
 }
 
-void VariableDecl::compile(CompileContext *cc) {
+void VariableDecl::compile(Context *cc) {
   auto vd = this; // TODO lazy
   Type *type;
   // check for arrays

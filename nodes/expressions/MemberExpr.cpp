@@ -58,7 +58,7 @@ llvm::Value *MemberExpr::getAlloca(CodegenContext *cc) {
   return member_ptr;
 }
 
-void MemberExpr::compile(CompileContext *cc) {
+void MemberExpr::compile(Context *cc) {
   resolveType(cc);
   e->compile(cc);
   // TODO check to see if mem is in the struct
@@ -73,7 +73,7 @@ void MemberExpr::compile(CompileContext *cc) {
   this->level = level;
 }
 
-Type *MemberExpr::resolveType(CompileContext *cc) {
+Type *MemberExpr::resolveType(Context *cc) {
   if (exprType)
     return exprType;
   // TODO check to see if it's a pointer

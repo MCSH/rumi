@@ -141,7 +141,7 @@ void CompileStatement::codegen(CodegenContext *cc) {
     exit(1);
   }
 }
-void CompileStatement::compile(CompileContext *cc) {
+void CompileStatement::compile(Context *cc) {
   s->compile(cc);
 
   // Now set it to be run

@@ -27,7 +27,7 @@ llvm::Value *VariableExpr::getAlloca(CodegenContext *cc) {
   return cc->getVariableAlloca(name);
 }
 
-void VariableExpr::compile(CompileContext *cc) {
+void VariableExpr::compile(Context *cc) {
   resolveType(cc);
   if (!cc->getVariableType(name)) {
     printf("Unknown variable %s in line %d\n", name->c_str(), lineno);
@@ -35,7 +35,7 @@ void VariableExpr::compile(CompileContext *cc) {
   }
 }
 
-Type *VariableExpr::resolveType(CompileContext *cc) {
+Type *VariableExpr::resolveType(Context *cc) {
   if (exprType)
     return exprType;
   Type *t = cc->getVariableType(name);

@@ -12,5 +12,5 @@ public:
 
   virtual ~IfStatement();
   virtual void codegen(CodegenContext *cc);
-  virtual void compile(CompileContext *cc);
+  virtual void compile(Context *cc);
 };

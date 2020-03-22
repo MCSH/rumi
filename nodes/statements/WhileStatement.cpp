@@ -43,7 +43,7 @@ void WhileStatement::codegen(CodegenContext *cc){
   cc->builder->SetInsertPoint(mergeB);
 }
 
-void WhileStatement::compile(CompileContext *cc){
+void WhileStatement::compile(Context *cc){
   auto ws = this; // TODO lazy
   ws->exp->compile(cc);
   ws->w->compile(cc);

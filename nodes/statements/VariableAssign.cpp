@@ -46,7 +46,7 @@ void VariableAssign::codegen(CodegenContext *cc) {
     cc->builder->CreateStore(e, alloc);
 }
 
-void VariableAssign::compile(CompileContext *cc) {
+void VariableAssign::compile(Context *cc) {
   auto va = this;
   va->base->compile(cc);
   va->exp->compile(cc);

@@ -85,7 +85,7 @@ llvm::Value *BinaryOperation::exprGen(CodegenContext *cc){
 
 llvm::Value *BinaryOperation::getAlloca(CodegenContext *cc) {}
 
-void BinaryOperation::compile(CompileContext *cc){
+void BinaryOperation::compile(Context *cc){
   resolveType(cc);
   lhs->compile(cc);
   rhs->compile(cc);
@@ -101,7 +101,7 @@ void BinaryOperation::compile(CompileContext *cc){
   // TODO I'd rather handle the op identification here, but it needs discussion
 }
 
-Type *BinaryOperation::resolveType(CompileContext *cc){
+Type *BinaryOperation::resolveType(Context *cc){
   if(exprType)
     return exprType;
 

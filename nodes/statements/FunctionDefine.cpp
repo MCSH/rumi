@@ -108,7 +108,7 @@ llvm::Function *FunctionDefine::funcgen(CodegenContext *cc) {
   return f;
 }
 
-void FunctionDefine::compile(CompileContext *cc) {
+void FunctionDefine::compile(Context *cc) {
   FunctionDefine *fd = this; // TODO because I'm lazy
   cc->blocks.push_back(new BlockContext());
 

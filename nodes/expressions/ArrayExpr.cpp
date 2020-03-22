@@ -45,7 +45,7 @@ llvm::Value *ArrayExpr::getAlloca(CodegenContext *cc) {
                                           indices, "ptrarrptr");
   }
 }
-void ArrayExpr::compile(CompileContext *cc) {
+void ArrayExpr::compile(Context *cc) {
   resolveType(cc);
   e->compile(cc);
   mem->compile(cc);
@@ -53,7 +53,7 @@ void ArrayExpr::compile(CompileContext *cc) {
   // TODO check to see if ae->mem is number
 }
 
-Type *ArrayExpr::resolveType(CompileContext *cc) {
+Type *ArrayExpr::resolveType(Context *cc) {
   if (exprType)
     return exprType;
   auto t = e->resolveType(cc);

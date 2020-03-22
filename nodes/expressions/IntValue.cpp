@@ -21,13 +21,13 @@ llvm::Value *IntValue::getAlloca(CodegenContext *cc) {
   exit(1);
 }
 
-void IntValue::compile(CompileContext *cc){
+void IntValue::compile(Context *cc){
   resolveType(cc);
   // TODO check max size
   // TODO should we move atoi here?
 }
 
-Type *IntValue::resolveType(CompileContext *cc){
+Type *IntValue::resolveType(Context *cc){
   if(exprType)
     return exprType;
   exprType = new IntType();

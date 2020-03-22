@@ -14,5 +14,5 @@ public:
   virtual ~FunctionDefine();
   llvm::Function *funcgen(CodegenContext *cc);
   virtual void codegen(CodegenContext *cc);
-  virtual void compile(CompileContext *cc);
+  virtual void compile(Context *cc);
 };

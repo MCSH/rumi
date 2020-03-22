@@ -9,5 +9,5 @@ public:
   CompileStatement(std::string *n, Statement *s): name(n), s(s){}
   virtual ~CompileStatement();
   virtual void codegen(CodegenContext *cc);
-  virtual void compile(CompileContext *cc);
+  virtual void compile(Context *cc);
 };

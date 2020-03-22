@@ -12,12 +12,12 @@ llvm::Value *PointerAccessExpr::getAlloca(CodegenContext *cc) {
   return load;
 }
 
-void PointerAccessExpr::compile(CompileContext *cc) {
+void PointerAccessExpr::compile(Context *cc) {
   resolveType(cc);
   exp->compile(cc);
 }
 
-Type *PointerAccessExpr::resolveType(CompileContext *cc) {
+Type *PointerAccessExpr::resolveType(Context *cc) {
   if (exprType)
     return exprType;
   PointerType *pt = (PointerType *)exp->resolveType(cc);

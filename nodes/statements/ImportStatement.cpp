@@ -21,7 +21,7 @@ void ImportStatement::codegen(CodegenContext *cc){
     s->codegen(cc);
 }
 
-void ImportStatement::compile(CompileContext *cc){
+void ImportStatement::compile(Context *cc){
   // TODO improve
 
   ImportStatement *is = this; // TODO because I'm lazy

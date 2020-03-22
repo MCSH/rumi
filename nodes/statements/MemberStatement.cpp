@@ -12,7 +12,7 @@ void MemberStatement::codegen(CodegenContext *cc){
   f->codegen(cc);
 }
 
-void MemberStatement::compile(CompileContext *cc) {
+void MemberStatement::compile(Context *cc) {
   // Resolve the struct,
   // Add to it's methods
   MemberStatement *m = this; // TODO lazy

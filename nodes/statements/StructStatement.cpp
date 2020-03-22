@@ -59,7 +59,7 @@ void StructStatement::codegen(CodegenContext *cc){
   cc->setStruct(this->name, s, this);
 }
 
-void StructStatement::compile(CompileContext *cc){
+void StructStatement::compile(Context *cc){
   auto ss = this; // TODO lazy
   cc->getBlock()->newStruct(ss->name, ss);
   // TODO do we want to do anything with the members?

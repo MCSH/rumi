@@ -9,12 +9,12 @@
 int yyparse();
 extern "C" FILE *yyin;
 
-typedef CompileContext CC;
+typedef Context CC;
 
 //void compile(Statement *stmts, CC* cc);
 //Type *resolveType(Expression *exp, CC *cc);
 
-CompileContext *compile(std::vector<Statement *> *stmts){
+Context *compile(std::vector<Statement *> *stmts){
   CC *cc = new CC();
   
   cc->codes = stmts;
@@ -33,7 +33,7 @@ std::vector<Statement *>* array_compile(std::vector<Statement *> *stmts, CC *cc)
   return stmts;
 }
 
-CompileContext* compile(char *fileName){
+Context* compile(char *fileName){
   yyin = fopen(fileName, "r");
 
   chdir(dirname(fileName)); // TODO change for windows
