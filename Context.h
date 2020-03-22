@@ -15,7 +15,6 @@
 #include "nodes/types/PointerType.h"
 #include <tuple>
 
-#include "compiler.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
@@ -176,10 +175,3 @@ class Context{
     return NULL;
   }
 };
-
-// TODO move
-llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, Context *cc, Node *n, bool expl, llvm::AllocaInst *alloc=nullptr);
-
-void handleDefer(Context *cc);
-
-llvm::Value* arrayToPointer(llvm::Type* t, llvm::Value * alloc, Context *cc);

@@ -1,5 +1,6 @@
 #include "CodeBlock.h"
 #include "../../Context.h"
+#include "../../codegen.h"
 
 CodeBlock::~CodeBlock() {
   for (auto s : *stmts) {

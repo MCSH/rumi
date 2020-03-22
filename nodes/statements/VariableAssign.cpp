@@ -1,7 +1,9 @@
 #include "VariableAssign.h"
+#include "../../Context.h"
+#include "../../codegen.h"
+#include "../../compiler.h"
 #include "../expressions/VariableExpr.h"
 #include "../types/ArrayType.h"
-#include "../../Context.h"
 #include <llvm/IR/Value.h>
 
 VariableAssign::~VariableAssign() {

@@ -1,5 +1,6 @@
 #include "MethodCall.h"
 #include "../../Context.h"
+#include "../../codegen.h"
 #include "../expressions/PointerAccessExpr.h"
 #include "../expressions/PointerExpr.h"
 #include "../statements/InterfaceStatement.h"

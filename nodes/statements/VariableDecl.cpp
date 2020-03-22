@@ -1,5 +1,6 @@
 #include "VariableDecl.h"
 #include "../../Context.h"
+#include "../../codegen.h"
 #include "../expressions/IntValue.h"
 #include "../types/ArrayType.h"
 #include "../types/InterfaceType.h"

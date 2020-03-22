@@ -1,5 +1,6 @@
 #include "ImportStatement.h"
 #include "../../Context.h"
+#include "../../compiler.h"
 #include <unistd.h> // chdir
 #include <libgen.h> // dirname
 
