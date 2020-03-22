@@ -49,7 +49,7 @@ void VariableDecl::codegen(Context *cc) {
   }
 
   if (typeid(*this->t).hash_code() == typeid(StructType).hash_code()) {
-    StructStatement *ss = cc->getStructStruct(((StructType *)this->t)->name);
+    StructStatement *ss = cc->getStruct(((StructType *)this->t)->name);
     if (ss->has_initializer) {
       for (int i = 0; i < ss->members->size(); i++) {
         auto vd = (*ss->members)[i];

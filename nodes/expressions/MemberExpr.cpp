@@ -26,7 +26,7 @@ llvm::Value *MemberExpr::getAlloca(Context *cc) {
   }
 
   auto t = (StructType *)tmpe;
-  auto ss = cc->getStructStruct(t->name);
+  auto ss = cc->getStruct(t->name);
   auto st = (llvm::StructType *)cc->getStructType(t->name);
 
   for (auto m : *ss->members) {

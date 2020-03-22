@@ -13,6 +13,9 @@ public:
 
   std::map<std::string, StructStatement *> implements;
 
+  llvm::Type *type=0;
+  llvm::Type *vtableType=0;
+
   InterfaceStatement(std::string *n, std::vector<Statement *> *m);
 
   virtual ~InterfaceStatement();

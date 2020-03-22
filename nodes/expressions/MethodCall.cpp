@@ -17,7 +17,7 @@ llvm::Value *interfaceMethodCall(MethodCall *mce, Context *cc) {
 
   // find the method index
   InterfaceType *it = (InterfaceType *)mce->e->exprType;
-  InterfaceStatement *is = cc->getInterfaceStatement(it->name);
+  InterfaceStatement *is = cc->getInterface(it->name);
 
   int ind = 0;
 

@@ -29,10 +29,8 @@ public:
   std::map<std::string, Type *> vars;
   std::map<std::string, std::tuple<llvm::AllocaInst *, VariableDecl *>*> variables;
 
-  std::map<std::string, std::tuple<llvm::Type *, StructStatement *>*> _structs;
   std::map<std::string, StructStatement *> structs;
 
-  std::map<std::string, std::tuple<std::tuple<llvm::Type *, llvm::Type*>*, InterfaceStatement *>*> _interfaces;
   std::map<std::string, InterfaceStatement *> interfaces;
 
   std::map<std::string, FunctionSignature *> functions;
@@ -100,15 +98,11 @@ class Context{
   VariableDecl *getVariableDecl(std::string *name);
   void setVariable(std::string *name, llvm::AllocaInst *var, VariableDecl *vd);
 
-  std::tuple<llvm::Type *, StructStatement *> *getStructTuple(std::string *name);
   llvm::Type* getStructType(std::string *name);
-  StructStatement *getStructStruct(std::string *name);
   void setStruct(std::string *name, llvm::Type *t, StructStatement *st);
 
-  std::tuple<std::tuple<llvm::Type *, llvm::Type*>*, InterfaceStatement*> *getInterfaceTuple(std::string *name);
   llvm::Type* getInterfaceType(std::string *name);
   llvm::Type* getInterfaceVtableType(std::string *name);
-  InterfaceStatement *getInterfaceStatement(std::string *name);
   void setInterface(std::string *name, llvm::Type *t, llvm::Type *t2, InterfaceStatement *it);
 
   llvm::BasicBlock *getEndBlock();

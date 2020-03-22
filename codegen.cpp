@@ -274,92 +274,42 @@ VariableDecl *Context::getVariableDecl(std::string *name) {
   return d;
 }
 
-std::tuple<llvm::Type *, StructStatement *> *
-Context::getStructTuple(std::string *name) {
-  for (auto i = blocks.rbegin(); i != blocks.rend(); i++) {
-    auto vars = (*i)->_structs;
-    auto p = vars.find(*name);
-    if (p != vars.end())
-      return p->second;
-  }
-
-  return global._structs[*name];
-}
-
 void Context::setStruct(std::string *name, llvm::Type *t,
                                StructStatement *st) {
   BlockContext *b = this->currentBlock();
-  b->_structs[*name] = new std::tuple<llvm::Type *, StructStatement *>(t, st);
+  b->structs[*name] = st;
+  st->type = t;
 }
 
 llvm::Type *Context::getStructType(std::string *name) {
   llvm::Type *t;
-  auto tup = this->getStructTuple(name);
-  if (!tup)
-    return nullptr;
-  std::tie(t, std::ignore) = *tup;
-  return t;
-}
-
-StructStatement *Context::getStructStruct(std::string *name) {
-  StructStatement *s;
-  auto tup = this->getStructTuple(name);
-  if (!tup)
-    return nullptr;
-  std::tie(std::ignore, s) = *tup;
-  return s;
-}
-
-std::tuple<std::tuple<llvm::Type *, llvm::Type *> *, InterfaceStatement *> *
-Context::getInterfaceTuple(std::string *name) {
-  for (auto i = blocks.rbegin(); i != blocks.rend(); i++) {
-    auto vars = (*i)->_interfaces;
-    auto p = vars.find(*name);
-    if (p != vars.end())
-      return p->second;
-  }
-
-  return global._interfaces[*name];
+  auto st = this->getStruct(name);
+  if(st)
+    return st->type;
+  return nullptr;
 }
 
 llvm::Type *Context::getInterfaceType(std::string *name) {
-  llvm::Type *t;
-  auto tup = this->getInterfaceTuple(name);
-  if (!tup)
-    return nullptr;
-  std::tuple<llvm::Type *, llvm::Type *> *tmp;
-  std::tie(tmp, std::ignore) = *tup;
-  std::tie(t, std::ignore) = *tmp;
-  return t;
+  auto in = this->getInterface(name);
+  if(in)
+    return in->type;
+  return nullptr;
 }
 
 llvm::Type *Context::getInterfaceVtableType(std::string *name) {
-  llvm::Type *t;
-  auto tup = this->getInterfaceTuple(name);
-  if (!tup)
-    return nullptr;
-  std::tuple<llvm::Type *, llvm::Type *> *tmp;
-  std::tie(tmp, std::ignore) = *tup;
-  std::tie(std::ignore, t) = *tmp;
-  return t;
-}
-
-InterfaceStatement *Context::getInterfaceStatement(std::string *name) {
-  InterfaceStatement *s;
-  auto tup = this->getInterfaceTuple(name);
-  if (!tup)
-    return nullptr;
-  std::tie(std::ignore, s) = *tup;
-  return s;
+  auto in = this->getInterface(name);
+  if(in)
+    return in->vtableType;
+  return nullptr;
 }
 
 void Context::setInterface(std::string *name, llvm::Type *t,
                                   llvm::Type *t2, InterfaceStatement *st) {
   BlockContext *b = this->currentBlock();
-  b->_interfaces[*name] =
-      new std::tuple<std::tuple<llvm::Type *, llvm::Type *> *,
-                     InterfaceStatement *>(
-          new std::tuple<llvm::Type *, llvm::Type *>(t, t2), st);
+  b->interfaces[*name] = st;
+  // TODO is this currect or reversed?
+  st->type = t;
+  st->vtableType = t2;
 }
 
 llvm::BasicBlock *Context::getEndBlock() {

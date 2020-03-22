@@ -15,6 +15,8 @@ public:
   int type_counter;
   StructStatement(std::string *name, std::vector<Statement *> *m);
 
+  llvm::Type *type=0;
+
   virtual ~StructStatement();
   virtual void codegen(Context *cc);
   virtual void compile(Context *cc);
