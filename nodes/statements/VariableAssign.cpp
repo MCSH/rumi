@@ -9,7 +9,7 @@ VariableAssign::~VariableAssign() {
   delete exp;
 }
 
-void VariableAssign::codegen(CodegenContext *cc) {
+void VariableAssign::codegen(Context *cc) {
   llvm::AllocaInst *alloc = (llvm::AllocaInst *)base->getAlloca(cc);
 
   if (!alloc) {

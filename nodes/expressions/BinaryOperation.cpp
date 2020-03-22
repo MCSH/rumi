@@ -9,7 +9,7 @@ BinaryOperation::~BinaryOperation() {
   delete lhs;
   delete rhs;
 }
-llvm::Value *BinaryOperation::exprGen(CodegenContext *cc){
+llvm::Value *BinaryOperation::exprGen(Context *cc){
   auto *lhs = this->lhs->exprGen(cc);
   auto *rhs = this->rhs->exprGen(cc);
 
@@ -83,7 +83,7 @@ llvm::Value *BinaryOperation::exprGen(CodegenContext *cc){
   printf("Can't run the expression on types %s and %s on line %d\n", this->lhs->exprType->displayName().c_str(), this->rhs->exprType->displayName().c_str(), this->lineno);
 }
 
-llvm::Value *BinaryOperation::getAlloca(CodegenContext *cc) {}
+llvm::Value *BinaryOperation::getAlloca(Context *cc) {}
 
 void BinaryOperation::compile(Context *cc){
   resolveType(cc);

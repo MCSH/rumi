@@ -3,11 +3,11 @@
 
 PointerAccessExpr::~PointerAccessExpr() { delete exp; }
 
-llvm::Value *PointerAccessExpr::exprGen(CodegenContext *cc) {
+llvm::Value *PointerAccessExpr::exprGen(Context *cc) {
   return cc->builder->CreateLoad(exp->exprGen(cc), "ptra");
 }
 
-llvm::Value *PointerAccessExpr::getAlloca(CodegenContext *cc) {
+llvm::Value *PointerAccessExpr::getAlloca(Context *cc) {
   auto load = this->exp->exprGen(cc);
   return load;
 }

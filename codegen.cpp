@@ -12,7 +12,7 @@
 // TODO check types on function return
 // TODO codegen should not throw any errors.
 
-typedef CodegenContext CC;
+typedef Context CC;
 
 CC *init_context();
 
@@ -238,8 +238,8 @@ llvm::Value *arrayToPointer(llvm::Type *t, llvm::Value *alloc, CC *cc) {
 }
 
 std::tuple<llvm::AllocaInst *, VariableDecl *> *
-CodegenContext::getVariable(std::string *name) {
-  for (auto i = block.rbegin(); i != block.rend(); i++) {
+Context::getVariable(std::string *name) {
+  for (auto i = blocks.rbegin(); i != blocks.rend(); i++) {
     auto vars = (*i)->variables;
     auto p = vars.find(*name);
     if (p != vars.end())
@@ -249,14 +249,14 @@ CodegenContext::getVariable(std::string *name) {
   return global.variables[*name];
 }
 
-void CodegenContext::setVariable(std::string *name, llvm::AllocaInst *var,
+void Context::setVariable(std::string *name, llvm::AllocaInst *var,
                                  VariableDecl *vd) {
-  CodegenBlockContext *b = this->currentBlock();
+  BlockContext *b = this->currentBlock();
   b->variables[*name] =
       new std::tuple<llvm::AllocaInst *, VariableDecl *>(var, vd);
 }
 
-llvm::AllocaInst *CodegenContext::getVariableAlloca(std::string *name) {
+llvm::AllocaInst *Context::getVariableAlloca(std::string *name) {
   llvm::AllocaInst *alloca;
   auto tup = this->getVariable(name);
   if (!tup)
@@ -265,7 +265,7 @@ llvm::AllocaInst *CodegenContext::getVariableAlloca(std::string *name) {
   return alloca;
 }
 
-VariableDecl *CodegenContext::getVariableDecl(std::string *name) {
+VariableDecl *Context::getVariableDecl(std::string *name) {
   VariableDecl *d;
   auto tup = this->getVariable(name);
   if (!tup)
@@ -275,35 +275,35 @@ VariableDecl *CodegenContext::getVariableDecl(std::string *name) {
 }
 
 std::tuple<llvm::Type *, StructStatement *> *
-CodegenContext::getStruct(std::string *name) {
-  for (auto i = block.rbegin(); i != block.rend(); i++) {
-    auto vars = (*i)->structs;
+Context::getStructTuple(std::string *name) {
+  for (auto i = blocks.rbegin(); i != blocks.rend(); i++) {
+    auto vars = (*i)->_structs;
     auto p = vars.find(*name);
     if (p != vars.end())
       return p->second;
   }
 
-  return global.structs[*name];
+  return global._structs[*name];
 }
 
-void CodegenContext::setStruct(std::string *name, llvm::Type *t,
+void Context::setStruct(std::string *name, llvm::Type *t,
                                StructStatement *st) {
-  CodegenBlockContext *b = this->currentBlock();
-  b->structs[*name] = new std::tuple<llvm::Type *, StructStatement *>(t, st);
+  BlockContext *b = this->currentBlock();
+  b->_structs[*name] = new std::tuple<llvm::Type *, StructStatement *>(t, st);
 }
 
-llvm::Type *CodegenContext::getStructType(std::string *name) {
+llvm::Type *Context::getStructType(std::string *name) {
   llvm::Type *t;
-  auto tup = this->getStruct(name);
+  auto tup = this->getStructTuple(name);
   if (!tup)
     return nullptr;
   std::tie(t, std::ignore) = *tup;
   return t;
 }
 
-StructStatement *CodegenContext::getStructStruct(std::string *name) {
+StructStatement *Context::getStructStruct(std::string *name) {
   StructStatement *s;
-  auto tup = this->getStruct(name);
+  auto tup = this->getStructTuple(name);
   if (!tup)
     return nullptr;
   std::tie(std::ignore, s) = *tup;
@@ -311,20 +311,20 @@ StructStatement *CodegenContext::getStructStruct(std::string *name) {
 }
 
 std::tuple<std::tuple<llvm::Type *, llvm::Type *> *, InterfaceStatement *> *
-CodegenContext::getInterface(std::string *name) {
-  for (auto i = block.rbegin(); i != block.rend(); i++) {
-    auto vars = (*i)->interfaces;
+Context::getInterfaceTuple(std::string *name) {
+  for (auto i = blocks.rbegin(); i != blocks.rend(); i++) {
+    auto vars = (*i)->_interfaces;
     auto p = vars.find(*name);
     if (p != vars.end())
       return p->second;
   }
 
-  return global.interfaces[*name];
+  return global._interfaces[*name];
 }
 
-llvm::Type *CodegenContext::getInterfaceType(std::string *name) {
+llvm::Type *Context::getInterfaceType(std::string *name) {
   llvm::Type *t;
-  auto tup = this->getInterface(name);
+  auto tup = this->getInterfaceTuple(name);
   if (!tup)
     return nullptr;
   std::tuple<llvm::Type *, llvm::Type *> *tmp;
@@ -333,9 +333,9 @@ llvm::Type *CodegenContext::getInterfaceType(std::string *name) {
   return t;
 }
 
-llvm::Type *CodegenContext::getInterfaceVtableType(std::string *name) {
+llvm::Type *Context::getInterfaceVtableType(std::string *name) {
   llvm::Type *t;
-  auto tup = this->getInterface(name);
+  auto tup = this->getInterfaceTuple(name);
   if (!tup)
     return nullptr;
   std::tuple<llvm::Type *, llvm::Type *> *tmp;
@@ -344,26 +344,26 @@ llvm::Type *CodegenContext::getInterfaceVtableType(std::string *name) {
   return t;
 }
 
-InterfaceStatement *CodegenContext::getInterfaceStatement(std::string *name) {
+InterfaceStatement *Context::getInterfaceStatement(std::string *name) {
   InterfaceStatement *s;
-  auto tup = this->getInterface(name);
+  auto tup = this->getInterfaceTuple(name);
   if (!tup)
     return nullptr;
   std::tie(std::ignore, s) = *tup;
   return s;
 }
 
-void CodegenContext::setInterface(std::string *name, llvm::Type *t,
+void Context::setInterface(std::string *name, llvm::Type *t,
                                   llvm::Type *t2, InterfaceStatement *st) {
-  CodegenBlockContext *b = this->currentBlock();
-  b->interfaces[*name] =
+  BlockContext *b = this->currentBlock();
+  b->_interfaces[*name] =
       new std::tuple<std::tuple<llvm::Type *, llvm::Type *> *,
                      InterfaceStatement *>(
           new std::tuple<llvm::Type *, llvm::Type *>(t, t2), st);
 }
 
-llvm::BasicBlock *CodegenContext::getEndBlock() {
-  for (auto i = block.rbegin(); i != block.rend(); i++) {
+llvm::BasicBlock *Context::getEndBlock() {
+  for (auto i = blocks.rbegin(); i != blocks.rend(); i++) {
     auto eb = (*i)->endblock;
     if (eb)
       return eb;
@@ -372,8 +372,8 @@ llvm::BasicBlock *CodegenContext::getEndBlock() {
   return nullptr;
 }
 
-llvm::AllocaInst *CodegenContext::getReturnAlloca() {
-  for (auto i = block.rbegin(); i != block.rend(); i++) {
+llvm::AllocaInst *Context::getReturnAlloca() {
+  for (auto i = blocks.rbegin(); i != blocks.rend(); i++) {
     auto ra = (*i)->returnAlloca;
     if (ra)
       return ra;

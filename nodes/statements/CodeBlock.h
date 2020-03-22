@@ -8,6 +8,6 @@ public:
   CodeBlock(std::vector<Statement*> *s): stmts(s){}
 
   virtual ~CodeBlock();
-  virtual void codegen(CodegenContext *cc);
+  virtual void codegen(Context *cc);
   virtual void compile(Context *cc);
 };

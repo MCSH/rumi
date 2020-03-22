@@ -61,7 +61,7 @@ FunctionType::~FunctionType() {
   delete args;
 }
 
-llvm::Type *FunctionType::typeGen(CodegenContext *cc){
+llvm::Type *FunctionType::typeGen(Context *cc){
   std::vector<llvm::Type *> params;
 
     for(auto arg: *this->args)

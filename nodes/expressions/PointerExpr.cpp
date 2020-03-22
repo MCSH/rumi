@@ -2,10 +2,10 @@
 #include "../types/PointerType.h"
 
 PointerExpr::~PointerExpr() { delete exp; }
-llvm::Value *PointerExpr::exprGen(CodegenContext *cc) {
+llvm::Value *PointerExpr::exprGen(Context *cc) {
   return exp->getAlloca(cc);
 }
-llvm::Value *PointerExpr::getAlloca(CodegenContext *cc) {}
+llvm::Value *PointerExpr::getAlloca(Context *cc) {}
 
 void PointerExpr::compile(Context *cc) {
   resolveType(cc);

@@ -17,7 +17,7 @@ void ReturnStatement::compile(Context *cc) {
   exp = castCompile(t, ft, exp, cc, this, false);
 }
 
-void ReturnStatement::codegen(CodegenContext *cc) {
+void ReturnStatement::codegen(Context *cc) {
   // TODO check void
   if (exp) {
     cc->builder->CreateStore(exp->exprGen(cc), cc->getReturnAlloca());

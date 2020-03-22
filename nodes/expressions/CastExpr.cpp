@@ -5,13 +5,13 @@ CastExpr::~CastExpr() {
   delete t;
   delete exp;
 }
-llvm::Value *CastExpr::exprGen(CodegenContext *cc) {
+llvm::Value *CastExpr::exprGen(Context *cc) {
   auto targetType = this->exp->exprType;
   auto baseType = this->t;
   return castGen(targetType, baseType, this->exp->exprGen(cc), cc, this, true);
 }
 
-llvm::Value *CastExpr::getAlloca(CodegenContext *cc) {}
+llvm::Value *CastExpr::getAlloca(Context *cc) {}
 
 void CastExpr::compile(Context *cc) {
   resolveType(cc);

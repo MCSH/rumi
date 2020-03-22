@@ -17,7 +17,7 @@ InterfaceStatement::~InterfaceStatement() {
     delete i;
   delete members;
 }
-void InterfaceStatement::codegen(CodegenContext *cc){
+void InterfaceStatement::codegen(Context *cc){
   // TODO
 
   // Create a vtable struct

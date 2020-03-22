@@ -33,11 +33,11 @@ StringValue::~StringValue(){
     delete val;
   }
 
-llvm::Value *StringValue::exprGen(CodegenContext *cc){
+llvm::Value *StringValue::exprGen(Context *cc){
   return cc->builder->CreateGlobalStringPtr(*this->val);
 }
 
-llvm::Value *StringValue::getAlloca(CodegenContext *cc){}
+llvm::Value *StringValue::getAlloca(Context *cc){}
 
 void StringValue::compile(Context *cc){
   resolveType(cc);

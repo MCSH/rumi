@@ -7,13 +7,13 @@ MemberExpr::~MemberExpr() {
   delete e;
   delete mem;
 }
-llvm::Value *MemberExpr::exprGen(CodegenContext *cc) {
+llvm::Value *MemberExpr::exprGen(Context *cc) {
   auto member_ptr = this->getAlloca(cc); // Level is handled there
   llvm::Value *loaded_member = cc->builder->CreateLoad(member_ptr, "loadtmp");
   return loaded_member;
 }
 
-llvm::Value *MemberExpr::getAlloca(CodegenContext *cc) {
+llvm::Value *MemberExpr::getAlloca(Context *cc) {
   int member_ind = 0;
 
   // TODO level

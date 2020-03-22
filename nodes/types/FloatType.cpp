@@ -25,7 +25,7 @@ Compatibility FloatType::compatible(Type *t) {
 
 FloatType *FloatType::clone() { return new FloatType(*this); }
 
-llvm::Type *FloatType::typeGen(CodegenContext *cc){
+llvm::Type *FloatType::typeGen(Context *cc){
   switch(size){
   case 0:
     // TODO do it based on sys arch

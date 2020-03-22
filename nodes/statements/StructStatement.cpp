@@ -15,7 +15,7 @@ StructStatement::~StructStatement() {
   delete members;
 }
 
-void StructStatement::codegen(CodegenContext *cc){
+void StructStatement::codegen(Context *cc){
   // TODO
 
   this->type_counter = cc->struct_type_counter;

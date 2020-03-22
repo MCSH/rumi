@@ -19,9 +19,9 @@ public:
   MethodCall(Expression *e, std::string *n, std::vector<Expression *> *expr);
  
   virtual ~MethodCall();
-  virtual llvm::Value *exprGen(CodegenContext *cc);
-  virtual llvm::Value *getAlloca(CodegenContext *cc);
-  void codegen(CodegenContext *cc);
+  virtual llvm::Value *exprGen(Context *cc);
+  virtual llvm::Value *getAlloca(Context *cc);
+  void codegen(Context *cc);
   virtual void compile(Context *cc);
   virtual Type *resolveType(Context *cc);
 };

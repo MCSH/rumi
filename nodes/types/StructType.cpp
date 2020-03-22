@@ -18,7 +18,7 @@ std::string StructType::displayName() { return "struct " + *name; }
 
 StructType::~StructType() { delete name; }
 
-llvm::Type *StructType::typeGen(CodegenContext *cc){
+llvm::Type *StructType::typeGen(Context *cc){
   return cc->getStructType(this->name);
 }
 

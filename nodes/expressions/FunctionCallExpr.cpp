@@ -19,7 +19,7 @@ FunctionCallExpr::~FunctionCallExpr() {
   delete expr;
 }
 
-llvm::Value *FunctionCallExpr::exprGen(CodegenContext *cc) {
+llvm::Value *FunctionCallExpr::exprGen(Context *cc) {
   // TODO args, function resolve could be improved!
   llvm::Function *calleeF = cc->module->getFunction(this->name->c_str());
   llvm::Value *cf;
@@ -81,9 +81,9 @@ llvm::Value *FunctionCallExpr::exprGen(CodegenContext *cc) {
   return cc->builder->CreateCall(cf, argsV, "calltmp");
 }
 
-llvm::Value *FunctionCallExpr::getAlloca(CodegenContext *cc) {}
+llvm::Value *FunctionCallExpr::getAlloca(Context *cc) {}
 
-void FunctionCallExpr::codegen(CodegenContext *cc) { exprGen(cc); }
+void FunctionCallExpr::codegen(Context *cc) { exprGen(cc); }
 
 void FunctionCallExpr::compile(Context *cc) {
   resolveType(cc);

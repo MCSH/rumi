@@ -7,7 +7,7 @@ IntValue::~IntValue() {
   if (val)
     delete val;
 }
-llvm::Value *IntValue::exprGen(CodegenContext *cc){
+llvm::Value *IntValue::exprGen(Context *cc){
   // TODO Check max size
   int value = this->size;
   if(this->val)
@@ -16,7 +16,7 @@ llvm::Value *IntValue::exprGen(CodegenContext *cc){
   return llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), value, true);
 }
 
-llvm::Value *IntValue::getAlloca(CodegenContext *cc) {
+llvm::Value *IntValue::getAlloca(Context *cc) {
   printf("Invalid operation, can't assign to int\n");
   exit(1);
 }

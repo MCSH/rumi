@@ -14,6 +14,6 @@ std::string InterfaceType::displayName() { return "interface " + *name; }
 
 InterfaceType::~InterfaceType() { delete name; }
 
-llvm::Type *InterfaceType::typeGen(CodegenContext *cc){
+llvm::Type *InterfaceType::typeGen(Context *cc){
   return cc->getInterfaceType(name);
 }

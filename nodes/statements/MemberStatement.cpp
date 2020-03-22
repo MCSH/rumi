@@ -8,7 +8,7 @@ MemberStatement::~MemberStatement() {
   delete f;
 }
 
-void MemberStatement::codegen(CodegenContext *cc){
+void MemberStatement::codegen(Context *cc){
   f->codegen(cc);
 }
 

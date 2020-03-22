@@ -11,6 +11,6 @@ public:
   }
 
   virtual ~WhileStatement();
-  virtual void codegen(CodegenContext *cc);
+  virtual void codegen(Context *cc);
   virtual void compile(Context *cc);
 };

@@ -41,7 +41,7 @@ ArrayType::~ArrayType(){
       delete exp;
   }
 
-llvm::Type *ArrayType::typeGen(CodegenContext *cc){
+llvm::Type *ArrayType::typeGen(Context *cc){
   // check for count
   if (this->count)
     return llvm::ArrayType::get(this->base->typeGen(cc), this->count);

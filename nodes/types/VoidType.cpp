@@ -9,6 +9,6 @@ std::string VoidType::displayName() { return "void"; }
 
 VoidType *VoidType::clone() { return new VoidType(*this); }
 
-llvm::Type *VoidType::typeGen(CodegenContext *cc) {
+llvm::Type *VoidType::typeGen(Context *cc) {
   return llvm::Type::getVoidTy(cc->context);
 }

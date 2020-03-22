@@ -16,6 +16,6 @@ public:
   InterfaceStatement(std::string *n, std::vector<Statement *> *m);
 
   virtual ~InterfaceStatement();
-  virtual void codegen(CodegenContext *cc);
+  virtual void codegen(Context *cc);
   virtual void compile(Context *cc);
 };

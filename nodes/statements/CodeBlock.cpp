@@ -9,7 +9,7 @@ CodeBlock::~CodeBlock() {
   delete stmts;
 }
 
-void CodeBlock::codegen(CodegenContext *cc){
+void CodeBlock::codegen(Context *cc){
   // TODO
   cc->defered.push_back(new std::vector<Statement*>());
 

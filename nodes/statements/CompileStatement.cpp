@@ -9,7 +9,7 @@
 
 void exitCallback(void *c, int status) { exit(status); }
 
-void import_compiler(llvm::ExecutionEngine *EE, CodegenContext *cc) {
+void import_compiler(llvm::ExecutionEngine *EE, Context *cc) {
   // Setup the compiler object
 
   // == compiler$exit := (c: compiler, status: int)-> void ==
@@ -63,7 +63,7 @@ CompileStatement::~CompileStatement() {
   delete name;
   delete s;
 }
-void CompileStatement::codegen(CodegenContext *cc) {
+void CompileStatement::codegen(Context *cc) {
   // TODO
   if (this->name->compare("compile") == 0) {
     // Compile the main statement

@@ -11,6 +11,6 @@ public:
   VariableDecl(std::string *n, Type *t, Expression *e=nullptr): name(n), t(t), exp(e){}
 
   virtual ~VariableDecl();
-  virtual void codegen(CodegenContext *cc);
+  virtual void codegen(Context *cc);
   virtual void compile(Context *cc);
 };

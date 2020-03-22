@@ -12,7 +12,7 @@ ImportStatement::~ImportStatement() {
     delete stmts;
 }
 
-void ImportStatement::codegen(CodegenContext *cc){
+void ImportStatement::codegen(Context *cc){
   if (name->compare("compiler") == 0) {
     cc->import_compiler = true;
   }

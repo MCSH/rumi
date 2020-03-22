@@ -16,6 +16,6 @@ public:
   StructStatement(std::string *name, std::vector<Statement *> *m);
 
   virtual ~StructStatement();
-  virtual void codegen(CodegenContext *cc);
+  virtual void codegen(Context *cc);
   virtual void compile(Context *cc);
 };

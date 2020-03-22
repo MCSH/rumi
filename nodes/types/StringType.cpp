@@ -18,7 +18,7 @@ StringType* StringType::clone(){
     return new StringType(*this);
   }
 
-llvm::Type *StringType::typeGen(CodegenContext *cc){
+llvm::Type *StringType::typeGen(Context *cc){
   // Improve?
   return llvm::PointerType::getUnqual(llvm::Type::getInt8Ty(cc->context));
 }

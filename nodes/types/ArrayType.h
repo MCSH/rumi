@@ -21,5 +21,5 @@ public:
 
   virtual ~ArrayType();
 
-  virtual llvm::Type *typeGen(CodegenContext *cc);
+  virtual llvm::Type *typeGen(Context *cc);
 };

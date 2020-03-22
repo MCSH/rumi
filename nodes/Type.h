@@ -6,7 +6,7 @@
 
 #include <llvm/IR/Type.h>
 
-class CodegenContext;
+class Context;
 
 enum Compatibility { OK = 1, ImpCast = 2, ExpCast = 3, UNCOMPATIBLE = 4 };
 
@@ -28,5 +28,5 @@ public:
   }
 
   virtual Type* clone() = 0;
-  virtual llvm::Type *typeGen(CodegenContext *cc)=0;
+  virtual llvm::Type *typeGen(Context *cc)=0;
 };

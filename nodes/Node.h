@@ -1,7 +1,6 @@
 #pragma once
 
 // TODO merge these two
-class CodegenContext;
 class Context;
 
 class Node{

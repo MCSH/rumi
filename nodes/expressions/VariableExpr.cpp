@@ -2,7 +2,7 @@
 #include "../../Context.h"
 
 VariableExpr::~VariableExpr() { delete name; }
-llvm::Value *VariableExpr::exprGen(CodegenContext *cc) {
+llvm::Value *VariableExpr::exprGen(Context *cc) {
   llvm::AllocaInst *alloc = cc->getVariableAlloca(this->name);
   if (!alloc) {
     // is it a function?
@@ -23,7 +23,7 @@ llvm::Value *VariableExpr::exprGen(CodegenContext *cc) {
   return load;
 }
 
-llvm::Value *VariableExpr::getAlloca(CodegenContext *cc) {
+llvm::Value *VariableExpr::getAlloca(Context *cc) {
   return cc->getVariableAlloca(name);
 }
 

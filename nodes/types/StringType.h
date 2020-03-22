@@ -7,5 +7,5 @@ class StringType: public Type{
   virtual std::string displayName();
 
   virtual StringType* clone();
-  virtual llvm::Type *typeGen(CodegenContext *cc);
+  virtual llvm::Type *typeGen(Context *cc);
 };

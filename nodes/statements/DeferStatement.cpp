@@ -3,7 +3,7 @@
 
 DeferStatement::~DeferStatement() { delete s; }
 
-void DeferStatement::codegen(CodegenContext *cc){
+void DeferStatement::codegen(Context *cc){
   cc->defered.back()->push_back(s);
 }
 

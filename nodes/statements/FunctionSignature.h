@@ -16,7 +16,7 @@ public:
   void noBlockCompile(Context *cc);
   Type *getType();
   virtual ~FunctionSignature();
-  virtual void codegen(CodegenContext *cc);
-  llvm::Function *signgen(CodegenContext *cc);
+  virtual void codegen(Context *cc);
+  llvm::Function *signgen(Context *cc);
   virtual void compile(Context *cc);
 };

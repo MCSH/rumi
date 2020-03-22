@@ -1,7 +1,7 @@
 #include "IntType.h"
 #include "../../Context.h"
 
-llvm::Type *IntType::typeGen(CodegenContext *cc){
+llvm::Type *IntType::typeGen(Context *cc){
   switch(this->size){
   case 0:
     /// TODO do it based on sys arch

@@ -29,7 +29,7 @@ std::string PointerType::displayName() { return "*" + base->displayName(); }
 
 PointerType::~PointerType(){ delete base; }
 
-llvm::Type *PointerType::typeGen(CodegenContext *cc) {
+llvm::Type *PointerType::typeGen(Context *cc) {
   auto baseType = this->base->typeGen(cc);
   if (!baseType) {
     // Type is not generated yet, it should be a struct I assume

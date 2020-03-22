@@ -34,7 +34,7 @@ $(BUILD_DIR)/%.o : %.cpp
 
 .PHONY: clean
 clean:
-	-rm -f $(BUILD_DIR)/$(BIN) $(OBJ) $(DEP) tests/*.o $(BIN) $(BINI) parse.cpp lex.cpp
+	-rm -f $(BUILD_DIR)/$(BIN) $(OBJ) $(DEP) tests/*.o $(BIN) $(BINI) parse.cpp lex.cpp $(BUILD_DIR)/$(BIN).o $(BUILD_DIR)/$(BINI).o  $(BUILD_DIR)/$(BIN).d $(BUILD_DIR)/$(BINI).d
 
 $(BIN):	$(OBJ) $(BUILD_DIR)/$(BIN).o
 	$(CC) $(COMPILER_EXEC_LLVM_FLAGS) $(OBJ) $(BUILD_DIR)/$(BIN).o -o $(BIN)

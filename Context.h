@@ -1,25 +1,51 @@
 #pragma once
 
-#include <fstream>
-#include <map>
 #include "nodes/Type.h"
-#include "nodes/statements/StructStatement.h"
-#include "nodes/statements/InterfaceStatement.h"
-#include "nodes/statements/FunctionSignature.h"
 #include "nodes/statements/CompileStatement.h"
+#include "nodes/statements/FunctionSignature.h"
+#include "nodes/statements/InterfaceStatement.h"
+#include "nodes/statements/StructStatement.h"
+#include <fstream>
+#include <llvm/IR/Value.h>
+#include <map>
 
-#include "codegen.h"
+#include "nodes/statements/InterfaceStatement.h"
+#include "nodes/statements/StructStatement.h"
+#include "nodes/statements/VariableDecl.h"
+#include "nodes/types/PointerType.h"
+#include <tuple>
+
 #include "compiler.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
 
-    // TODO memory leak
+// TODO memory leak
 class BlockContext { // Block Context
 public:
   // Type *returnType; // TODO move this to function define?
+
+  // TODO merge
   std::map<std::string, Type *> vars;
+  std::map<std::string, std::tuple<llvm::AllocaInst *, VariableDecl *>*> variables;
+
+  std::map<std::string, std::tuple<llvm::Type *, StructStatement *>*> _structs;
   std::map<std::string, StructStatement *> structs;
+
+  std::map<std::string, std::tuple<std::tuple<llvm::Type *, llvm::Type*>*, InterfaceStatement *>*> _interfaces;
   std::map<std::string, InterfaceStatement *> interfaces;
+
   std::map<std::string, FunctionSignature *> functions;
   FunctionDefine *currentFunction;
+
+  llvm::BasicBlock *bblock;
+  llvm::BasicBlock *endblock=nullptr;
+  llvm::AllocaInst *returnAlloca=nullptr;
+
+  BlockContext(){}
+
+ BlockContext(llvm::BasicBlock *bb):bblock(bb){}
 
   void newVar(std::string *name, Type *type){
     // TODO check for name collision
@@ -49,12 +75,45 @@ public:
 
     // TODO memory leak
 class Context{
+  BlockContext *currentBlock(){
+    if(blocks.size()!=0)
+      return blocks.back();
+    return &global;
+  }
  public:
   BlockContext global;
   std::vector<BlockContext *> blocks;
 
   std::vector<CompileStatement *> compiles; // TODO redundent?
   std::vector<Statement *> *codes; // TODO redundent?
+
+  int struct_type_counter = 1;
+  bool import_compiler = false;
+
+  llvm::LLVMContext context;
+  llvm::Module *module;
+  llvm::IRBuilder<> *builder;
+  llvm::Function *mainF;
+  std::vector<std::vector<Statement *> *> defered;
+
+  std::tuple<llvm::AllocaInst *, VariableDecl *> *getVariable(std::string *name);
+  llvm::AllocaInst *getVariableAlloca(std::string *name);
+  VariableDecl *getVariableDecl(std::string *name);
+  void setVariable(std::string *name, llvm::AllocaInst *var, VariableDecl *vd);
+
+  std::tuple<llvm::Type *, StructStatement *> *getStructTuple(std::string *name);
+  llvm::Type* getStructType(std::string *name);
+  StructStatement *getStructStruct(std::string *name);
+  void setStruct(std::string *name, llvm::Type *t, StructStatement *st);
+
+  std::tuple<std::tuple<llvm::Type *, llvm::Type*>*, InterfaceStatement*> *getInterfaceTuple(std::string *name);
+  llvm::Type* getInterfaceType(std::string *name);
+  llvm::Type* getInterfaceVtableType(std::string *name);
+  InterfaceStatement *getInterfaceStatement(std::string *name);
+  void setInterface(std::string *name, llvm::Type *t, llvm::Type *t2, InterfaceStatement *it);
+
+  llvm::BasicBlock *getEndBlock();
+  llvm::AllocaInst *getReturnAlloca();
 
   BlockContext *getBlock() {
     if (blocks.size() != 0)
@@ -117,3 +176,10 @@ class Context{
     return NULL;
   }
 };
+
+// TODO move
+llvm::Value *castGen(Type *exprType, Type *baseType, llvm::Value *e, Context *cc, Node *n, bool expl, llvm::AllocaInst *alloc=nullptr);
+
+void handleDefer(Context *cc);
+
+llvm::Value* arrayToPointer(llvm::Type* t, llvm::Value * alloc, Context *cc);

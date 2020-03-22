@@ -6,7 +6,7 @@ WhileStatement::~WhileStatement(){
     delete w;
     delete exp;
   }
-void WhileStatement::codegen(CodegenContext *cc){
+void WhileStatement::codegen(Context *cc){
   // TODO
 
   llvm::Function *f = cc->builder->GetInsertBlock()->getParent();
@@ -19,16 +19,16 @@ void WhileStatement::codegen(CodegenContext *cc){
   cc->builder->CreateBr(condB);
 
   // While cond
-  cc->block.push_back(new CodegenBlockContext(condB));
+  cc->blocks.push_back(new BlockContext(condB));
   cc->builder->SetInsertPoint(condB);
   llvm::Value *cond = this->exp->exprGen(cc);
   cond = cc->builder->CreateICmpNE(cond, llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), 0, false), "whilecond"); // TODO improve?
   cc->builder->CreateCondBr(cond, whileB, mergeB);
-  cc->block.pop_back();
+  cc->blocks.pop_back();
 
   // While Body
   f->getBasicBlockList().push_back(whileB);
-  cc->block.push_back(new CodegenBlockContext(whileB));
+  cc->blocks.push_back(new BlockContext(whileB));
   cc->builder->SetInsertPoint(whileB);
   this->w->codegen(cc);
   if (cc->builder->GetInsertPoint()
@@ -36,7 +36,7 @@ void WhileStatement::codegen(CodegenContext *cc){
           ->getOpcode() != llvm::Instruction::Br) {
     cc->builder->CreateBr(condB);
   }
-  cc->block.pop_back();
+  cc->blocks.pop_back();
 
   // Cont
   f->getBasicBlockList().push_back(mergeB);

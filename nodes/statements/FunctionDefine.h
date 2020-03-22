@@ -12,7 +12,7 @@ public:
   }
 
   virtual ~FunctionDefine();
-  llvm::Function *funcgen(CodegenContext *cc);
-  virtual void codegen(CodegenContext *cc);
+  llvm::Function *funcgen(Context *cc);
+  virtual void codegen(Context *cc);
   virtual void compile(Context *cc);
 };

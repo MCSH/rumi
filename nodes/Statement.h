@@ -3,5 +3,5 @@
 
 class Statement: public Node{
 public:
-  virtual void codegen(CodegenContext *cc)=0;
+  virtual void codegen(Context *cc)=0;
 };

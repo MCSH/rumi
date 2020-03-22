@@ -8,5 +8,5 @@ class AnyType: public Type{
 
   virtual AnyType* clone();
 
-  virtual llvm::Type *typeGen(CodegenContext *cc);
+  virtual llvm::Type *typeGen(Context *cc);
 };

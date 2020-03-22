@@ -12,7 +12,7 @@ VariableDecl::~VariableDecl() {
   delete exp;
 }
 
-void VariableDecl::codegen(CodegenContext *cc) {
+void VariableDecl::codegen(Context *cc) {
   // TODO maybe we need the block first for allocation?
   auto t = this->t->typeGen(cc);
   if (!t) {
@@ -20,7 +20,7 @@ void VariableDecl::codegen(CodegenContext *cc) {
     exit(1);
   }
 
-  auto bblock = cc->block.back()->bblock;
+  auto bblock = cc->blocks.back()->bblock;
 
   if (auto at = dynamic_cast<ArrayType *>(this->t)) {
     if (at->exp) {

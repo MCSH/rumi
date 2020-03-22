@@ -7,9 +7,9 @@ FunctionDefine::~FunctionDefine() {
   delete sign;
   delete body;
 }
-void FunctionDefine::codegen(CodegenContext *cc) { funcgen(cc); }
+void FunctionDefine::codegen(Context *cc) { funcgen(cc); }
 
-llvm::Function *FunctionDefine::funcgen(CodegenContext *cc) {
+llvm::Function *FunctionDefine::funcgen(Context *cc) {
   // TODO
 
   cc->defered.push_back(new std::vector<Statement *>());
@@ -28,10 +28,10 @@ llvm::Function *FunctionDefine::funcgen(CodegenContext *cc) {
 
   llvm::BasicBlock *bblock = llvm::BasicBlock::Create(cc->context, "entry", f);
   cc->builder->SetInsertPoint(bblock);
-  cc->block.push_back(new CodegenBlockContext(bblock));
+  cc->blocks.push_back(new BlockContext(bblock));
 
   llvm::BasicBlock *endblock = llvm::BasicBlock::Create(cc->context, "end", f);
-  auto cbc = cc->block.back();
+  auto cbc = cc->blocks.back();
   cbc->endblock = endblock;
 
   bool isVoid =
@@ -97,7 +97,7 @@ llvm::Function *FunctionDefine::funcgen(CodegenContext *cc) {
 
   llvm::verifyFunction(*f);
 
-  cc->block.pop_back();
+  cc->blocks.pop_back();
 
   if (this->sign->name->compare("main") == 0) {
     cc->mainF = f;

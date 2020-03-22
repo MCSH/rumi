@@ -8,5 +8,5 @@ class VoidType: public Type{
 
   virtual VoidType* clone();
 
-  virtual llvm::Type *typeGen(CodegenContext *cc);
+  virtual llvm::Type *typeGen(Context *cc);
 };

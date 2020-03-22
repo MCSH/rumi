@@ -10,7 +10,7 @@
 #include "../types/StructType.h"
 #include "../types/VoidType.h"
 
-llvm::Value *interfaceMethodCall(MethodCall *mce, CodegenContext *cc) {
+llvm::Value *interfaceMethodCall(MethodCall *mce, Context *cc) {
 
   llvm::Value *i = mce->e->getAlloca(cc);
 
@@ -116,15 +116,15 @@ MethodCall::~MethodCall() {
     delete e;
   delete expr;
 }
-llvm::Value *MethodCall::exprGen(CodegenContext *cc) {
+llvm::Value *MethodCall::exprGen(Context *cc) {
   if (f)
     return fce->exprGen(cc);
   return interfaceMethodCall(this, cc);
 }
 
-llvm::Value *MethodCall::getAlloca(CodegenContext *cc) {}
+llvm::Value *MethodCall::getAlloca(Context *cc) {}
 
-void MethodCall::codegen(CodegenContext *cc) {
+void MethodCall::codegen(Context *cc) {
   if (f)
     return fce->codegen(cc);
   interfaceMethodCall(this, cc);

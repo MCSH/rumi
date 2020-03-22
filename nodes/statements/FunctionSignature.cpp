@@ -37,11 +37,11 @@ FunctionSignature::~FunctionSignature() {
   }
   delete args;
 }
-void FunctionSignature::codegen(CodegenContext *cc){
+void FunctionSignature::codegen(Context *cc){
   signgen(cc);
 }
 
-llvm::Function *FunctionSignature::signgen(CodegenContext *cc){
+llvm::Function *FunctionSignature::signgen(Context *cc){
   // TODO
   auto fargs = this->args;
   std::vector<llvm::Type *> args;

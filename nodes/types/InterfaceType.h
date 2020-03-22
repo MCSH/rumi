@@ -15,5 +15,5 @@ public:
 
   virtual ~InterfaceType();
 
-  virtual llvm::Type *typeGen(CodegenContext *cc);
+  virtual llvm::Type *typeGen(Context *cc);
 };

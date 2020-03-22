@@ -9,6 +9,6 @@ public:
   std::vector<Statement *> *stmts;
   ImportStatement(std::string *n): name(n){}
   virtual ~ImportStatement();
-  virtual void codegen(CodegenContext *cc);
+  virtual void codegen(Context *cc);
   virtual void compile(Context *cc);
 };

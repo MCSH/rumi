@@ -6,13 +6,13 @@ ArrayExpr::~ArrayExpr() {
   delete e;
   delete mem;
 }
-llvm::Value *ArrayExpr::exprGen(CodegenContext *cc) {
+llvm::Value *ArrayExpr::exprGen(Context *cc) {
   auto member_ptr = this->getAlloca(cc);
   llvm::Value *loaded_member = cc->builder->CreateLoad(member_ptr, "loadtmp");
   return loaded_member;
 }
 
-llvm::Value *ArrayExpr::getAlloca(CodegenContext *cc) {
+llvm::Value *ArrayExpr::getAlloca(Context *cc) {
   ArrayType *at = (ArrayType *)this->e->exprType;
 
   // check for count member
