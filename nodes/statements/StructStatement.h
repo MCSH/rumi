@@ -1,10 +1,11 @@
 #pragma once
 #include "../Statement.h"
 #include "VariableDecl.h"
-#include "FunctionDefine.h"
 #include <string>
 #include <vector>
 #include <map>
+
+class FunctionDefine;
 
 class StructStatement: public Statement{
 public:

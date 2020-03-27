@@ -2,6 +2,7 @@
 #include "../../Context.h"
 #include "../../codegen.h"
 #include "../statements/ArgDecl.h"
+#include "../statements/FunctionSignature.h"
 #include "../types/ArrayType.h"
 #include "../types/FunctionType.h"
 #include "../types/VoidType.h"

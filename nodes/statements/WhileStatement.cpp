@@ -19,7 +19,8 @@ void WhileStatement::codegen(Context *cc){
   cc->builder->CreateBr(condB);
 
   // While cond
-  cc->blocks.push_back(new BlockContext(condB));
+  this->cb.bblock = condB;
+  cc->blocks.push_back(&this->cb);
   cc->builder->SetInsertPoint(condB);
   llvm::Value *cond = this->exp->exprGen(cc);
   cond = cc->builder->CreateICmpNE(cond, llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), 0, false), "whilecond"); // TODO improve?
@@ -28,7 +29,8 @@ void WhileStatement::codegen(Context *cc){
 
   // While Body
   f->getBasicBlockList().push_back(whileB);
-  cc->blocks.push_back(new BlockContext(whileB));
+  this->bblock = whileB;
+  cc->blocks.push_back(this);
   cc->builder->SetInsertPoint(whileB);
   this->w->codegen(cc);
   if (cc->builder->GetInsertPoint()
@@ -45,8 +47,13 @@ void WhileStatement::codegen(Context *cc){
 
 void WhileStatement::compile(Context *cc){
   auto ws = this; // TODO lazy
+  cc->blocks.push_back(&this->cb);
   ws->exp->compile(cc);
+  cc->blocks.pop_back();
+
+  cc->blocks.push_back(this);
   ws->w->compile(cc);
+  cc->blocks.pop_back();
   return;
 }
 

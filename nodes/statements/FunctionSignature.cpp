@@ -2,6 +2,8 @@
 #include "../../Context.h"
 #include "../types/FunctionType.h"
 
+// TODO no context in codegen? is this right?
+
 FunctionSignature::FunctionSignature(std::string *val, std::vector<Statement *> *a, Type *t)
     : name(val), returnT(t) {
   args = new std::vector<ArgDecl *>();
@@ -95,13 +97,11 @@ void FunctionSignature::noBlockCompile(Context *cc){
 }
 
 void FunctionSignature::compile(Context *cc){
-    cc->blocks.push_back(new BlockContext());
+    cc->blocks.push_back(this);
 
     this->noBlockCompile(cc);
 
-    BlockContext *bc = cc->blocks.back();
     cc->blocks.pop_back();
-    delete bc;
     return;
 }
 

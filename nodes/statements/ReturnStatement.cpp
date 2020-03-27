@@ -1,6 +1,7 @@
 #include "ReturnStatement.h"
 #include "../../Context.h"
 #include "../../compiler.h"
+#include "FunctionDefine.h"
 
 void ReturnStatement::compile(Context *cc) {
   // TODO handle void?

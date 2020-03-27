@@ -1,10 +1,11 @@
 #pragma once
 #include "../Statement.h"
+#include "../../BlockContext.h"
 #include "ArgDecl.h"
 #include <string>
 #include <vector>
 
-class FunctionSignature : public Statement {
+class FunctionSignature : public Statement, public BlockContext {
 public:
   std::string *name;
   Type *returnT;

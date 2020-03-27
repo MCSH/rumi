@@ -23,8 +23,8 @@ void CodeBlock::codegen(Context *cc){
 
 void CodeBlock::compile(Context *cc){
   auto cb = this; // TODO lazy
-  cc->blocks.push_back(new BlockContext());
-  for (auto s : *cb->stmts) {
+  cc->blocks.push_back((BlockContext*)this);
+  for (auto s : *stmts) {
     s->compile(cc);
   }
   cc->blocks.pop_back();

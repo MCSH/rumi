@@ -1,5 +1,6 @@
 #include "CompileStatement.h"
 #include "../../Context.h"
+#include "../types/PointerType.h"
 #include "../types/StructType.h"
 #include "FunctionDefine.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"

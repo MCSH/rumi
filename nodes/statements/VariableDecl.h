@@ -4,9 +4,9 @@
 
 class VariableDecl: public Statement{
 public:
-  std::string *name;
-  Type *t;
-  Expression *exp;
+  std::string *name=0;
+  Type *t=0;
+  Expression *exp=0;
   VariableDecl(){}
   VariableDecl(std::string *n, Type *t, Expression *e=nullptr): name(n), t(t), exp(e){}
 

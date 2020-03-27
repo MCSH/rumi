@@ -10,6 +10,7 @@
 #include "../types/InterfaceType.h"
 #include "../types/StructType.h"
 #include "../types/VoidType.h"
+#include "../types/PointerType.h"
 
 llvm::Value *interfaceMethodCall(MethodCall *mce, Context *cc) {
 

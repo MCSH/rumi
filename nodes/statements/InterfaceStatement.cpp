@@ -1,4 +1,5 @@
 #include "InterfaceStatement.h"
+#include "FunctionSignature.h"
 #include "../../Context.h"
 
 InterfaceStatement::InterfaceStatement(std::string *n,

@@ -3,6 +3,7 @@
 #include "../../codegen.h"
 #include "../types/VoidType.h"
 #include "llvm/IR/Verifier.h"
+#include "CodeBlock.h"
 
 FunctionDefine::~FunctionDefine() {
   delete sign;
@@ -29,7 +30,8 @@ llvm::Function *FunctionDefine::funcgen(Context *cc) {
 
   llvm::BasicBlock *bblock = llvm::BasicBlock::Create(cc->context, "entry", f);
   cc->builder->SetInsertPoint(bblock);
-  cc->blocks.push_back(new BlockContext(bblock));
+  this->bblock = bblock;
+  cc->blocks.push_back(this);
 
   llvm::BasicBlock *endblock = llvm::BasicBlock::Create(cc->context, "end", f);
   auto cbc = cc->blocks.back();
@@ -111,7 +113,7 @@ llvm::Function *FunctionDefine::funcgen(Context *cc) {
 
 void FunctionDefine::compile(Context *cc) {
   FunctionDefine *fd = this; // TODO because I'm lazy
-  cc->blocks.push_back(new BlockContext());
+  cc->blocks.push_back(this);
 
   fd->sign->noBlockCompile(cc);
   // functionSignCompile(fd->sign, cc); // TODO is this fine?, WRONG!

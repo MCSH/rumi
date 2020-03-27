@@ -1,9 +1,12 @@
 #pragma once
 #include "../Statement.h"
 #include "FunctionSignature.h"
-#include "CodeBlock.h"
+#include "../../BlockContext.h"
 
-class FunctionDefine: public Statement{
+// This prevents recursive inclusion
+class CodeBlock;
+
+class FunctionDefine: public Statement, public BlockContext{
 public:
   FunctionSignature *sign;
   CodeBlock *body;

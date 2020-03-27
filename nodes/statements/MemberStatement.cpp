@@ -2,6 +2,7 @@
 #include "../../Context.h"
 #include "StructStatement.h"
 #include "../types/StructType.h"
+#include "../types/PointerType.h"
 
 MemberStatement::~MemberStatement() {
   delete name;

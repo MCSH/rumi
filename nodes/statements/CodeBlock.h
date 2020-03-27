@@ -1,8 +1,9 @@
 #pragma once
 #include "../Statement.h"
+#include "../../BlockContext.h"
 #include <vector>
 
-class CodeBlock: public Statement{
+class CodeBlock: public Statement, public BlockContext{
 public:
   std::vector<Statement *> *stmts;
   CodeBlock(std::vector<Statement*> *s): stmts(s){}

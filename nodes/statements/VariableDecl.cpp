@@ -1,10 +1,12 @@
 #include "VariableDecl.h"
+#include "FunctionDefine.h"
 #include "../../Context.h"
 #include "../../codegen.h"
 #include "../expressions/IntValue.h"
 #include "../types/ArrayType.h"
 #include "../types/InterfaceType.h"
 #include "../types/StructType.h"
+#include "../types/PointerType.h"
 #include <llvm/IR/IRBuilder.h>
 
 VariableDecl::~VariableDecl() {

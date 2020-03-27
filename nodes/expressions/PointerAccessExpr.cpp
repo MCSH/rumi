@@ -1,5 +1,6 @@
 #include "PointerAccessExpr.h"
 #include "../../Context.h"
+#include "../types/PointerType.h"
 
 PointerAccessExpr::~PointerAccessExpr() { delete exp; }
 

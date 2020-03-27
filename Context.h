@@ -1,76 +1,23 @@
 #pragma once
 
+#include "BlockContext.h"
 #include "nodes/Type.h"
-#include "nodes/statements/CompileStatement.h"
-#include "nodes/statements/FunctionSignature.h"
-#include "nodes/statements/InterfaceStatement.h"
-#include "nodes/statements/StructStatement.h"
-#include <fstream>
-#include <llvm/IR/Value.h>
-#include <map>
-
-#include "nodes/statements/InterfaceStatement.h"
-#include "nodes/statements/StructStatement.h"
-#include "nodes/statements/VariableDecl.h"
-#include "nodes/types/PointerType.h"
-#include <tuple>
-
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
+#include <fstream>
+#include <llvm/IR/Value.h>
+#include <tuple>
+
+class GlobalContext: public BlockContext{};
+
+class VariableDecl;
+class CompileStatement;
+class InterfaceStatement;
+class FunctionSignature;
 
 // TODO memory leak
-class BlockContext { // Block Context
-public:
-  // Type *returnType; // TODO move this to function define?
-
-  // TODO merge
-  std::map<std::string, Type *> vars;
-  std::map<std::string, std::tuple<llvm::AllocaInst *, VariableDecl *>*> variables;
-
-  std::map<std::string, StructStatement *> structs;
-
-  std::map<std::string, InterfaceStatement *> interfaces;
-
-  std::map<std::string, FunctionSignature *> functions;
-  FunctionDefine *currentFunction;
-
-  llvm::BasicBlock *bblock;
-  llvm::BasicBlock *endblock=nullptr;
-  llvm::AllocaInst *returnAlloca=nullptr;
-
-  BlockContext(){}
-
- BlockContext(llvm::BasicBlock *bb):bblock(bb){}
-
-  void newVar(std::string *name, Type *type){
-    // TODO check for name collision
-    vars[*name] = type;
-  }
-
-  void newStruct(std::string *name, StructStatement *ss){
-    // TODO check for name collision
-    // TODO maybe register as var?
-    structs[*name] = ss;
-  }
-
-  void newInterface(std::string *name, InterfaceStatement *is){
-    // TODO check for name collision
-    // TODO maybe register as var?
-    interfaces[*name] = is;
-  }
-
-  void newFunction(std::string *name, FunctionSignature *fs){
-    // TODO check for name collision
-    // TODO maybe register as var?
-    functions[*name] = fs;
-    newVar(name, fs->getType());
-  }
-};
-
-
-    // TODO memory leak
 class Context{
   BlockContext *currentBlock(){
     if(blocks.size()!=0)
@@ -78,7 +25,7 @@ class Context{
     return &global;
   }
  public:
-  BlockContext global;
+  GlobalContext global;
   std::vector<BlockContext *> blocks;
 
   std::vector<CompileStatement *> compiles; // TODO redundent?
@@ -122,12 +69,12 @@ class Context{
 
   Type *getVariableType(std::string *name){
     for(auto i = blocks.rbegin(); i!=blocks.rend(); i++){
-      auto vars = (*i)->vars;
+      auto vars = (*i)->_vars;
       auto p = vars.find(*name);
       if(p!=vars.end())
         return p->second;
     }
-    return global.vars[*name];
+    return global._vars[*name];
   }
 
   StructStatement *getStruct(std::string *name){

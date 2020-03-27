@@ -1,10 +1,11 @@
 #pragma once
 #include "../Statement.h"
-#include "FunctionSignature.h"
 #include "StructStatement.h"
 #include <map>
 #include <string>
 #include <vector>
+
+class FunctionSignature;
 
 class InterfaceStatement : public Statement {
 public:

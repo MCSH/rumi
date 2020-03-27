@@ -28,7 +28,7 @@ void IfStatement::codegen(Context *cc){
   cc->builder->CreateCondBr(cond, ifB, elseB);
 
   // If Body
-  cc->blocks.push_back(new BlockContext(ifB));
+  cc->blocks.push_back(getIB(ifB));
   cc->builder->SetInsertPoint(ifB);
   this->i->codegen(cc);
   printf("lineno = %d\n", lineno);
@@ -43,7 +43,7 @@ void IfStatement::codegen(Context *cc){
 
   // Else
   if(this->e){
-    cc->blocks.push_back(new BlockContext(elseB));
+    cc->blocks.push_back(getEB(elseB));
     f->getBasicBlockList().push_back(elseB);
     cc->builder->SetInsertPoint(elseB);
     this->e->codegen(cc);
@@ -61,8 +61,37 @@ void IfStatement::codegen(Context *cc){
 
 void IfStatement::compile(Context *cc){
   auto is = this; // TODO lazy
+  // TODO context handling???
   is->exp->compile(cc);
+
+  cc->blocks.push_back(getIB());
   is->i->compile(cc);
-  if (is->e)
+  cc->blocks.pop_back();
+
+  if (is->e){
+    cc->blocks.push_back(getEB());
     is->e->compile(cc);
+    cc->blocks.pop_back();
+  }
+}
+
+
+IfContext *IfStatement::getIB(llvm::BasicBlock *bb){
+  if(!ib)
+    ib = new IfContext();
+
+  if(bb)
+    ib->bblock = bb;
+
+  return ib;
+}
+
+IfContext *IfStatement::getEB(llvm::BasicBlock *bb){
+  if(!eb)
+    eb = new IfContext();
+
+  if(bb)
+    eb->bblock = bb;
+
+  return eb;
 }
