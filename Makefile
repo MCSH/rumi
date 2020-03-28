@@ -12,7 +12,7 @@ BINI = rumi
 
 BUILD_DIR = ./build
 
-CPP = codegen.cpp compiler.cpp BlockContext.cpp $(wildcard nodes/**/*.cpp) lex.cpp parse.cpp
+CPP = Context.cpp codegen.cpp compiler.cpp BlockContext.cpp $(wildcard nodes/**/*.cpp) lex.cpp parse.cpp
 
 OBJ = $(CPP:%.cpp=$(BUILD_DIR)/%.o)
 

@@ -23,7 +23,7 @@ void VariableDecl::codegen(Context *cc) {
     exit(1);
   }
 
-  auto bblock = cc->blocks.back()->bblock;
+  auto bblock = cc->currentB->bblock;
 
   if (auto at = dynamic_cast<ArrayType *>(this->t)) {
     if (at->exp) {

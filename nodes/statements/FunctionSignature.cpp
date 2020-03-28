@@ -97,11 +97,11 @@ void FunctionSignature::noBlockCompile(Context *cc){
 }
 
 void FunctionSignature::compile(Context *cc){
-    cc->blocks.push_back(this);
+    cc->pushBlock(this);
 
     this->noBlockCompile(cc);
 
-    cc->blocks.pop_back();
+    cc->popBlock();
     return;
 }
 

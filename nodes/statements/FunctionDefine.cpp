@@ -31,10 +31,10 @@ llvm::Function *FunctionDefine::funcgen(Context *cc) {
   llvm::BasicBlock *bblock = llvm::BasicBlock::Create(cc->context, "entry", f);
   cc->builder->SetInsertPoint(bblock);
   this->bblock = bblock;
-  cc->blocks.push_back(this);
+  cc->pushBlock(this);
 
   llvm::BasicBlock *endblock = llvm::BasicBlock::Create(cc->context, "end", f);
-  auto cbc = cc->blocks.back();
+  auto cbc = cc->getBlock();
   cbc->endblock = endblock;
 
   bool isVoid =
@@ -100,7 +100,7 @@ llvm::Function *FunctionDefine::funcgen(Context *cc) {
 
   llvm::verifyFunction(*f);
 
-  cc->blocks.pop_back();
+  cc->popBlock();
 
   if (this->sign->name->compare("main") == 0) {
     cc->mainF = f;
@@ -113,7 +113,7 @@ llvm::Function *FunctionDefine::funcgen(Context *cc) {
 
 void FunctionDefine::compile(Context *cc) {
   FunctionDefine *fd = this; // TODO because I'm lazy
-  cc->blocks.push_back(this);
+  cc->pushBlock(this);
 
   fd->sign->noBlockCompile(cc);
   // functionSignCompile(fd->sign, cc); // TODO is this fine?, WRONG!
@@ -124,5 +124,5 @@ void FunctionDefine::compile(Context *cc) {
     s->compile(cc);
   }
 
-  cc->blocks.pop_back();
+  cc->popBlock();
 }

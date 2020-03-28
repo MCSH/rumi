@@ -13,6 +13,8 @@ class BlockContext { // Block Context
 public:
   // Type *returnType; // TODO move this to function define?
 
+  BlockContext *parent=0;
+
   // TODO merge
   std::map<std::string, Type *> _vars;
   std::map<std::string, std::tuple<llvm::AllocaInst *, VariableDecl *> *>

@@ -28,7 +28,7 @@ void IfStatement::codegen(Context *cc){
   cc->builder->CreateCondBr(cond, ifB, elseB);
 
   // If Body
-  cc->blocks.push_back(getIB(ifB));
+  cc->pushBlock(getIB(ifB));
   cc->builder->SetInsertPoint(ifB);
   this->i->codegen(cc);
   printf("lineno = %d\n", lineno);
@@ -39,11 +39,11 @@ void IfStatement::codegen(Context *cc){
               ->getOpcode() != llvm::Instruction::Br) {
     cc->builder->CreateBr(mergeB);
   }
-  cc->blocks.pop_back();
+  cc->popBlock();
 
   // Else
   if(this->e){
-    cc->blocks.push_back(getEB(elseB));
+    cc->pushBlock(getEB(elseB));
     f->getBasicBlockList().push_back(elseB);
     cc->builder->SetInsertPoint(elseB);
     this->e->codegen(cc);
@@ -52,7 +52,7 @@ void IfStatement::codegen(Context *cc){
             ->getOpcode() != llvm::Instruction::Br) {
       cc->builder->CreateBr(mergeB);
     }
-    cc->blocks.pop_back();
+    cc->popBlock();
   }
 
   f->getBasicBlockList().push_back(mergeB);
@@ -64,14 +64,14 @@ void IfStatement::compile(Context *cc){
   // TODO context handling???
   is->exp->compile(cc);
 
-  cc->blocks.push_back(getIB());
+  cc->pushBlock(getIB());
   is->i->compile(cc);
-  cc->blocks.pop_back();
+  cc->popBlock();
 
   if (is->e){
-    cc->blocks.push_back(getEB());
+    cc->pushBlock(getEB());
     is->e->compile(cc);
-    cc->blocks.pop_back();
+    cc->popBlock();
   }
 }
 

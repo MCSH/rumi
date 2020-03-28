@@ -242,8 +242,8 @@ llvm::Value *arrayToPointer(llvm::Type *t, llvm::Value *alloc, CC *cc) {
 
 std::tuple<llvm::AllocaInst *, VariableDecl *> *
 Context::getVariable(std::string *name) {
-  for (auto i = blocks.rbegin(); i != blocks.rend(); i++) {
-    auto vars = (*i)->variables;
+  for(auto i = currentB; i != 0; i=i->parent){
+    auto vars = i->variables;
     auto p = vars.find(*name);
     if (p != vars.end())
       return p->second;
@@ -316,8 +316,8 @@ void Context::setInterface(std::string *name, llvm::Type *t,
 }
 
 llvm::BasicBlock *Context::getEndBlock() {
-  for (auto i = blocks.rbegin(); i != blocks.rend(); i++) {
-    auto eb = (*i)->endblock;
+  for(auto i = currentB; i != 0; i=i->parent){
+    auto eb = i->endblock;
     if (eb)
       return eb;
   }
@@ -326,8 +326,8 @@ llvm::BasicBlock *Context::getEndBlock() {
 }
 
 llvm::AllocaInst *Context::getReturnAlloca() {
-  for (auto i = blocks.rbegin(); i != blocks.rend(); i++) {
-    auto ra = (*i)->returnAlloca;
+  for(auto i = currentB; i != 0; i=i->parent){
+    auto ra = i->returnAlloca;
     if (ra)
       return ra;
   }

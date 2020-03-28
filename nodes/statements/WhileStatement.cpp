@@ -20,17 +20,17 @@ void WhileStatement::codegen(Context *cc){
 
   // While cond
   this->cb.bblock = condB;
-  cc->blocks.push_back(&this->cb);
+  cc->pushBlock(&this->cb);
   cc->builder->SetInsertPoint(condB);
   llvm::Value *cond = this->exp->exprGen(cc);
   cond = cc->builder->CreateICmpNE(cond, llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), 0, false), "whilecond"); // TODO improve?
   cc->builder->CreateCondBr(cond, whileB, mergeB);
-  cc->blocks.pop_back();
+  cc->popBlock();
 
   // While Body
   f->getBasicBlockList().push_back(whileB);
   this->bblock = whileB;
-  cc->blocks.push_back(this);
+  cc->pushBlock(this);
   cc->builder->SetInsertPoint(whileB);
   this->w->codegen(cc);
   if (cc->builder->GetInsertPoint()
@@ -38,7 +38,7 @@ void WhileStatement::codegen(Context *cc){
           ->getOpcode() != llvm::Instruction::Br) {
     cc->builder->CreateBr(condB);
   }
-  cc->blocks.pop_back();
+  cc->popBlock();
 
   // Cont
   f->getBasicBlockList().push_back(mergeB);
@@ -47,13 +47,13 @@ void WhileStatement::codegen(Context *cc){
 
 void WhileStatement::compile(Context *cc){
   auto ws = this; // TODO lazy
-  cc->blocks.push_back(&this->cb);
+  cc->pushBlock(&this->cb);
   ws->exp->compile(cc);
-  cc->blocks.pop_back();
+  cc->popBlock();
 
-  cc->blocks.push_back(this);
+  cc->pushBlock(this);
   ws->w->compile(cc);
-  cc->blocks.pop_back();
+  cc->popBlock();
   return;
 }
 

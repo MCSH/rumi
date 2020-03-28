@@ -20,13 +20,11 @@ class FunctionSignature;
 // TODO memory leak
 class Context{
   BlockContext *currentBlock(){
-    if(blocks.size()!=0)
-      return blocks.back();
-    return &global;
+    return currentB;
   }
  public:
   GlobalContext global;
-  std::vector<BlockContext *> blocks;
+  BlockContext *currentB=0;
 
   std::vector<CompileStatement *> compiles; // TODO redundent?
   std::vector<Statement *> *codes; // TODO redundent?
@@ -39,6 +37,10 @@ class Context{
   llvm::IRBuilder<> *builder;
   llvm::Function *mainF;
   std::vector<std::vector<Statement *> *> defered;
+
+  Context(){
+    currentB = &global;
+  }
 
   std::tuple<llvm::AllocaInst *, VariableDecl *> *getVariable(std::string *name);
   llvm::AllocaInst *getVariableAlloca(std::string *name);
@@ -56,20 +58,22 @@ class Context{
   llvm::AllocaInst *getReturnAlloca();
 
   BlockContext *getBlock() {
-    if (blocks.size() != 0)
-      return blocks.back();
+    return currentB;
+  }
+
+  void pushBlock(BlockContext *b);
+  void popBlock();
+
+  BlockContext *getParentBlock() {
+    if(currentB->parent)
+      return currentB -> parent;
+
     return &global;
   }
 
-  BlockContext *getParentBlock() {
-    if(blocks.size() < 2)
-      return &global;
-    return blocks[blocks.size()-2];
-  }
-
   Type *getVariableType(std::string *name){
-    for(auto i = blocks.rbegin(); i!=blocks.rend(); i++){
-      auto vars = (*i)->_vars;
+    for(auto i = currentB; i != 0; i=i->parent){
+      auto vars = i->_vars;
       auto p = vars.find(*name);
       if(p!=vars.end())
         return p->second;
@@ -78,8 +82,8 @@ class Context{
   }
 
   StructStatement *getStruct(std::string *name){
-    for(auto i = blocks.rbegin(); i!=blocks.rend(); i++){
-      auto vars = (*i)->structs;
+    for(auto i = currentB; i != 0; i=i->parent){
+      auto vars = i->structs;
       auto p = vars.find(*name);
       if(p!=vars.end())
         return p->second;
@@ -88,8 +92,8 @@ class Context{
   }
 
   InterfaceStatement *getInterface(std::string *name){
-    for(auto i = blocks.rbegin(); i!=blocks.rend(); i++){
-      auto vars = (*i)->interfaces;
+    for(auto i = currentB; i != 0; i=i->parent){
+      auto vars = i->interfaces;
       auto p = vars.find(*name);
       if(p!=vars.end())
         return p->second;
@@ -98,8 +102,8 @@ class Context{
   }
 
   FunctionSignature *getFunction(std::string *name){
-    for(auto i = blocks.rbegin(); i!=blocks.rend(); i++){
-      auto vars = (*i)->functions;
+    for(auto i = currentB; i != 0; i=i->parent){
+      auto vars = i->functions;
       auto p = vars.find(*name);
       if(p!=vars.end())
         return p->second;
@@ -108,8 +112,8 @@ class Context{
   }
 
   FunctionDefine *getCurrentFunction(){
-    for(auto i = blocks.rbegin(); i!=blocks.rend(); i++){
-      auto f = (*i)->currentFunction;
+    for(auto i = currentB; i != 0; i=i->parent){
+      auto f = i->currentFunction;
       if(f)
         return f;
     }
