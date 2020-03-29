@@ -6,6 +6,7 @@ and /*nested*/ comments*/
 // Imports
 // import "base.rum"
 import base
+import compiler
 
 section := (name: string)->void{
   printf("\n\n========\n%s\n========\n\n", name);
@@ -25,6 +26,14 @@ vardiac_test := ()->void{
 branch_test := () -> void{
   if(1)
     printf("inside if\n");
+
+  if(1 == 1){
+    printf("1=1\n");
+  }
+
+  if(1 == 0){
+    printf("ERR: 1=0\n");
+  }
 
   if(1)
     if(0)
@@ -289,6 +298,25 @@ pointer_arithmetic_test := () -> void{
   return;
 }
 
+List : struct{
+  id: int;
+  next: *List;
+}
+
+pointer_to_self := () -> void{
+
+  l : *List;
+  l2 : *List;
+  l = malloc(sizeof(List))->*List;
+  l2 = malloc(sizeof(List));
+
+  l2.id = 20;
+
+  l.next = l2;
+
+  printf("l.next.id = %d\n",l.next.id);
+}
+
 main := () -> int{
   section("vardiac");
   vardiac_test();
@@ -329,7 +357,37 @@ main := () -> int{
   section("pointer arithmetic");
   pointer_arithmetic_test();
 
+  section("pointer to self");
+  pointer_to_self();
+
   return 0;
+}
+
+rem := (a: int, b:int)->int{
+  // returns 0 if a is dividable by b, otherwise the remainder
+
+  // Pretend this is hard to calculate!
+
+  return a % b;
+}
+
+@compile
+rem_test := ()->int{
+  printf("Running tests for rem\n"); // This will run in compile time
+
+  if(rem(8,4)){
+    printf("rem(8,4) should be 0\n");
+    return 2; // returning a value higher than 1 results in compile error
+  }
+
+  return 0; // This tells the compiler everything is fine
+}
+
+@compile
+rem_test2 := () -> int{
+  printf("Incomplete test, TODO\n"); // This will run in compile time
+
+  return 1; // This will print a compile warning
 }
 
 @compile
