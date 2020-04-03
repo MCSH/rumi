@@ -8,3 +8,6 @@ compiler : struct {
 }
 
 compiler.exit := (status: int)->void{}
+
+statement : struct{
+}

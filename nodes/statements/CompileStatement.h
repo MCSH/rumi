@@ -1,5 +1,6 @@
 #pragma once
 #include "../Statement.h"
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <string>
 
 class CompileStatement: public Statement{
@@ -11,3 +12,5 @@ public:
   virtual void codegen(Context *cc);
   virtual void compile(Context *cc);
 };
+
+void import_compiler(llvm::ExecutionEngine *EE, Context *cc);

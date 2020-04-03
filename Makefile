@@ -1,6 +1,6 @@
 
 export RUMI_PATH=$(shell pwd)/rumlib
-NUMTESTS = 3
+NUMTESTS = 4
 CC = clang++
 COMPILER_BASE_FLAGS = -w -g
 COMPILER_LLVM_FLAGS = `llvm-config --cxxflags --ldflags --system-libs --libs core`

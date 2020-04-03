@@ -38,9 +38,7 @@ class Context{
   llvm::Function *mainF;
   std::vector<std::vector<Statement *> *> defered;
 
-  Context(){
-    currentB = &global;
-  }
+  Context();
 
   std::tuple<llvm::AllocaInst *, VariableDecl *> *getVariable(std::string *name);
   llvm::AllocaInst *getVariableAlloca(std::string *name);
@@ -57,66 +55,22 @@ class Context{
   llvm::BasicBlock *getEndBlock();
   llvm::AllocaInst *getReturnAlloca();
 
-  BlockContext *getBlock() {
-    return currentB;
-  }
+  BlockContext *getBlock();
 
   void pushBlock(BlockContext *b);
   void popBlock();
 
-  BlockContext *getParentBlock() {
-    if(currentB->parent)
-      return currentB -> parent;
+  BlockContext *getParentBlock();
 
-    return &global;
-  }
+  Type *getVariableType(std::string *name);
 
-  Type *getVariableType(std::string *name){
-    for(auto i = currentB; i != 0; i=i->parent){
-      auto vars = i->_vars;
-      auto p = vars.find(*name);
-      if(p!=vars.end())
-        return p->second;
-    }
-    return global._vars[*name];
-  }
+  StructStatement *getStruct(std::string *name);
 
-  StructStatement *getStruct(std::string *name){
-    for(auto i = currentB; i != 0; i=i->parent){
-      auto vars = i->structs;
-      auto p = vars.find(*name);
-      if(p!=vars.end())
-        return p->second;
-    }
-    return global.structs[*name];
-  }
+  InterfaceStatement *getInterface(std::string *name);
 
-  InterfaceStatement *getInterface(std::string *name){
-    for(auto i = currentB; i != 0; i=i->parent){
-      auto vars = i->interfaces;
-      auto p = vars.find(*name);
-      if(p!=vars.end())
-        return p->second;
-    }
-    return global.interfaces[*name];
-  }
+  FunctionSignature *getFunction(std::string *name);
 
-  FunctionSignature *getFunction(std::string *name){
-    for(auto i = currentB; i != 0; i=i->parent){
-      auto vars = i->functions;
-      auto p = vars.find(*name);
-      if(p!=vars.end())
-        return p->second;
-    }
-    return global.functions[*name];
-  }
+  FunctionDefine *getCurrentFunction();
 
-  FunctionDefine *getCurrentFunction(){
-    for(auto i = currentB; i != 0; i=i->parent){
-      auto f = i->currentFunction;
-      if(f)
-        return f;
-    }
-    return NULL;
-  }
+  CompileDirective *getDirective(std::string *name);
 };

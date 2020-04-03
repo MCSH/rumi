@@ -1,0 +1,24 @@
+import base
+import compiler
+
+@define
+add_id := (c: *compiler, s: *statement) -> int {
+
+  //s.add_field("id", int, 0);
+  printf("From inside!\n");
+
+  return 0;
+}
+
+@add_id
+MyStruct : struct {
+  a: int = 0;
+}
+
+main := () -> int{
+
+  m: MyStruct;
+
+
+  return 0;
+}

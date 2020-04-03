@@ -8,6 +8,8 @@
 #include <llvm/IR/Value.h>
 #include <map>
 
+class CompileDirective;
+
 // TODO memory leak
 class BlockContext { // Block Context
 public:
@@ -25,6 +27,9 @@ public:
   std::map<std::string, InterfaceStatement *> interfaces;
 
   std::map<std::string, FunctionSignature *> functions;
+
+  std::map<std::string, CompileDirective *> directives;
+
   FunctionDefine *currentFunction;
 
   llvm::BasicBlock *bblock;
@@ -40,6 +45,10 @@ public:
   void newVar(std::string *name, Type *type) {
     // TODO check for name collision
     _vars[*name] = type;
+  }
+
+  void newDirective(std::string *name, CompileDirective *cd){
+    directives[*name] = cd;
   }
 
   void newStruct(std::string *name, StructStatement *ss) {

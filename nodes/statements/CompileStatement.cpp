@@ -2,6 +2,7 @@
 #include "../../Context.h"
 #include "../types/PointerType.h"
 #include "../types/StructType.h"
+#include "CompileDirective.h"
 #include "FunctionDefine.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
@@ -64,9 +65,25 @@ CompileStatement::~CompileStatement() {
   delete name;
   delete s;
 }
+
 void CompileStatement::codegen(Context *cc) {
   // TODO
-  if (this->name->compare("compile") == 0) {
+  if (this->name->compare("define") == 0){
+    FunctionDefine *df;
+    if (!(df = dynamic_cast<FunctionDefine *>(this->s))) {
+      printf("@define directive must be used with a function, line %d.\n",
+             this->lineno);
+    }
+
+    // TODO ensure return type of int
+    llvm::Function *f = df->funcgen(cc);
+    // TODO add it to the current block
+
+    CompileDirective *cd = new CompileDirective(f, df);
+
+    cc->currentB->newDirective(df->sign->name, cd);
+
+  } else if (this->name->compare("compile") == 0) {
     // Compile the main statement
     // Ensure it's a function
     FunctionDefine *df;
@@ -128,20 +145,20 @@ void CompileStatement::codegen(Context *cc) {
       }
     }
 
-    /*
-    llvm::GenericValue gv = EE->runFunction(f, noargs);
-
-    int retval = gv.IntVal.getLimitedValue();
-    */
-
     EE->removeModule(cc->module);
 
   } else {
-    printf("Unknown compile directive %s on line %d\naborting\n",
-           this->name->c_str(), this->lineno);
-    exit(1);
+    CompileDirective *cd = cc->getDirective(this->name);
+    if(!cd){
+      printf("Unknown compile directive %s on line %d\naborting\n",
+             this->name->c_str(), this->lineno);
+      exit(1);
+    }
+
+    cd->run(cc, this->s);
   }
 }
+
 void CompileStatement::compile(Context *cc) {
   s->compile(cc);
 
