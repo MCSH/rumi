@@ -30,3 +30,5 @@ public:
   virtual Type* clone() = 0;
   virtual llvm::Type *typeGen(Context *cc)=0;
 };
+
+Type *resolve_type(std::string *name);

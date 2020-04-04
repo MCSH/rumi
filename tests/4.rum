@@ -4,7 +4,7 @@ import compiler
 @define
 add_id := (c: *compiler, s: *statement) -> int {
 
-  //s.add_field("id", int, 0);
+  s.add_field("id", "int");
   printf("From inside!\n");
 
   return 0;
@@ -19,6 +19,9 @@ main := () -> int{
 
   m: MyStruct;
 
+  m.id = 2;
+
+  printf("m.id: ", m.id);
 
   return 0;
 }

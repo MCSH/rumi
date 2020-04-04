@@ -4,12 +4,27 @@
 #include "../types/StructType.h"
 #include "CompileDirective.h"
 #include "FunctionDefine.h"
+#include "StructStatement.h"
+#include "VariableDecl.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/ExecutionEngine/MCJIT.h"
 #include <cstdio>
 
 void exitCallback(void *c, int status) { exit(status); }
+
+void addFieldCallback(Statement *s, char *field, char *t){
+  //printf("Asked to create %s with type %s for %d\n", field, t, s->lineno);
+  StructStatement *ss = dynamic_cast<StructStatement *>(s);
+  if(!ss){
+    printf("add callback works on structs only, line %d\n", s->lineno);
+    exit(1);
+  }
+
+  Type *type = resolve_type(new std::string(t));
+
+  ss->members->push_back(new VariableDecl(new std::string(field), type));
+}
 
 void import_compiler(llvm::ExecutionEngine *EE, Context *cc) {
   // Setup the compiler object
@@ -41,6 +56,51 @@ void import_compiler(llvm::ExecutionEngine *EE, Context *cc) {
     auto inargs = n->args();
 
     // Set the first argument to the first incoming arguments, compiler
+    // args->push_back(inargs.begin());
+
+    for (auto &arg : inargs)
+      args->push_back(&arg);
+
+    /*
+      // nullptr, removed in favor of inargs[0]
+    args->push_back(builder.CreateIntToPtr(
+        llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), 0, true),
+        llvm::Type::getInt64Ty(cc->context)->getPointerTo()));
+    */
+    builder.CreateCall(fp, *args);
+    builder.CreateRetVoid();
+
+    f->replaceAllUsesWith(n);
+    n->takeName(f);
+    f->eraseFromParent();
+  }
+  // == statement$add_field := (s: statement, field: string, t: string)-> void ==
+  {
+    // Get the current function and create a replacement
+    llvm::Function *f = EE->FindFunctionNamed("statement$add_field");
+    llvm::Function *n = llvm::Function::Create(
+        f->getFunctionType(), llvm::Function::ExternalLinkage,
+        "statement$add_field_replacement", *cc->module);
+
+    // Creaete a basic block
+    auto bb = llvm::BasicBlock::Create(cc->context, "entry", n);
+    llvm::IRBuilder<> builder(bb, bb->begin());
+    builder.SetInsertPoint(bb);
+
+    // Cast the callback function to int, and then the int to function pointer
+    // inside llvm
+    auto fp = builder.CreateIntToPtr(
+        llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context),
+                               (uint64_t)&addFieldCallback, false),
+        f->getFunctionType()->getPointerTo());
+
+    // Set up the args
+    std::vector<llvm::Value *> *args;
+    args = new std::vector<llvm::Value *>();
+
+    auto inargs = n->args();
+
+    // Set the first argument to the first incoming arguments, statement
     // args->push_back(inargs.begin());
 
     for (auto &arg : inargs)

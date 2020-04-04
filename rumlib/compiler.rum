@@ -11,3 +11,5 @@ compiler.exit := (status: int)->void{}
 
 statement : struct{
 }
+
+statement.add_field := (field: string, t: string)->void{}
