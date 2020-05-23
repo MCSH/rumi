@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eu
+
 IPATH=$RUMI_PATH
 
 if [ -z "$IPATH" ]
@@ -12,7 +14,9 @@ mkdir -p "$IPATH/bin/"
 
 make rum
 
-cp rum "$IPATH/bin/"
+./compile.sh
+
+cp src/rum "$IPATH/bin/"
 
 #cp -r rumlib/* "$IPATH"
 
