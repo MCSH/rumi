@@ -1580,6 +1580,11 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     t : *Type = p.decl.p2;
     ft: *FunctionType = t.payload;
     return ft.returnType;
+  } else if(e.type == 8){ // sizeof
+    t : *Type = malloc(sizeof Type);
+    t.type = 1;
+    t.payload = 0;
+    return t;
   } else {
     printf("unknwon type resolve for expression type %d\n", e.type);
     exit(1);
