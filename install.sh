@@ -12,11 +12,9 @@ fi
 
 mkdir -p "$IPATH/bin/"
 
-make rum
+./self_compile.sh
 
-./compile.sh
-
-cp src/rum "$IPATH/bin/"
+cp src/rum2 "$IPATH/bin/rum"
 
 #cp -r rumlib/* "$IPATH"
 

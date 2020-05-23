@@ -195,6 +195,7 @@ Expression: struct{
       5 -> const string(val, ,)
       6 -> ptr (expr,,)
       7 -> fcall(id, args,)
+      8 -> sizeof(type,,)
   */
   p1: *any;
   p2: *any;
@@ -259,6 +260,7 @@ Token: struct {
      39 -> f64
      40 -> bool
      41 -> %
+     42 -> sizeof
   */
   payload: *any;
 }
@@ -610,6 +612,12 @@ lexer := (buf: *u8) -> *Lexer{
       } else if(streq(id, "bool")){
         t : *Token = malloc(2*8);
         t.type = 40;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "sizeof")){
+        t : *Token = malloc(2*8);
+        t.type = 42;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
@@ -1043,6 +1051,12 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
   } else if(tn.type == 20) { // string
     ans.type = 5;
     ans.p1 = tn.payload;
+    return ans;
+  } else if(tn.type == 42){ // sizeof
+    ans.type = 8;
+    // next is either a type or an id
+    tmp := parse_type(l);
+    ans.p1 = tmp;
     return ans;
   } else {
     printf("Expected to see value, saw %d\n", tn.type);
@@ -1860,6 +1874,62 @@ exprgen_pointer := (e: *Expression, cc: *CC) -> *any{
   return LLVMBuildLoad(cc.builder, exprgen(e.p1, cc), "ptra");
 }
 
+typesize := (e: *Type, cc: *CC) -> int{
+  ptr_size := 8; // TODO set based on arch
+  if(e.type == 0){
+    // recursively find the size
+    ans := 0;
+    s_name := e.payload;
+    tmp := cc_resolve_named(cc, s_name);
+    vp : *VariablePayload = tmp.payload;
+    f_mem : *Statement = vp.decl.p2;
+    while(f_mem){
+      tmp := typesize(f_mem.p2, cc);
+      ans = ans + typesize(f_mem.p2, cc);
+      f_mem = f_mem.next;
+    }
+    return ans;
+  }
+  if((e.type == 1) + (e.type == 2)){
+    // this is an int, we can divide payload by 8
+    intsize : int = e.payload;
+    if(intsize == 0){ // we have a default
+      return 8;
+    }
+    return intsize / 8;
+  }
+  if(e.type == 3){// float
+    fsize : int = e.payload;
+    return fsize / 8;
+  }
+  if(e.type == 4){// bool
+    return 1;
+  }
+  if(e.type == 5){// string
+    return ptr_size;
+  }
+  if(e.type == 6){// pointer
+    return ptr_size;
+  }
+  if(e.type == 7){// void
+    return 0;
+  }
+  if(e.type ==  8){// ftype
+    return ptr_size;
+  }
+  if(e.type == 9){// any
+    return ptr_size;
+  }
+  printf("Unknown typesize for type %d\n", e.type);
+  exit(1);
+  return 0;
+}
+
+exprgen_sizeof := (e: *Expression, cc: *CC) -> *any{
+  size := typesize(e.p1, cc);
+  return LLVMConstInt(LLVMInt32TypeInContext(cc.context), size, 0);
+}
+
 exprgen := (e: *Expression, cc: *CC) -> *any{
   if(e.type == 0){// variable
     name := cc_resolve_named(cc, e.p1);
@@ -1883,6 +1953,8 @@ exprgen := (e: *Expression, cc: *CC) -> *any{
     return exprgen_pointer(e, cc);
   } else if(e.type == 7){// fcall
     return exprgen_fcall(e, cc);
+  } else if(e.type == 8){// sizeof
+    return exprgen_sizeof(e, cc);
   } else {
     printf("Unknown expression in exprgen %d\n", e.type);
     exit(1);
