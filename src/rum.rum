@@ -1,0 +1,2292 @@
+malloc := (size: u64) -> *any;
+
+exit := (s: int) -> void;
+
+fopen := (s: string, mod: string) -> *int;
+fseek := (f: *int, offset: u64, whence: u32) -> int; // SEEK_END == 2, SEEK_SET == 0
+ftell := (f: *int) -> int;
+fread := (buf: string, size: int, nmemb: int, f: *int) -> int;
+
+atoi := (s: string) -> int;
+
+printf := (T: string, s: ...any)->void;
+
+// LLVM
+LLVMContextCreate := () -> *any;
+LLVMModuleCreateWithNameInContext := (name: string, c: *any) -> *any;
+LLVMPrintModuleToString := (m: *any) -> string;
+LLVMCreateBuilderInContext := (c: *any) -> *any;
+LLVMDisposeBuilder := (b: *any) -> void;
+
+LLVMGetNamedFunction := (m: *any, name: string) -> *any;
+LLVMGetReturnType := (f: *any) -> *any;
+LLVMBuildCall := (b: *any, f: *any, args: *any, count: int, name: string) -> *any;
+LLVMGetElementType := (t: *any) -> *any;
+LLVMGetTypeKind := (t: *any) -> int;
+/*
+  void : 0
+  ptr: 12
+*/
+
+LLVMInt1TypeInContext := (c: *any) -> *any;
+LLVMInt8TypeInContext := (c: *any) -> *any;
+LLVMInt16TypeInContext := (c: *any) -> *any;
+LLVMInt32TypeInContext := (c: *any) -> *any;
+LLVMInt64TypeInContext := (c: *any) -> *any;
+LLVMVoidTypeInContext := (c: *any) -> *any;
+LLVMPointerType := (elemntType: *any, addresspace: u64) -> *any;
+LLVMFunctionType := (returnType: *any, paramTypes: **any, paramCount: u64, isVarArg: bool) -> *any;
+
+LLVMTypeOf := (val: *any) -> *any;
+LLVMDumpValue := (val: *any) -> void;
+LLVMDumpType := (val: *any) -> void;
+
+LLVMAddFunction := (m: *any, name: string, ftype: *any) -> *any;
+LLVMAppendBasicBlockInContext := (c: *any, f: *any, name: string)-> *any;
+LLVMCreateBasicBlockInContext := (c: *any, name: string) -> *any;
+LLVMAppendExistingBasicBlock := (f: *any, bb: *any) -> void;
+LLVMGetParam := (f: *any, ind: u64) -> *any;
+LLVMSetValueName2 := (v: *any, name: string, size: u64) -> void;
+
+LLVMPositionBuilder := (b: *any, bb: *any, inst: *any) -> void;
+LLVMBuildRet := (b: *any, v: *any) -> void;
+LLVMBuildRetVoid := (b: *any) -> void;
+LLVMBuildAlloca := (b: *any, type: *any, name: string) -> *any;
+LLVMBuildStore := (b: *any, val: *any, ptr: *any) -> void;
+LLVMBuildLoad := (b: *any, ptr: *any, name: string) -> *any;
+LLVMBuildIntToPtr := (b: *any, val: *any, dest: *any, name: string) -> *any;
+LLVMBuildIntCast2 := (b: *any, val: *any, dest: *any, signed: bool, name: string) -> *any;
+LLVMBuildBitCast := (b: *any, val: *any, dest: *any, name: string) -> *any;
+LLVMBuildICmp := (b: *any, op: int, lhs: *any, rhs: *any, name: string) -> *any;
+/*
+  * 32,  EQ
+  * 33,  NEQ
+  * 34,  UGT
+  * 35,  UGE
+  * 36,  ULT
+  * 37,  ULE
+  * 38,  SGT
+  * 39,  SGE
+  * 40,  SLT
+  * 41,  SLE
+*/
+LLVMBuildBinOp := (b: *any, op: int, lhs: *any, rhs: *any, name: string) -> *any;
+/*
+  * Standard Binary Operators
+   LLVMAdd            = 8,
+   LLVMFAdd           = 9,
+   LLVMSub            = 10,
+   LLVMFSub           = 11,
+   LLVMMul            = 12,
+   LLVMFMul           = 13,
+   LLVMUDiv           = 14,
+   LLVMSDiv           = 15,
+   LLVMFDiv           = 16,
+   LLVMURem           = 17,
+   LLVMSRem           = 18,
+   LLVMFRem           = 19,
+ 
+  * Logical Operators
+   LLVMShl            = 20,
+   LLVMLShr           = 21,
+   LLVMAShr           = 22,
+   LLVMAnd            = 23,
+   LLVMOr             = 24,
+   LLVMXor            = 25,
+*/
+
+LLVMConstInt := (t: *any, v: *any, signed: bool) -> *any;
+LLVMBuildGlobalStringPtr := (b: *any, str: string, name: string) -> *any;
+
+LLVMStructCreateNamed := (c: *any, name: *string) -> *any;
+LLVMStructSetBody := (t: *any, types: *any, count: int, packed: bool) -> void;
+
+LLVMBuildInBoundsGEP2 :=(b : *any, t: *any, ptr: *any, ind: *any, ind_count: int, name: string) -> *any;
+LLVMBuildStructGEP2 :=(b : *any, t: *any, ptr: *any, ind: int, name: string) -> *any;
+
+LLVMWriteBitcodeToFile := (m: *any, path: string) -> int;
+LLVMSetTarget := (m: *any, triple: string) -> void;
+LLVMSetDataLayout := (m: *any, dl: string) -> void;
+
+LLVMGetInsertBlock := (b: *any) -> *any;
+LLVMGetBasicBlockParent := (bb: *any) -> *any;
+LLVMGetFirstBasicBlock := (f: *any) -> *any;
+LLVMGetFirstInstruction := (bb: *any) -> *any;
+LLVMBuildCondBr := (b: *any, cond: *any, bt: *any, bf: *any) -> *any;
+LLVMBuildBr := (b: *any, bb: *any) -> *any;
+LLVMGetBasicBlockTerminator := (bb: *any) -> *any; // instruction
+LLVMGetInstructionOpcode := (inst: *any) -> int;
+
+// Helper
+
+CompileLLVM := (m :* any, path: string) -> void;
+
+Names: struct{
+  name: string;
+  next: *Names;
+  payload: *any;
+}
+
+BB: struct{
+  prev: *BB;
+  names: *Names;
+}
+
+CC: struct{
+  context: *any;
+  module: *any;
+  builder: *any;
+  lastB: *BB;
+}
+
+Type: struct{
+  type: int;
+  /*
+     0 -> struct
+     1 -> int
+     2 -> unsigned int
+     3 -> float
+     4 -> bool
+     5 -> string
+     6 -> pointer
+     7 -> void
+     8 -> ftype
+     9 -> any
+  */
+  payload: *any;
+}
+
+Statement: struct {
+  type: int;
+  /*
+      0 -> return (value,,)
+      1 -> decl (name, type, expr)
+      2 -> assign (id, val,)
+      3 -> mem assign (expr, val,) // member is handled in expression
+      4 -> fcall (id, args, )
+      5 -> if (expr, st1, st2)
+      6 -> while(expr, st, )
+      7 -> codeblock(first, ,)
+      8 -> pointer assign (alloca, val, )
+      9 -> function define(id, type, first)
+      10 -> function sign(id, type, )
+      11 -> struct(id, variable decl, )
+      12 -> arg(val, , )
+  */
+  p1: *any;
+  p2: *any;
+  p3: *any;
+  next: *Statement;
+}
+
+VariablePayload: struct{
+  alloc : *any;
+  decl : *Statement;
+}
+
+Expression: struct{
+  type: int;
+  /*
+      0 -> variable(id, ,)
+      1 -> member(expr, id, )
+      2 -> binary expression(e1, op, e2)
+      3 -> binary expression (requires reordering in parent) REMOVE??
+      4 -> const int(val, ,)
+      5 -> const string(val, ,)
+      6 -> ptr (expr,,)
+      7 -> fcall(id, args,)
+  */
+  p1: *any;
+  p2: *any;
+  /*
+     opcode list:
+     0 -> ==
+     1 -> +
+     2 -> -
+     3 -> *
+     4 -> /
+     5 -> %
+  */
+  p3: *any;
+
+  prec: int; // precident
+}
+
+FunctionType: struct{
+  returnType: *Type;
+  first: *Statement; // variable decl
+}
+
+Token: struct {
+  type: int; // We don't have enums yet
+  /*
+      0 -> EOF
+      1 -> id
+      2 -> :
+      3 -> :=
+      4 -> (
+      5 -> )
+      6 -> ,
+      7 -> .
+      8 -> ...
+      9 -> -
+     10 -> ->
+     11 -> ;
+     12 -> *
+     13 -> /
+     14 -> {
+     15 -> }
+     16 -> num
+     17 -> =
+     18 -> ==
+     19 -> +
+     20 -> string value
+     21 -> int
+     22 -> return
+     23 -> if
+     24 -> while
+     25 -> else
+     26 -> string
+     27 -> any
+     28 -> struct
+     29 -> void
+     30 -> u8
+     31 -> u16
+     32 -> u32
+     33 -> u64
+     34, 37 -> s8 ... s64
+     38 -> f32
+     39 -> f64
+     40 -> bool
+     41 -> %
+  */
+  payload: *any;
+}
+
+Lexer : struct {
+  ptr    : **Token;
+  count  : int;
+  offset : int;
+}
+
+streq := (s1: *u8, s2: *u8) -> bool{
+  counter := 0;
+  while(1){
+    if((*(s1 + counter) == *(s2 + counter)) == 0){
+      return 0;
+    }
+    if(*(s1+counter) == 0)
+      return 1;
+
+    counter = counter + 1;
+  }
+
+  return 0; // unreachable
+}
+
+strlen := (s1: *u8) -> u64{
+  size := 0;
+  while(1){
+    if((*(s1+size)) == 0)
+      return size;
+    size = size + 1;
+  }
+  return 0; // unreachable
+}
+
+is_alpha := (c: u8) -> bool{
+  // We don't have < or >, so I have to improvise
+  a := 97;
+  z := 122;
+
+  while_cond := 1;
+  counter := a;
+  while(while_cond){
+    if(c == counter)
+      return 1;
+
+    if(counter == z)
+      while_cond = 0;
+
+    counter = counter + 1;
+  }
+
+  A := 65;
+  Z := 90;
+
+  while_cond = 1;
+  counter = A;
+  while(while_cond){
+    if(c == counter)
+      return 1;
+
+    if(counter == Z)
+      while_cond = 0;
+
+    counter = counter + 1;
+  }
+
+  return 0;
+}
+
+is_numeric := (c: u8) -> bool{
+  zero := 48;
+  nine := 57;
+
+  while_cond := 1;
+  counter := zero;
+  while(while_cond){
+    if(c == counter)
+      return 1;
+
+    if(counter == nine)
+      while_cond = 0;
+
+    counter = counter + 1;
+  }
+
+  return 0;
+}
+
+is_alphanumeric := (c: u8) -> bool{
+  if(c == 95) // underline
+    return 1;
+
+  if(is_alpha(c))
+    return 1;
+
+  return is_numeric(c);
+}
+
+lexer_skip_ws := (buf: *u8, offset: int) -> int {
+  while(1){
+    is_ws := 0;
+
+    c : u8 = *(buf + offset);
+
+
+    if(c == 10) // \n
+      is_ws = 1;
+
+    if(c == 32) // space
+      is_ws = 1;
+
+    if(c == 9) // tab
+      is_ws = 1;
+
+    if(is_ws==0)
+      return offset;
+
+    offset = offset + 1;
+  }
+
+  return 0; // Never reaches here, just to precent segfault in compile
+}
+
+lex_id := (buf: *u8, offset: int) -> int {
+  end := offset;
+  while(is_alphanumeric(*(buf+end))){
+    end = end + 1;
+  }
+  return end;
+}
+
+lex_num := (buf: *u8, offset: int) -> int {
+  end := offset;
+  while(is_numeric(*(buf+end))){
+    end = end + 1;
+  }
+  return end;
+}
+
+lex_str := (buf: *u8, offset: int) -> int {
+  end := offset+1;
+
+  while(1){
+    if(*(buf+end) == 34){ // "
+      return end + 1;
+    }
+    if(*(buf+end) == 10){ // newline
+      printf("Unclosed string literal\n");
+      exit(1);
+    }
+
+    if(*(buf+end) == 92){ // \ 
+      end = end + 1; // skip the next one, whatever it might be.
+    }
+    end = end + 1;
+  }
+
+  return 0; // won't reach here
+}
+
+handle_str := (buf: *u8, offset: int, end: int) -> string {
+  ind := 0;
+  offset = offset + 1; // ignore "
+  end = end - 1; // ignore "
+  size := end - offset;
+  // TODO debug size
+  out : *u8 = malloc(2 * (size+4)); // not sure why we need +4 here.
+
+  while(end - offset){
+    *(out + ind) = *(buf + offset);
+
+    if(*(buf + offset) == 92){
+      // handle special cases
+      offset = offset + 1;
+      if(*(buf + offset) == 110){ // n
+        *(out + ind) = 10; // \n
+      } else { // TODO handle tab, etc
+        *(out + ind) = *(buf + offset); // others
+      }
+    }
+
+    offset = offset + 1;
+    ind = ind + 1;
+  }
+
+  *(out + ind) = 0;
+
+  return out;
+}
+
+strcp := (buf: *u8, start: int, end: int) -> string{
+  out : *u8 = malloc(8 * (end - start));
+  counter := start;
+  while((counter==end)==0){ // We don't have != yet
+    *(out + (counter - start)) = *(buf + counter);
+    counter = counter + 1;
+  }
+  *(out + (end - start)) = 0; // '\0'
+  return out;
+}
+
+parse_num := (buf: *u8, start: int, end: int) -> int{
+  str := strcp(buf, start, end);
+  return atoi(str);
+}
+
+lexer := (buf: *u8) -> *Lexer{
+  l : *Lexer;
+
+  l = malloc(3 * 8); // no sizeof
+  l.count = 0;
+  l.ptr = malloc(9000000 * 2 * 8);
+
+  offset := 0;
+
+  // we don't have a break yet
+  while_cond := 1;
+  while(while_cond){
+    offset = lexer_skip_ws(buf, offset);
+
+    if(*(buf+offset) == 0){
+      // EOF
+      t : *Token = malloc(2*8);
+      t.type = 0;
+      t.payload = 0;
+      *(l.ptr + l.count) = t;
+      l.count = l.count + 1;
+      while_cond = 0;
+    } else if(is_alpha(*(buf+offset))){
+      end := lex_id(buf, offset); 
+      id := strcp(buf, offset, end);
+      offset = end;
+      // capture different tokens
+      if(streq(id, "int")){
+        t : *Token = malloc(2*8);
+        t.type = 21;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "return")){
+        t : *Token = malloc(2*8);
+        t.type = 22;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "if")){
+        t : *Token = malloc(2*8);
+        t.type = 23;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "while")){
+        t : *Token = malloc(2*8);
+        t.type = 24;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "else")){
+        t : *Token = malloc(2*8);
+        t.type = 25;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "string")){
+        t : *Token = malloc(2*8);
+        t.type = 26;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "any")){
+        t : *Token = malloc(2*8);
+        t.type = 27;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "struct")){
+        t : *Token = malloc(2*8);
+        t.type = 28;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "void")){
+        t : *Token = malloc(2*8);
+        t.type = 29;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "u8")){
+        t : *Token = malloc(2*8);
+        t.type = 30;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "u16")){
+        t : *Token = malloc(2*8);
+        t.type = 31;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "u32")){
+        t : *Token = malloc(2*8);
+        t.type = 32;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "u64")){
+        t : *Token = malloc(2*8);
+        t.type = 33;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "s8")){
+        t : *Token = malloc(2*8);
+        t.type = 34;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "s16")){
+        t : *Token = malloc(2*8);
+        t.type = 35;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "s32")){
+        t : *Token = malloc(2*8);
+        t.type = 36;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "s64")){
+        t : *Token = malloc(2*8);
+        t.type = 37;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "f32")){
+        t : *Token = malloc(2*8);
+        t.type = 38;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "f64")){
+        t : *Token = malloc(2*8);
+        t.type = 39;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "bool")){
+        t : *Token = malloc(2*8);
+        t.type = 40;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else {
+        t : *Token = malloc(2*8);
+        t.type = 1;
+        t.payload = id;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      }
+    } else if(is_numeric(*(buf+offset))){
+      end := lex_num(buf, offset); 
+      num := parse_num(buf, offset, end);
+      offset = end;
+      t : *Token = malloc(2*8);
+      t.type = 16;
+      t.payload = num;
+      *(l.ptr + l.count) = t;
+      l.count = l.count + 1;
+    } else if(*(buf+offset) == 58){ // :
+      offset = offset + 1;
+      if(*(buf+offset) == 61) { // :=
+        offset = offset + 1;
+        t : *Token = malloc(2*8);
+        t.type = 3;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else { // only :
+        t : *Token = malloc(2*8);
+        t.type = 2;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      }
+    } else if(*(buf+offset) == 40){ // lpar
+      t : *Token = malloc(2*8);
+      t.type = 4;
+      t.payload = 0;
+      *(l.ptr + l.count) = t;
+      l.count = l.count + 1;
+      offset = offset + 1;
+    } else if(*(buf+offset) == 41){ // rpar
+      t : *Token = malloc(2*8);
+      t.type = 5;
+      t.payload = 0;
+      *(l.ptr + l.count) = t;
+      l.count = l.count + 1;
+      offset = offset + 1;
+    } else if(*(buf+offset) == 44){ // ,
+      t : *Token = malloc(2*8);
+      t.type = 6;
+      t.payload = 0;
+      *(l.ptr + l.count) = t;
+      l.count = l.count + 1;
+      offset = offset + 1;
+    } else if(*(buf+offset) == 46){ // .
+      // we don't have and, so we multiply them
+      tmp_bool : bool = *(buf+offset+1) == *(buf+offset+2);
+      tmp_bool2 : bool = *(buf+offset+1) == 46;
+      if(tmp_bool * tmp_bool2){ // ...
+        t : *Token = malloc(2*8);
+        t.type = 8;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+        offset = offset + 3;
+      } else {
+        t : *Token = malloc(2*8);
+        t.type = 7;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+        offset = offset + 1;
+      }
+    } else if(*(buf+offset) == 45){ // -
+      if(*(buf+offset+1) == 62){ // ->
+        t : *Token = malloc(2*8);
+        t.type = 10;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+        offset = offset + 2;
+      } else {
+        t : *Token = malloc(2*8);
+        t.type = 9;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+        offset = offset + 1;
+      }
+    } else if(*(buf+offset) == 59){ // ;
+      t : *Token = malloc(2*8);
+      t.type = 11;
+      t.payload = 0;
+      *(l.ptr + l.count) = t;
+      l.count = l.count + 1;
+      offset = offset + 1;
+    } else if(*(buf+offset) == 42){ // *
+      t : *Token = malloc(2*8);
+      t.type = 12;
+      t.payload = 0;
+      *(l.ptr + l.count) = t;
+      l.count = l.count + 1;
+      offset = offset + 1;
+    } else if(*(buf+offset) == 47){ // /
+      if (*(buf+offset +1) == 42) {
+        // multiline comment
+        whilecond := 1;
+        while(whilecond){
+          offset = offset +1;
+          if(*(buf+offset) == 42){
+            offset = offset +1;
+            if(*(buf+offset) == 47){
+              whilecond = whilecond - 1;
+            }
+          }
+          if(*(buf+offset) == 47){
+            offset = offset +1;
+            if(*(buf+offset) == 42){
+              whilecond = whilecond + 1;
+            }
+          }
+        }
+      } else if(*(buf+offset+1) == 47){
+        // comment
+        offset = offset + 2;
+        while((*(buf+offset) == 10) == 0)
+          offset = offset + 1;
+      } else {
+        t : *Token = malloc(2*8);
+        t.type = 13;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+        offset = offset + 1;
+      }
+    } else if(*(buf+offset) == 123){ // {
+      t : *Token = malloc(2*8);
+      t.type = 14;
+      t.payload = 0;
+      *(l.ptr + l.count) = t;
+      l.count = l.count + 1;
+      offset = offset + 1;
+    } else if(*(buf+offset) == 125){ // }
+      t : *Token = malloc(2*8);
+      t.type = 15;
+      t.payload = 0;
+      *(l.ptr + l.count) = t;
+      l.count = l.count + 1;
+      offset = offset + 1;
+    } else if(*(buf+offset) == 43){ // +
+      t : *Token = malloc(2*8);
+      t.type = 19;
+      t.payload = 0;
+      *(l.ptr + l.count) = t;
+      l.count = l.count + 1;
+      offset = offset + 1;
+    } else if(*(buf+offset) == 37){ // %
+      t : *Token = malloc(2*8);
+      t.type = 41;
+      t.payload = 0;
+      *(l.ptr + l.count) = t;
+      l.count = l.count + 1;
+      offset = offset + 1;
+    } else if(*(buf+offset) == 61){ // =
+      if(*(buf+offset+1) == 61){ // ==
+        t : *Token = malloc(2*8);
+        t.type = 18;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+        offset = offset + 2;
+      } else {
+        t : *Token = malloc(2*8);
+        t.type = 17;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+        offset = offset + 1;
+      }
+    } else if(*(buf+offset) == 34) { // "
+      end := lex_str(buf, offset);
+      str := handle_str(buf, offset, end);
+      offset = end;
+      t : *Token = malloc(2*8);
+      t.type = 20;
+      t.payload = str;
+      *(l.ptr + l.count) = t;
+      l.count = l.count + 1;
+    } else {
+      while_cond = 0; // break!
+      counter := 30;
+      printf("Could not understand token %d, at: ", *(buf+(offset+30-counter)));
+      while(counter){
+        printf("%c", *(buf+(offset+30-counter)));
+        counter = counter - 1;
+      }
+      printf("\n");
+    }
+  }
+
+  return l;
+}
+
+lexer_pop := (l : *Lexer) -> *Token{
+  l.offset = l.offset + 1;
+  return *(l.ptr + l.offset -1);
+}
+
+lexer_peep := (l : *Lexer) -> *Token{
+  return *(l.ptr + l.offset);
+}
+
+lexer_expect := (l : *Lexer, t: int, description: string) -> bool{
+  tn : *Token = lexer_pop(l);
+  tk := tn.type;
+  if (tk == t) return 0;
+
+  printf("On token %d\n", l.offset);
+  printf("Expected to see %s, but saw %d\n", description, tk);
+  l.offset = l.count;
+  exit(1);
+  return 1;
+}
+
+parse_type := (l: *Lexer) -> *Type{
+  tn := lexer_pop(l);
+  ans : *Type = malloc(2 * 8);
+  if(tn.type == 26){
+    ans.type = 5;
+    ans.payload = 0;
+    return ans;
+  }
+  if(tn.type == 29){
+    ans.type = 7;
+    ans.payload = 0;
+    return ans;
+  }
+  if(tn.type == 30){
+    ans.type = 2;
+    ans.payload = 8;
+    return ans;
+  }
+  if(tn.type == 31){
+    ans.type = 2;
+    ans.payload = 16;
+    return ans;
+  }
+  if(tn.type == 32){
+    ans.type = 2;
+    ans.payload = 32;
+    return ans;
+  }
+  if(tn.type == 33){
+    ans.type = 2;
+    ans.payload = 64;
+    return ans;
+  }
+  if(tn.type == 34){
+    ans.type = 1;
+    ans.payload = 8;
+    return ans;
+  }
+  if(tn.type == 35){
+    ans.type = 1;
+    ans.payload = 16;
+    return ans;
+  }
+  if(tn.type == 36){
+    ans.type = 1;
+    ans.payload = 32;
+    return ans;
+  }
+  if(tn.type == 37){
+    ans.type = 1;
+    ans.payload = 64;
+    return ans;
+  }
+  if(tn.type == 38){
+    ans.type = 3;
+    ans.payload = 32;
+    return ans;
+  }
+  if(tn.type == 39){
+    ans.type = 3;
+    ans.payload = 64;
+    return ans;
+  }
+  if(tn.type == 40){
+    ans.type = 4;
+    ans.payload = 0;
+    return ans;
+  }
+  if(tn.type == 21){
+    ans.type = 1;
+    ans.payload = 0;
+    return ans;
+  }
+  if(tn.type == 1){
+    ans.type = 0;
+    ans.payload = tn.payload;
+    return ans;
+  }
+  if(tn.type == 27){
+    ans.type = 9;
+    return ans;
+  }
+
+  // pointer *
+  if(tn.type == 12){
+    ans.type = 6;
+    ans.payload = parse_type(l);
+    return ans;
+  }
+
+  printf("Expected to see type, but saw %d\n", tn.type);
+  exit(1);
+  return 0;
+}
+
+parse_expr := (l: *Lexer) -> *Expression;
+parse_expr_rec := (l: *Lexer, last: int) -> *Expression;
+
+parse_fcall_args := (l: *Lexer) -> *Statement{
+  nt : *Token = lexer_peep(l);
+  ans : *Statement = 0;
+  prev : *Statement = 0;
+  while((nt.type == 5) == 0){
+    val := parse_expr(l);
+    tmp : *Statement = malloc(5*8);
+    tmp.type = 12;
+    tmp.p1 = val;
+    tmp.next = 0;
+    if(ans == 0)
+      ans = tmp;
+    if(prev)
+      prev.next = tmp;
+    prev = tmp;
+    nt = lexer_peep(l);
+    // ,
+    if((nt.type == 6) == 0){
+      if((nt.type == 5) == 0){
+        printf("Expected to see , or ), saw %d\n", nt.type);
+        l.offset = l.count;
+        exit(1);
+        return 0;
+      }
+    } else {
+      lexer_pop(l);
+    }
+  }
+  lexer_pop(l); // pop the )
+
+  return ans;
+}
+
+parse_exp_val:=(l: *Lexer) -> *Expression{
+  // check ( or *
+  // GET EXPR
+  // EXPECT )
+  tn := lexer_pop(l);
+  ans : *Expression = malloc(5*8);
+
+  if(tn.type == 4){ // (
+    e := parse_expr(l);
+    e.prec = 4;
+    lexer_expect(l, 5, ")");
+    tn = lexer_peep(l);
+    if(tn.type == 7){ // .
+      lexer_pop(l);
+      tn = lexer_peep(l);
+      lexer_expect(l, 1, "id"); // member
+      ans.type = 1;
+      ans.p1 = e;
+      ans.p2 = tn.payload;
+      return ans;
+    }
+    return e;
+  }
+
+  if(tn.type == 12){ // *
+    v : *Expression = parse_exp_val(l);
+    // check to ensure it is not const
+    if((v.type == 4) + (v.type == 5)){
+      printf("Pointer is pointing to an expression %d\n", v.type);
+      exit(1);
+    }
+    ans.type = 6;
+    ans.p1 = v;
+    return ans;
+  }
+
+  // TODO handle negative values
+
+  if(tn.type == 1){ // id
+    id := tn.payload;
+    // EXPECT ID
+    // CHECK FOR . ID
+    tn = lexer_peep(l);
+    if(tn.type == 7){ // member value
+      ans.type = 0;
+      ans.p1 = id;
+      while(tn.type == 7){
+        lexer_pop(l);
+        tn2 := lexer_peep(l);
+        lexer_expect(l, 1, "id");
+        tmp : *Expression = malloc(5*8);
+        tmp.type = 1;
+        tmp.p1 = ans;
+        tmp.p2 = tn2.payload;
+        ans = tmp;
+        tn = lexer_peep(l);
+      }
+      return ans;
+    } else if(tn.type == 4){ // function call
+      lexer_pop(l);
+      ans.p2 = parse_fcall_args(l);
+      ans.p1 = id;
+      ans.type = 7;
+      return ans;
+    } else { // variable
+      ans.type = 0;
+      ans.p1 = id;
+      return ans;
+    }
+  } else if(tn.type == 16) { // num
+    ans.type = 4;
+    ans.p1 = tn.payload;
+    return ans;
+  } else if(tn.type == 20) { // string
+    ans.type = 5;
+    ans.p1 = tn.payload;
+    return ans;
+  } else {
+    printf("Expected to see value, saw %d\n", tn.type);
+    l.offset = l.count;
+    exit(1);
+    return 0;
+  }
+
+  return 0; // unreachable code
+}
+
+parse_expr_rec := (l: *Lexer, last: int) -> *Expression{
+  ans : *Expression = parse_exp_val(l);
+  // check op precedense
+  prec := 0; // hacky implementation, XY, X: prec, Y: opcode
+  nt := lexer_peep(l);
+
+  if(nt.type == 18){
+    prec = 10; // ==   
+  }
+  else if(nt.type == 19){
+    prec = 21; // +   
+  }
+  else if(nt.type == 9){
+    prec = 22; // -   
+  }
+  else if(nt.type == 12){
+    prec = 33; // *   
+  }
+  else if(nt.type == 13){
+    prec = 34; // /   
+  }
+  else if(nt.type == 41){
+    prec = 35; // %   
+  }
+
+  if(prec){
+    lexer_pop(l);
+    opcode := prec % 10;
+    expr1 := ans;
+    expr2 : *Expression = parse_expr_rec(l, last);
+    ans = malloc(5*8);
+
+    prec = prec / 10;
+
+    ans.prec = prec;
+    ans.type = 2;
+    ans.p1 = expr1;
+    ans.p2 = opcode;
+    ans.p3 = expr2;
+
+    //if(expr2.prec < prec)
+    if(expr2.type == 2){
+      if(((prec == 1) * (expr2.prec == 0))
+      + ((prec == 2) * ((expr2.prec == 0) + (expr2.prec == 1)))
+      + ((prec == 3) * ((expr2.prec == 0) + (expr2.prec == 1) + (expr2.prec == 2)))
+      + (expr2.prec == 4)){
+        ans.prec = prec;
+        return ans;
+      }
+      ans.p3 = expr2.p1;
+      expr2.p1 = ans;
+      return expr2;
+    }
+  }
+
+  // It was a single value, return it
+  return ans;
+}
+
+parse_expr := (l: *Lexer) -> *Expression{
+  return parse_expr_rec(l, 0);
+}
+
+parse_statement := (l: *Lexer) -> *Statement{
+  tn : *Token = lexer_pop(l);
+  ans : *Statement = malloc(5 * 8);
+  if(tn.type == 22){
+    // Return
+    tn : *Token = lexer_peep(l);
+    if(tn.type == 11){ // ;
+      lexer_expect(l, 11, ";");
+      ans.type = 0;
+      ans.p1 = 0;
+      return ans;
+    } else { // return expr ;
+      ans.type = 0;
+      ans.p1 = parse_expr(l);
+      lexer_expect(l, 11, ";");
+      return ans;
+    }
+  } else if(tn.type == 1){
+    // var decl, var assign, function call, member_access
+    ans.p1 = tn.payload;
+    tn = lexer_pop(l);
+    if(tn.type == 2){ // : variable decl
+      ans.type = 1;
+      ans.p2 = parse_type(l);
+      // = or ;
+      tn =  lexer_pop(l);
+      if(tn.type == 17){// assign
+        ans.p3 = parse_expr(l);
+        lexer_expect(l, 11, ";");
+        return ans;
+      } else if(tn.type == 11){// decl only
+        // Nothing
+        ans.p3 = 0;
+        return ans;
+      } else {
+        printf("Expected to see = or ;, but saw %d instead", tn.type);
+        l.offset = l.count;
+        exit(1);
+        return 0;
+      }
+    } else if(tn.type == 3){ // := variable decl
+      ans.type = 1;
+      ans.p2 = 0;
+      ans.p3 = parse_expr(l);
+      lexer_expect(l, 11, ";");
+      return ans;
+    } else if(tn.type == 17){ // = variable assign
+      ans.type = 2;
+      ans.p2 = parse_expr(l);
+      lexer_expect(l, 11, ";");
+      return ans;
+    } else if(tn.type == 7){ // id.id = expr; 
+      tmp : *Expression = malloc(5*8);
+      tmp.type = 0;
+      tmp.p1 = ans.p1;
+      ans.p1 = tmp;
+      while(tn.type == 7){
+        //
+        tn = lexer_peep(l); // hack so I don't have to handle not seeing id
+        lexer_expect(l, 1, "id");
+        tmp = malloc(5*8);
+        tmp.type = 1;
+        tmp.p1 = ans.p1;
+        tmp.p2 = tn.payload;
+        ans.p1 = tmp;
+        ans.p2 = tn.payload;
+        tn = lexer_peep(l);
+        if(tn.type == 7)
+          lexer_pop(l);
+      }
+      lexer_expect(l, 17, "=");
+      ans.p2 = parse_expr(l);
+      lexer_expect(l, 11, ";");
+      ans.type = 3;
+      return ans;
+    } else if(tn.type == 4){ // function call
+      ans.p2 = parse_fcall_args(l);
+      lexer_expect(l, 11, ";");
+      ans.type = 4;
+      return ans;
+    } else {
+      printf("Expected to see :, =, . (, but got %d\n", tn.type);
+      l.offset = l.count;
+      exit(1);
+      return 0;
+    }
+  } else if(tn.type == 23){// if
+    ans.type = 5;
+    lexer_expect(l, 4, "(");
+    ans.p1 = parse_expr(l);
+    lexer_expect(l, 5, ")");
+
+    ans.p2 = parse_statement(l);
+    ans.p3 = 0;
+
+    tn = lexer_peep(l);
+    if(tn.type == 25){ // else
+      lexer_pop(l);
+      ans.p3 = parse_statement(l);
+    }
+    return ans;
+  } else if(tn.type == 24){
+    // while
+    ans.type = 6;
+    lexer_expect(l, 4, "(");
+    ans.p1 = parse_expr(l);
+    lexer_expect(l, 5, ")");
+    ans.p2 = parse_statement(l);
+    return ans;
+  } else if(tn.type == 14){
+    ans.type = 7;
+    prev : *Statement = 0;
+    ans.p1 = 0;
+    // {
+    while(((*lexer_peep(l)).type == 15) == 0){
+        tmp := parse_statement(l);
+        if(ans.p1 == 0){
+          ans.p1 = tmp;
+        }
+        if(prev)
+          prev.next = tmp;
+        prev = tmp;
+    }
+    lexer_expect(l, 15, "}");
+    return ans;
+  } else if(tn.type == 12){ // pointer access variable assign
+    ans.type = 8;
+    ans.p1 = parse_expr(l);
+    lexer_expect(l, 17, "=");
+    ans.p2 = parse_expr(l);
+    lexer_expect(l, 11, ";");
+    return ans;
+  } else {
+    printf("Expected to see statement, saw %d\n", tn.type);
+    l.offset = l.count;
+    exit(1);
+    return 0;
+  }
+
+  return 0; // unreachable code, here to prevent errors.
+}
+
+parse_function := (l: *Lexer) -> *Statement{
+  // the function signature as well as opening { has been parsed
+
+  ans : *Statement = malloc(5 * 8);
+  ans.type = 9;
+  ans.p3 = 0;
+
+  // next token is not }
+  prev : *Statement = 0;
+  while(((*lexer_peep(l)).type == 15) == 0){
+    tmp : *Statement = parse_statement(l);
+    if(tmp)
+      tmp.next = 0;
+    if(ans.p3 == 0)
+      ans.p3 = tmp;
+    if(prev)
+      prev.next = tmp;
+    prev = tmp;
+  }
+
+  lexer_expect(l, 15, "}");
+  return ans;
+}
+
+parse_top_level := (l: *Lexer) -> *Statement{
+  if( (*lexer_peep(l)).type == 1 ){
+    test_tmp := lexer_peep(l);
+    id : string = (*lexer_pop(l)).payload;
+
+    // printf("Saw id %s \n", id);
+
+    nt : *Token = lexer_pop(l);
+
+    // id := () -> type { statements }
+    // id := () -> type ;
+    // id : struct { member define }
+    if(nt.type == 3){
+       // function sign or function define
+
+      lexer_expect(l, 4, "(");
+
+      args : *Type = malloc(2*8);
+      args.type = 8;
+      ft : *FunctionType = malloc(2*8);
+      args.payload = ft;
+
+      prev : * Statement = 0;
+      ft.first = 0;
+      // parse args
+      while(((*lexer_peep(l)).type == 5) == 0){
+        tmp : *Statement = malloc(5*8);
+        tmp.p1 = (*(lexer_peep(l))).payload;
+        lexer_expect(l, 1, "id");
+        lexer_expect(l, 2, ":");
+
+        if((*lexer_peep(l)).type == 8){
+          lexer_expect(l, 8, "...");
+          // TODO ensure it is the last argument
+        }
+
+        tmp.p2 = parse_type(l);
+        tmp.p3 = 0;
+        tmp.next = 0;
+        tmp.type = 1; // 1?
+
+        if(ft.first == 0)
+          ft.first = tmp;
+
+        if(prev)
+          prev.next = tmp;
+        prev = tmp;
+
+        if((*lexer_peep(l)).type == 6)
+          lexer_expect(l, 6, ",");
+        else if(((*lexer_peep(l)).type == 5) == 0){
+          printf("Expected to see ) or , \n");
+          l.offset = l.count;
+          exit(1);
+          return 0;
+        }
+      }
+
+
+      lexer_expect(l, 5, ")");
+      lexer_expect(l, 10, "->");
+
+      ft.returnType = parse_type(l);
+
+      nt : *Type = lexer_pop(l);
+
+      if(nt.type == 11){
+        // signature
+        s : *Statement = malloc(5*8);
+        s.type = 10;
+        s.p1 = id;
+        s.p2 = args;
+        return s;
+      } else if(nt.type == 14){
+        // body
+        s : *Statement = parse_function(l);
+        s.p1 = id;
+        s.p2 = args;
+        return s;
+      } else {
+        printf("Expected to see ; or }, saw %d\n", nt.type);
+        l.offset = l.count;
+        exit(1);
+        return 0;
+      }
+
+    } else if(nt.type == 2){
+      ans : *Statement = malloc(5 * 8);
+      ans.type = 11;
+      ans.p1 = id;
+      ans.p2 = 0;
+      // struct
+      lexer_expect(l, 28, "struct");
+      lexer_expect(l, 14, "{");
+      nt: *Token = lexer_peep(l);
+      prev : *Statement = 0;
+      while((nt.type == 15) == 0){
+        tid := (*lexer_peep(l)).payload;
+        lexer_expect(l, 1, "id");
+        lexer_expect(l, 2, ":");
+        tp := parse_type(l);
+        lexer_expect(l, 11, ";");
+        nt = lexer_peep(l);
+
+        tmp : *Statement = malloc(5 * 8);
+        tmp.type = 1;
+        tmp.p1 = tid;
+        tmp.p2 = tp;
+        tmp.next = 0;
+        if(ans.p2 == 0)
+          ans.p2 = tmp;
+        if(prev)
+          prev.next = tmp;
+        prev = tmp;
+      }
+      lexer_pop(l); // }
+      return ans;
+    } else {
+      printf("Expected token : or :=, saw %d\n", nt.type);
+      l.offset = l.count;
+      exit(1);
+      return 0;
+    }
+  } else if((*lexer_peep(l)).type == 0){
+    // end of file
+    lexer_pop(l);
+    return 0;
+
+  } else {
+    printf("Top level token, expect id saw %d\n", (*(l.ptr + l.offset)).type);
+    l.offset = l.count;
+    exit(1);
+    return 0;
+  }
+
+  return 0;
+}
+
+parser := (l: *Lexer) -> *Statement{
+  l.offset = 0;
+
+  ans : *Statement = 0;
+  prev : *Statement = 0;
+  while(1){
+    if(l.offset == l.count)
+       return ans;
+
+    tmp := parse_top_level(l);
+    if(tmp)
+      tmp.next = 0;
+    if(ans == 0)
+      ans = tmp;
+    if(prev)
+      prev.next = tmp;
+    prev = tmp;
+  }
+
+  return ans;
+}
+
+push_bb := (cc: *CC) -> void{
+  bb : *BB = malloc(2*8);
+  bb.prev = cc.lastB;
+  bb.names = 0;
+  cc.lastB = bb;
+  return;
+}
+
+pop_bb := (cc: *CC) -> void{
+  bb := cc.lastB;
+  cc.lastB = bb.prev;
+  // TODO free?
+  return;
+}
+
+cc_resolve_named := (cc: *CC, name: string) -> *Names{
+  b := cc.lastB;
+  while(b){
+    n := b.names;
+    while(n){
+        if(streq(n.name, name)){
+        return n;
+        }
+        n = n.next;
+    }
+    b = b.prev;
+  }
+  return 0;
+}
+
+cc_set_named := (cc: *CC, name: string, payload: *any) -> void {
+  if(cc.lastB.names == 0){
+    // just set it and be done
+    cc.lastB.names = malloc(3*8);
+    cc.lastB.names.name = name;
+    cc.lastB.names.payload = payload;
+    cc.lastB.names.next = 0;
+    return;
+  }
+  names := cc.lastB.names;
+  while(1){
+    // check for equal str
+    if(streq(names.name, name)){
+      names.payload = payload;
+      return;
+    }
+    if(names.next == 0){
+      names.next = malloc(3*8);
+      names.next.name = name;
+      names.next.payload = payload;
+      names.next.next = 0;
+      return;
+    }
+    names = names.next;
+  }
+  return; // unreachable
+}
+
+typeresolve := (e: *Expression, cc: *CC) -> *Type{
+  if(e.type == 0){// variable
+    n := cc_resolve_named(cc, e.p1);
+    if(n == 0){
+      printf("Variable %s not found\n", e.p1);
+      exit(1);
+    }
+    p : *VariablePayload = n.payload;
+    return p.decl.p2;
+  } else if(e.type == 1){ // member access
+    t := typeresolve(e.p1, cc);
+    // verify that t is a struct
+    while(t.type == 6){ // pointer, go back
+      t = t.payload;
+    }
+    if((t.type == 0)==0){
+      printf("base of member should be a struct, but was %d\n", t.type);
+      exit(1);
+    }
+    s_name : string = t.payload;
+    tmp := cc_resolve_named(cc, s_name);
+    vp : *VariablePayload =  tmp.payload;
+    f_mem :*Statement= vp.decl.p2;
+    while(f_mem){
+      if(streq(f_mem.p1, e.p2)){ // found the member
+        return f_mem.p2;
+      }
+      f_mem = f_mem.next;
+    }
+    printf("Couldn't find member\n");
+    exit(1);
+  } else if(e.type == 2){ // binary expression
+    // TODO
+    if(e.p2 == 0){//bool
+      t : *Type = malloc(2*8);
+      t.type = 4;
+      t.payload = 0;
+      return t;
+    }
+    return typeresolve(e.p1, cc); // return p1, whatever it is.
+  } else if(e.type == 4){ // const int
+    t : *Type = malloc(2*8);
+    t.type = 1;
+    t.payload = 0;
+    return t;
+  } else if(e.type == 5){ // const string
+    t : *Type = malloc(2*8);
+    t.type = 5;
+    t.payload = 0;
+    return t;
+  } else if(e.type == 6){ // pointer
+    t : * Type = malloc(2*8);
+    t.type = 6;
+    t.payload = typeresolve(e.p1, cc);
+    return t;
+  } else if(e.type == 7){ // fcall type resolve
+    n := cc_resolve_named(cc, e.p1);
+    if(n == 0){
+      printf("Unable to find function %s\n", e.p1);
+      exit(1);
+    }
+    p : *VariablePayload = n.payload;
+    t : *Type = p.decl.p2;
+    ft: *FunctionType = t.payload;
+    return ft.returnType;
+  } else {
+    printf("unknwon type resolve for expression type %d\n", e.type);
+    exit(1);
+  }
+  return 0;
+}
+
+typegen := (t: *Type, cc: *CC) -> *any{
+  if(t.type == 0){// struct
+    tmp :* Names = cc_resolve_named(cc, t.payload);
+    if(tmp ==0){
+      printf("Couldn't find type %s\n", t.payload);
+      exit(1);
+    }
+    vt : *VariablePayload = tmp.payload;
+    return vt.alloc;
+  } else if((t.type == 2) + (t.type == 1)){ // int
+    if(t.payload == 0){
+      return LLVMInt64TypeInContext(cc.context);
+    } else if(t.payload == 8){
+      return LLVMInt8TypeInContext(cc.context);
+    } else if(t.payload == 16){
+      return LLVMInt16TypeInContext(cc.context);
+    } else if(t.payload == 32){
+      return LLVMInt32TypeInContext(cc.context);
+    } else if(t.payload == 64){
+      return LLVMInt64TypeInContext(cc.context);
+    } else {
+      printf("unknown int type\n");
+      printf("type = %d\n", t.payload);
+      exit(1);
+    }
+  } else if(t.type == 4){ // bool
+    return LLVMInt1TypeInContext(cc.context);
+  } else if(t.type == 5){ // string
+    return LLVMPointerType(LLVMInt8TypeInContext(cc.context), 0);
+  } else if(t.type == 6){ // pointer
+    base := typegen(t.payload, cc);
+    return LLVMPointerType(base, 0);
+  } else if(t.type == 7){ // void
+    return LLVMVoidTypeInContext(cc.context);
+  } else if(t.type == 9){ // any
+    return LLVMPointerType(LLVMInt64TypeInContext(cc.context), 0);
+  } else {
+    printf("Unknown type in typegen %d\n", t.type);
+    exit(1);
+  }
+  return 0;
+}
+
+exprgen := (e: *Expression, cc: *CC) -> *any;
+
+exprgen_binop := (e: *Expression, cc: *CC) -> *any{
+  lhs := exprgen(e.p1, cc);
+  rhs := exprgen(e.p3, cc);
+
+  ltt := typeresolve(e.p1, cc);
+  rtt := typeresolve(e.p3, cc);
+
+  op := e.p2;
+  if(ltt == 0){
+    printf("unknown type for lhs\n");
+    exit(1);
+  }
+
+  if(rtt == 0){
+    printf("unknown type for rhs\n");
+    exit(1);
+  }
+
+  sit := 1; // signed int type
+  uit := 2; // unsigned int type
+  bit := 4;
+  ft := 3; // float type
+  pt := 6; // pointer type
+
+  l_pt : bool = ltt.type == pt; // lhs is pointer
+  r_pt : bool = rtt.type == pt;
+
+  l_int := (ltt.type == sit)+ (ltt.type == uit) + (ltt.type == bit);
+  r_int := (rtt.type == sit)+ (rtt.type == uit) + (rtt.type == bit);
+
+  // TODO reimplement this, it's terrible.
+  if(op == 0){//==
+    // TODO check type
+    // TODO handle float properly
+    if((l_pt == r_pt) == 0){
+      // covnert to pointer
+      if(l_pt){
+        rhs = LLVMBuildIntToPtr(cc.builder, rhs, LLVMTypeOf(lhs), "rhs");
+      } else {
+        lhs = LLVMBuildIntToPtr(cc.builder, lhs, LLVMTypeOf(rhs), "lhs");
+      }
+    } else if((LLVMTypeOf(lhs) == LLVMTypeOf(rhs))){} else { // TODO we need a !=
+      // convert
+        if(l_int){
+          // TODO cast the bigger one to smaller one
+          rhs = LLVMBuildIntCast2(cc.builder, rhs, LLVMTypeOf(lhs), rtt.type == sit, "rhs");
+        } else {
+          // TODO float point, not doing now since we don't have floats yet
+          printf("Unimplemented in binop nested if\n");
+          exit(1);
+        }
+    }
+    return LLVMBuildICmp(cc.builder, 32, lhs, rhs, "eq");
+  }
+
+  tmp : bool = l_pt + r_pt;
+  // TODO this is a bug and needs to be fixed, l_pt + r_pt == 0 was becoming false
+  if(tmp == 0){ // regular arithmetic
+    tmp : bool = LLVMTypeOf(lhs) == LLVMTypeOf(rhs);
+    if(tmp == 0){ // TODO we need a !=
+      // convert
+      if(r_int * l_int){
+        // TODO cast the smaller one to bigger one
+        rhs = LLVMBuildIntCast2(cc.builder, rhs, LLVMTypeOf(lhs), rtt.type == sit, "rhs");
+      } else if(ltt.type == rtt.type){
+        if(l_int){
+          // TODO cast the smaller one to bigger one
+          rhs = LLVMBuildIntCast2(cc.builder, rhs, LLVMTypeOf(lhs), rtt.type == sit, "rhs");
+        } else {
+          // TODO float point, not doing now since we don't have floats yet
+          printf("Unimplemented in binop nested if\n");
+          exit(1);
+        }
+      } else if(l_int){
+        // TODO rhs is float
+        printf("Unimplemented in binop else if\n");
+        exit(1);
+      } else {
+        // TODO lhs is float
+        printf("Unimplemented in binop else\n");
+        exit(1);
+      }
+    }
+    inst : int;
+    // TODO handle fp
+    if(op == 1){ // +
+      inst = 8;
+    } else if(op == 2){ // -
+      inst = 10;
+    } else if(op == 3){ // *
+      inst = 12;
+    } else if(op == 4){ // /
+      // TODO handle other cases
+      inst = 15;
+      if((ltt.type == uit) * (rtt.type == uit)){// both are unsigned
+        inst = 14;
+      }
+    } else if(op == 5){ // %
+      // TODO handle other cases
+      inst = 18;
+      if((ltt.type == uit) * (rtt.type == uit)){// both are unsigned
+        inst = 17;
+      }
+    } else {
+      printf("Unknown op %d\n", op);
+      exit(1);
+    }
+    return LLVMBuildBinOp(cc.builder, inst, lhs, rhs, "binop");
+  } else { // handle pointer arithmetic 
+    if(((ltt.type == pt) == 0) * ((rtt.type == pt) == 0)){
+      printf("unsupported binary operation %d %d %d\n", ltt.type, op, rtt.type);
+      exit(1);
+    }
+    // lhs must be the pointer:
+    if(((ltt.type == pt) == 0) * (rtt.type == pt)){
+      tmp := lhs;
+      lhs = rhs;
+      rhs = tmp;
+    }
+
+    t := LLVMTypeOf(lhs);
+    if(LLVMGetTypeKind(t) == 12){
+      t = LLVMGetElementType(t);
+    } else {
+      t = LLVMTypeOf(rhs);
+      t = LLVMGetElementType(t);
+      tmp := lhs;
+      lhs = rhs;
+      rhs = lhs;
+    }
+
+
+    if(op == 2){// -
+      mone := LLVMConstInt(LLVMInt64TypeInContext(cc.context), 0-1, 1);
+      rhs = LLVMBuildBinOp(cc.builder, 12, rhs, mone, "ptrop"); // TODO problem?
+    }
+
+    indices := malloc(1 * 8);
+
+    *indices = rhs;
+    return LLVMBuildInBoundsGEP2(cc.builder, t, lhs, indices, 1, "ptrarrptr");
+  }
+
+  printf("unknown binary operation %d %d %d\n", ltt.type, op, rtt.type);
+  exit(1);
+  return 0;
+}
+
+exprgen_fcall := (e: *Expression, cc: *CC)-> *any{
+  // p1 id
+  // p2 args
+  calleeF := LLVMGetNamedFunction(cc.module, e.p1);
+  if(calleeF == 0){
+    printf("Function not found %s\n", e.p1);
+    exit(1);
+  }
+  // TODO not used
+  is_void := LLVMGetTypeKind(LLVMGetReturnType(LLVMTypeOf(calleeF))) == 0;
+
+  count := 0;
+  arg : *Statement = e.p2;
+  while(arg){
+    arg = arg.next;
+    count = count + 1;
+  }
+
+  args := malloc(count * 8);
+
+  arg = e.p2;
+  count = 0;
+  while(arg){
+    *(args + count) = exprgen(arg.p1, cc);
+    arg = arg.next;
+    count = count + 1;
+  }
+  name := "retval";
+  return LLVMBuildCall(cc.builder, calleeF, args, count, name);
+}
+
+get_alloca := (e: *Expression, cc: *CC) -> *any{
+  if(e.type == 0){// variable
+    name := cc_resolve_named(cc, e.p1);
+    if(name == 0){
+      printf("Variable not found %s\n", e.p1);
+    }
+    vp : *VariablePayload = name.payload;
+    return vp.alloc;
+  } else if(e.type == 1){//member
+    member_ind := 0;
+    tmpe := typeresolve(e.p1, cc);
+    level := 0;
+    p := tmpe;
+    while(p.type == 6){ // go til you reach the base
+      level = level + 1;
+      p = p.payload;
+    }
+
+    alloc := get_alloca(e.p1, cc);
+    // TODO, what is happeninig here?
+    if(level == 1){
+      alloc = LLVMBuildLoad(cc.builder, alloc, "paccess");
+      level = level - 1;
+    } else if(level == 3){
+      alloc = LLVMBuildLoad(cc.builder, alloc, "paccess");
+    }
+    // get the struct
+    // p.payload is the struct name
+    s_name : string = p.payload;
+    tmp := cc_resolve_named(cc, s_name);
+    vp : *VariablePayload =  tmp.payload;
+    f_mem :*Statement= vp.decl.p2;
+    st := vp.alloc;
+    while(f_mem){
+      if(streq(f_mem.p1, e.p2)){ // found the member
+        indices := malloc(2*8);
+        *(indices) = LLVMConstInt(LLVMInt64TypeInContext(cc.context), 0, 0);
+        *(indices + 1) = LLVMConstInt(LLVMInt64TypeInContext(cc.context), member_ind, 0);
+        ans := LLVMBuildStructGEP2(cc.builder, st, alloc, member_ind, "memberptr");
+        return ans;
+      }
+      f_mem = f_mem.next;
+      member_ind = member_ind + 1;
+    }
+    printf("Couldn't find member %s\n", e.p2);
+    exit(1);
+  } else if(e.type == 2){// binop
+    tmp := exprgen(e, cc);
+    tmp = LLVMBuildLoad(cc.builder, tmp, "binopload");
+    return tmp;
+  } else if(e.type == 6){//ptr
+    tmp := exprgen(e.p1, cc);
+    return tmp;
+  }
+  printf("Unknown expression in alloca %d\n", e.type);
+  exit(1);
+  return 0;
+}
+
+exprgen_pointer := (e: *Expression, cc: *CC) -> *any{
+  return LLVMBuildLoad(cc.builder, exprgen(e.p1, cc), "ptra");
+}
+
+exprgen := (e: *Expression, cc: *CC) -> *any{
+  if(e.type == 0){// variable
+    name := cc_resolve_named(cc, e.p1);
+    if(name == 0){
+      printf("Variable not found %s\n", e.p1);
+    }
+    vp : *VariablePayload = name.payload;
+    return LLVMBuildLoad(cc.builder, vp.alloc, e.p1);
+  } else if(e.type == 1){// member access
+    alloc := get_alloca(e, cc);
+    return LLVMBuildLoad(cc.builder, alloc, "memberptr");
+  } else if(e.type == 2){// binary operation
+    return exprgen_binop(e, cc);
+  } else if(e.type == 4){// const int
+    // TODO refine int choice based on arch
+    // TODO refine unsigned choice
+    return LLVMConstInt(LLVMInt64TypeInContext(cc.context), e.p1, 1);
+  } else if(e.type == 5){// const string
+    return LLVMBuildGlobalStringPtr(cc.builder, e.p1, "gstr");
+  } else if(e.type == 6){// pointer
+    return exprgen_pointer(e, cc);
+  } else if(e.type == 7){// fcall
+    return exprgen_fcall(e, cc);
+  } else {
+    printf("Unknown expression in exprgen %d\n", e.type);
+    exit(1);
+  }
+  return 0;
+}
+
+compile := (s: *Statement, cc: *CC)->void;
+
+compile_fs := (s: *Statement, cc: *CC) -> *any{
+  if(LLVMGetNamedFunction(cc.module, s.p1)){
+    // Overwriting existing function
+    return LLVMGetNamedFunction(cc.module, s.p1);
+  }
+  // count number of args
+  t : *Type = s.p2;
+  ft : *FunctionType = t.payload;
+  args_count := 0;
+  {
+    tmp : *Statement = ft.first;
+    while(tmp){
+      args_count = args_count + 1;
+      tmp = tmp.next;
+    }
+  }
+  args := malloc(args_count * 8);
+  arg : *Statement = ft.first;
+  count := 0;
+  while(arg){
+    // gen type
+    *(args + count) = typegen(arg.p2, cc);
+    count = count + 1;
+    arg = arg.next;
+  }
+
+  // TODO handle varargs
+  ftype := LLVMFunctionType(typegen(ft.returnType, cc), args, args_count, 0);
+  f := LLVMAddFunction(cc.module, s.p1, ftype);
+
+  payload: *VariablePayload = malloc(2*8);
+  payload.alloc = f;
+  payload.decl = s;
+  cc_set_named(cc, s.p1, payload);
+
+  return f;
+}
+
+compile_function := (s: *Statement, cc: *CC) -> void {
+  f := compile_fs(s, cc);
+
+  bblock := LLVMAppendBasicBlockInContext(cc.context, f, "entry");
+  LLVMPositionBuilder(cc.builder, bblock, 0);
+
+  // push block
+  push_bb(cc);
+
+  // set param name
+  t : *Type = s.p2;
+  ft: *FunctionType = t.payload;
+  arg : *Statement = ft.first;
+  count := 0;
+  while(arg){
+    param := LLVMGetParam(f, count);
+    LLVMSetValueName2(param, arg.p1, strlen(arg.p1));
+    alloc := LLVMBuildAlloca(cc.builder, typegen(arg.p2, cc), arg.p1);
+    // set variable name
+    payload: *VariablePayload = malloc(2*8);
+    payload.alloc = alloc;
+    payload.decl = arg;
+    cc_set_named(cc, arg.p1, payload);
+    LLVMBuildStore(cc.builder, param, alloc);
+    count = count + 1;
+    arg = arg.next;
+  }
+  // generate the body
+  stmt : *Statement = s.p3;
+  if(stmt)
+    compile(stmt, cc);
+
+  pop_bb(cc);
+  return;
+}
+
+compile_decl := (s: *Statement, cc: *CC) -> void{
+  // check to see if it has type
+  type : *any = 0;
+  if(s.p2 == 0){
+    //resolve type using expr
+    s.p2 = typeresolve(s.p3, cc);
+  }
+  type = typegen(s.p2, cc);
+
+  tbuilder := LLVMCreateBuilderInContext(cc.context);
+
+  f := LLVMGetFirstBasicBlock(LLVMGetBasicBlockParent(LLVMGetInsertBlock(cc.builder)));
+  instr := LLVMGetFirstInstruction(f);
+  LLVMPositionBuilder(tbuilder, f, instr);
+
+  alloc := LLVMBuildAlloca(tbuilder, type, s.p1);
+
+  LLVMDisposeBuilder(tbuilder);
+
+  payload: *VariablePayload = malloc(2*8);
+  payload.alloc = alloc;
+  payload.decl = s;
+  cc_set_named(cc, s.p1, payload);
+
+  if(s.p3){
+    LLVMBuildStore(cc.builder, exprgen(s.p3, cc), alloc);
+  }
+  return ;
+}
+
+compile_struct := (s: *Statement, cc: *CC) -> void{
+  st := LLVMStructCreateNamed(cc.context, s.p1);
+  vp : *VariablePayload = malloc(2 * 8);
+  vp.alloc = st;
+  vp.decl = s;
+  cc_set_named(cc, s.p1, vp);
+  count := 0;
+  f : *Statement = s.p2;
+  while(f){
+    count = count + 1;
+    f = f.next;
+  }
+  members : *any = malloc(8 * count);
+  f = s.p2;
+  i := 0;
+  while(f){
+    *(members + i) = typegen(f.p2, cc);
+    f = f.next;
+    i = i + 1;
+  }
+  LLVMStructSetBody(st, members, count, 0); // TODO changed packed?
+
+  return;
+}
+
+is_br_ok := (cc: *CC) -> bool{
+  instr := LLVMGetBasicBlockTerminator(LLVMGetInsertBlock(cc.builder));
+  if(instr == 0){ // if there aren't any instruction, it's okay
+    return 1;
+  }
+  opcode := LLVMGetInstructionOpcode(instr);
+  if(opcode == 0){// ret
+    return 0;
+  }
+  if(opcode == 1){// br
+    return 0;
+  }
+  return 1;
+}
+
+compile_if := (s: *Statement, cc: *CC) -> void{
+  f := LLVMGetBasicBlockParent(LLVMGetInsertBlock(cc.builder));
+
+  ifB := LLVMAppendBasicBlockInContext(cc.context, f, "if");
+  elseB :*any;
+  mergeB := LLVMCreateBasicBlockInContext(cc.context, "ifcont");
+  if(s.p3){
+    elseB = LLVMCreateBasicBlockInContext(cc.context, "else");
+  }
+  else{
+    elseB = mergeB;
+  }
+  cond := exprgen(s.p1, cc);
+
+  correct_type : bool = LLVMTypeOf(cond) == LLVMInt64TypeInContext(cc.context);
+  if(correct_type == 0){
+    cond = LLVMBuildIntCast2(cc.builder, cond, LLVMInt64TypeInContext(cc.context), 1, "cond");
+  }
+
+  cond = LLVMBuildICmp(cc.builder, 33, cond, LLVMConstInt(LLVMInt64TypeInContext(cc.context), 0, 0), "ifcond");
+
+  LLVMBuildCondBr(cc.builder, cond, ifB, elseB);
+
+  push_bb(cc);
+  LLVMPositionBuilder(cc.builder, ifB, 0);
+  compile(s.p2, cc);
+  if(is_br_ok(cc)){
+    LLVMBuildBr(cc.builder, mergeB);
+  }
+  pop_bb(cc);
+
+  if(s.p3){
+    push_bb(cc);
+    LLVMAppendExistingBasicBlock(f, elseB);
+    LLVMPositionBuilder(cc.builder, elseB, 0);
+    compile(s.p3, cc);
+    if(is_br_ok(cc)){
+        LLVMBuildBr(cc.builder, mergeB);
+    }
+    pop_bb(cc);
+  }
+
+  LLVMAppendExistingBasicBlock(f, mergeB);
+  LLVMPositionBuilder(cc.builder, mergeB, 0);
+
+  return 0;
+}
+
+compile_while := (s: *Statement, cc: *CC) -> void{
+  f := LLVMGetBasicBlockParent(LLVMGetInsertBlock(cc.builder));
+
+  condB := LLVMAppendBasicBlockInContext(cc.context, f, "whilecond");
+  whileB := LLVMAppendBasicBlockInContext(cc.context, f, "while");
+  mergeB := LLVMCreateBasicBlockInContext(cc.context, "whilecont");
+
+  LLVMBuildBr(cc.builder, condB);
+  LLVMPositionBuilder(cc.builder, condB, 0);
+
+  cond := exprgen(s.p1, cc);
+
+  correct_type : bool = LLVMTypeOf(cond) == LLVMInt64TypeInContext(cc.context);
+  if(correct_type == 0){
+    cond = LLVMBuildIntCast2(cc.builder, cond, LLVMInt64TypeInContext(cc.context), 1, "cond");
+  }
+
+  cond = LLVMBuildICmp(cc.builder, 33, cond, LLVMConstInt(LLVMInt64TypeInContext(cc.context), 0, 0), "whilecond");
+
+  LLVMBuildCondBr(cc.builder, cond, whileB, mergeB);
+
+  push_bb(cc);
+  LLVMPositionBuilder(cc.builder, whileB, 0);
+  compile(s.p2, cc);
+  if(is_br_ok(cc)){
+    LLVMBuildBr(cc.builder, condB);
+  }
+  pop_bb(cc);
+
+  LLVMAppendExistingBasicBlock(f, mergeB);
+  LLVMPositionBuilder(cc.builder, mergeB, 0);
+
+  return 0;
+}
+
+compile_ret := (s: *Statement, cc: *CC) -> void{
+  if(s.p1){// has value
+    LLVMBuildRet(cc.builder, exprgen(s.p1, cc));
+  } else {
+    LLVMBuildRetVoid(cc.builder);
+  }
+  return ;
+}
+
+compile_base_assign := (base: *any, v: *Expression, cc: *CC) -> void{
+  alloc := get_alloca(base, cc);
+  val := exprgen(v, cc);
+  // TODO better conversion?
+  if(LLVMGetTypeKind(LLVMTypeOf(alloc)) == 12){// alloc is pointer
+      val = LLVMBuildBitCast(cc.builder, val,
+      LLVMGetElementType(LLVMTypeOf(alloc)),
+      "castval");
+  }
+  LLVMBuildStore(cc.builder, val, alloc);
+  return;
+}
+
+compile_assign := (s: *Statement, cc: *CC) -> void{
+  e : *Expression = malloc(5*8);
+  e.type = 0;
+  e.p1 = s.p1;
+  compile_base_assign(e, s.p2, cc);
+  return;
+}
+
+compile_member_assign := (s: *Statement, cc: *CC) -> void{
+  compile_base_assign(s.p1, s.p2, cc);
+  return;
+}
+
+compile_ptr_assign := (s: *Statement, cc: *CC) -> void{
+  e: *Expression = malloc(5*8);
+  e.type = 6;
+  e.p1 = s.p1;
+  compile_base_assign(e, s.p2, cc);
+  return;
+}
+
+compile_fcall := (s: *Statement, cc: *CC) -> void{
+  e : *Expression = malloc(5*8);
+  e.type = 7;
+  e.p1 = s.p1;
+  e.p2 = s.p2;
+  exprgen_fcall(e, cc);
+  return;
+}
+
+compile_cb := (s: *Statement, cc: *CC) -> void{
+  f : *Statement = s.p1;
+  if(f)
+    compile(f, cc);
+  return;
+}
+
+compile := (s: *Statement, cc: *CC) -> void{
+  if(s.type == 0){ // return
+    compile_ret(s, cc);
+  } else if(s.type == 1){ // declaration
+    compile_decl(s, cc);
+  } else if(s.type == 2){ // assign
+    compile_assign(s, cc);
+  } else if(s.type == 3){ // member
+    compile_member_assign(s, cc);
+  } else if(s.type == 4){ // fcall
+    compile_fcall(s, cc);
+  } else if(s.type == 5){ // if
+    compile_if(s, cc);
+  } else if(s.type == 6){ // while
+    compile_while(s, cc);
+  } else if(s.type == 7){ // codeblock
+    compile_cb(s, cc);
+  } else if(s.type == 8){ // ptr assign
+    compile_ptr_assign(s, cc);
+  } else if(s.type == 9){ // function
+    compile_function(s, cc);
+  } else if(s.type == 10){ // function signature
+    compile_fs(s, cc);
+  } else if(s.type == 11){ // struct
+    compile_struct(s, cc);
+  } else{
+    printf("Unknown statement type %d\n", s.type);
+    exit(1);
+    return;
+  }
+  if(s.next){
+    compile(s.next, cc);
+  }
+  return;
+}
+
+main := (argc: s32,argv: *string) -> int{
+  // We don't have a not operation yet
+  if((argc == 2) == 0) {
+    printf("not enough arguments provided\n");
+    return 1;
+  }
+
+  filename := *(argv +1);
+
+  buf : string = 0;
+  null : *int = 0;
+
+  f := fopen(filename, "r");
+
+  // We don't have not implemented yet...
+  if(f){
+  } else {
+    printf("Could not open file\n");
+    return 1;
+  }
+
+  if(fseek(f, 0, 2)){
+    printf("unable to seek file\n");
+    exit(1);
+  }
+
+  bufsize := ftell(f);
+  // We don't have negatives yet.
+  negOne := 0 -1;
+
+  if(bufsize == negOne){
+    printf("unable to read file\n");
+    exit(1);
+  }
+  buf = malloc(1 *(bufsize+1));
+
+  if(fseek(f, 0, 0)){ // go back
+    printf("unable to seek file\n");
+    exit(1);
+  }
+
+  newLen := fread(buf, 1, bufsize, f);
+
+  // just to be safe
+  { // buf[newLen +1 ] = '\0';
+    tmpB : *u8 = *buf;
+    tmpB = tmpB + newLen + 1;
+    tmpB = 0; // '\0'
+  }
+
+  // the file is no loaded, let's pass it to a lexer
+  l := lexer(buf);
+
+  ast := parser(l);
+
+  cc: *CC = malloc(4*8);
+  cc.lastB = 0;
+
+  push_bb(cc);
+
+  cc.context = LLVMContextCreate();
+  cc.module = LLVMModuleCreateWithNameInContext("module", cc.context);
+  cc.builder = LLVMCreateBuilderInContext(cc.context);
+
+  LLVMSetTarget(cc.module, "x86_64-pc-linux-gnu");
+  LLVMSetDataLayout(cc.module, "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128");
+
+  compile(ast, cc);
+
+
+  printf("%s\n", LLVMPrintModuleToString(cc.module));
+
+  CompileLLVM(cc.module, "out.o");
+
+  return 0;
+}

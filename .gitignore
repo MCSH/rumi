@@ -1,0 +1,9 @@
+build/
+/lex.cpp
+/parse.cpp
+/parse.hpp
+rum
+src/a.out
+src/rum.rum.o
+src/out.o
+src/rum2
