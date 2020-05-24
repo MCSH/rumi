@@ -1100,38 +1100,43 @@ parse_expr_rec := (l: *Lexer, last: int) -> *Expression{
   ans : *Expression = parse_exp_val(l);
   // check op precedense
   prec := 0; // hacky implementation, XY, X: prec, Y: opcode
+  opcode := 0;
   nt := lexer_peep(l);
 
   if(nt.type == 18){
-    prec = 10; // ==   
+    prec = 1; // ==   
+    opcode = 0;
   }
   else if(nt.type == 43){
-    prec = 16; // !=
+    prec = 1; // !=
+    opcode = 6;
   }
   else if(nt.type == 19){
-    prec = 21; // +   
+    prec = 2; // +   
+    opcode = 1;
   }
   else if(nt.type == 9){
-    prec = 22; // -   
+    prec = 2; // -   
+    opcode = 2;
   }
   else if(nt.type == 12){
-    prec = 33; // *   
+    prec = 3; // *   
+    opcode = 3;
   }
   else if(nt.type == 13){
-    prec = 34; // /   
+    prec = 3; // /   
+    opcode = 4;
   }
   else if(nt.type == 41){
-    prec = 35; // %   
+    prec = 3; // %   
+    opcode = 5;
   }
 
   if(prec){
     lexer_pop(l);
-    opcode := prec % 10;
     expr1 := ans;
     expr2 : *Expression = parse_expr_rec(l, last);
     ans = malloc(sizeof Expression);
-
-    prec = prec / 10;
 
     ans.prec = prec;
     ans.type = 2;
