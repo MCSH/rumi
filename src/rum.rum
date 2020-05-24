@@ -266,6 +266,10 @@ Token: struct {
      42 -> sizeof
      43 -> !=
      44 -> !
+     45 -> <
+     46 -> <=
+     47 -> >
+     48 -> >=
   */
   payload: *any;
 }
@@ -654,6 +658,38 @@ lexer := (buf: *u8) -> *Lexer{
       } else { // !
         t: *Token = malloc(sizeof Token);
         t.type = 44;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      }
+    } else if(*(buf+offset) == 60){ // <
+      offset = offset + 1;
+      if(*(buf+offset) == 61){// <=
+        offset = offset + 1;
+        t: *Token = malloc(sizeof Token);
+        t.type = 46;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else { // <
+        t: *Token = malloc(sizeof Token);
+        t.type = 45;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      }
+    } else if(*(buf+offset) == 62){ // >
+      offset = offset + 1;
+      if(*(buf+offset) == 61){// >=
+        offset = offset + 1;
+        t: *Token = malloc(sizeof Token);
+        t.type = 48;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else { // >
+        t: *Token = malloc(sizeof Token);
+        t.type = 47;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
@@ -1110,6 +1146,22 @@ parse_expr_rec := (l: *Lexer, last: int) -> *Expression{
   else if(nt.type == 43){
     prec = 1; // !=
     opcode = 6;
+  }
+  else if(nt.type == 45){
+    prec = 1; // <
+    opcode = 7;
+  }
+  else if(nt.type == 46){
+    prec = 1; // <=
+    opcode = 8;
+  }
+  else if(nt.type == 47){
+    prec = 1; // >
+    opcode = 9;
+  }
+  else if(nt.type == 48){
+    prec = 1; // >=
+    opcode = 10;
   }
   else if(nt.type == 19){
     prec = 2; // +   
@@ -1584,7 +1636,9 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     exit(1);
   } else if(e.type == 2){ // binary expression
     // TODO
-    if((e.p2 == 0) + (e.p2 == 6)){//bool
+    if((e.p2 == 0) + (e.p2 == 6)
+    + (e.p2 == 7) + (e.p2 == 8)
+    + (e.p2 == 9) + (e.p2 == 10)){//bool
       t : *Type = malloc(sizeof Type);
       t.type = 4;
       t.payload = 0;
@@ -1744,6 +1798,30 @@ exprgen_binop := (e: *Expression, cc: *CC) -> *any{
 
   l_int := (ltt.type == sit)+ (ltt.type == uit) + (ltt.type == bit);
   r_int := (rtt.type == sit)+ (rtt.type == uit) + (rtt.type == bit);
+
+  // TODO refine this
+  is_unsigned := (ltt.type == uit) + (rtt.type == uit);
+
+  if(op == 7){// <
+    if(is_unsigned)
+      return exprgen_binop_icmp(e, 36, cc);
+    return exprgen_binop_icmp(e, 40, cc);
+  }
+  if(op == 8){// <=
+    if(is_unsigned)
+      return exprgen_binop_icmp(e, 37, cc);
+    return exprgen_binop_icmp(e, 41, cc);
+  }
+  if(op == 9){// >
+    if(is_unsigned)
+      return exprgen_binop_icmp(e, 34, cc);
+    return exprgen_binop_icmp(e, 38, cc);
+  }
+  if(op == 10){// >=
+    if(is_unsigned)
+      return exprgen_binop_icmp(e, 35, cc);
+    return exprgen_binop_icmp(e, 39, cc);
+  }
 
   // TODO reimplement this, it's terrible.
 
@@ -1948,11 +2026,11 @@ exprgen_sizeof := (e: *Expression, cc: *CC) -> *any{
 
 exprgen_not := (e: *Expression, cc: *CC) -> *any{
   val := exprgen(e.p1, cc);
-  correct_type : bool = LLVMTypeOf(val) == LLVMInt1TypeInContext(cc.context);
+  correct_type : bool = LLVMTypeOf(val) == LLVMInt64TypeInContext(cc.context);
   if(correct_type == 0){
-    val = LLVMBuildIntCast2(cc.builder, val, LLVMInt1TypeInContext(cc.context), 1, "castnot");
+    val = LLVMBuildIntCast2(cc.builder, val, LLVMInt64TypeInContext(cc.context), 1, "castnot");
   }
-  return LLVMBuildICmp(cc.builder, 32, val, LLVMConstInt(LLVMInt1TypeInContext(cc.context), 0, 0), "not");
+  return LLVMBuildICmp(cc.builder, 32, val, LLVMConstInt(LLVMInt64TypeInContext(cc.context), 0, 0), "not");
 }
 
 exprgen := (e: *Expression, cc: *CC) -> *any{
