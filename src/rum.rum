@@ -1616,6 +1616,11 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     t.type = 1;
     t.payload = 0;
     return t;
+  } else if(e.type == 9){ // not -> boolean
+    t : *Type = malloc(sizeof Type);
+    t.type = 4;
+    t.payload = 0;
+    return t;
   } else {
     printf("unknwon type resolve for expression type %d\n", e.type);
     exit(1);
