@@ -198,6 +198,7 @@ Expression: struct{
       6 -> ptr (expr,,)
       7 -> fcall(id, args,)
       8 -> sizeof(type,,)
+      9 -> not(expr,,)
   */
   p1: *any;
   p2: *any;
@@ -264,6 +265,7 @@ Token: struct {
      41 -> %
      42 -> sizeof
      43 -> !=
+     44 -> !
   */
   payload: *any;
 }
@@ -649,9 +651,12 @@ lexer := (buf: *u8) -> *Lexer{
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
-      } else {
-        printf("unknown char !\n");
-        exit(1);
+      } else { // !
+        t: *Token = malloc(sizeof Token);
+        t.type = 44;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
       }
     } else if(*(buf+offset) == 58){ // :
       offset = offset + 1;
@@ -1023,6 +1028,13 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
       exit(1);
     }
     ans.type = 6;
+    ans.p1 = v;
+    return ans;
+  }
+
+  if(tn.type == 44){// !
+    v : *Expression = parse_exp_val(l);
+    ans.type = 9;
     ans.p1 = v;
     return ans;
   }
@@ -1935,6 +1947,15 @@ exprgen_sizeof := (e: *Expression, cc: *CC) -> *any{
   return LLVMConstInt(LLVMInt32TypeInContext(cc.context), size, 0);
 }
 
+exprgen_not := (e: *Expression, cc: *CC) -> *any{
+  val := exprgen(e.p1, cc);
+  correct_type : bool = LLVMTypeOf(val) == LLVMInt1TypeInContext(cc.context);
+  if(correct_type == 0){
+    val = LLVMBuildIntCast2(cc.builder, val, LLVMInt1TypeInContext(cc.context), 1, "castnot");
+  }
+  return LLVMBuildICmp(cc.builder, 32, val, LLVMConstInt(LLVMInt1TypeInContext(cc.context), 0, 0), "not");
+}
+
 exprgen := (e: *Expression, cc: *CC) -> *any{
   if(e.type == 0){// variable
     name := cc_resolve_named(cc, e.p1);
@@ -1960,6 +1981,8 @@ exprgen := (e: *Expression, cc: *CC) -> *any{
     return exprgen_fcall(e, cc);
   } else if(e.type == 8){// sizeof
     return exprgen_sizeof(e, cc);
+  } else if(e.type == 9){ // not
+    return exprgen_not(e, cc);
   } else {
     printf("Unknown expression in exprgen %d\n", e.type);
     exit(1);
