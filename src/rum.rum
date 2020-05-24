@@ -277,7 +277,7 @@ Lexer : struct {
 streq := (s1: *u8, s2: *u8) -> bool{
   counter := 0;
   while(1){
-    if((*(s1 + counter) == *(s2 + counter)) == 0){
+    if(*(s1+ counter) != *(s2+counter)){
       return 0;
     }
     if(*(s1+counter) == 0)
@@ -458,7 +458,7 @@ handle_str := (buf: *u8, offset: int, end: int) -> string {
 strcp := (buf: *u8, start: int, end: int) -> string{
   out : *u8 = malloc(sizeof u64 * (end - start));
   counter := start;
-  while((counter==end)==0){ // We don't have != yet
+  while(counter != end){
     *(out + (counter - start)) = *(buf + counter);
     counter = counter + 1;
   }
@@ -761,7 +761,7 @@ lexer := (buf: *u8) -> *Lexer{
       } else if(*(buf+offset+1) == 47){
         // comment
         offset = offset + 2;
-        while((*(buf+offset) == 10) == 0)
+        while(*(buf+offset) != 10)
           offset = offset + 1;
       } else {
         t : *Token = malloc(sizeof Token);
@@ -962,7 +962,7 @@ parse_fcall_args := (l: *Lexer) -> *Statement{
   nt : *Token = lexer_peep(l);
   ans : *Statement = 0;
   prev : *Statement = 0;
-  while((nt.type == 5) == 0){
+  while(nt.type != 5){
     val := parse_expr(l);
     tmp : *Statement = malloc(sizeof Statement);
     tmp.type = 12;
@@ -975,8 +975,8 @@ parse_fcall_args := (l: *Lexer) -> *Statement{
     prev = tmp;
     nt = lexer_peep(l);
     // ,
-    if((nt.type == 6) == 0){
-      if((nt.type == 5) == 0){
+    if(nt.type != 6){
+      if(nt.type != 5){
         printf("Expected to see , or ), saw %d\n", nt.type);
         l.offset = l.count;
         exit(1);
@@ -1264,7 +1264,7 @@ parse_statement := (l: *Lexer) -> *Statement{
     prev : *Statement = 0;
     ans.p1 = 0;
     // {
-    while(((*lexer_peep(l)).type == 15) == 0){
+    while((*lexer_peep(l)).type != 15){
         tmp := parse_statement(l);
         if(ans.p1 == 0){
           ans.p1 = tmp;
@@ -1301,7 +1301,7 @@ parse_function := (l: *Lexer) -> *Statement{
 
   // next token is not }
   prev : *Statement = 0;
-  while(((*lexer_peep(l)).type == 15) == 0){
+  while((*lexer_peep(l)).type != 15){
     tmp : *Statement = parse_statement(l);
     if(tmp)
       tmp.next = 0;
@@ -1341,7 +1341,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
       prev : * Statement = 0;
       ft.first = 0;
       // parse args
-      while(((*lexer_peep(l)).type == 5) == 0){
+      while((*lexer_peep(l)).type != 5){
         tmp : *Statement = malloc(sizeof Statement);
         tmp.p1 = (*(lexer_peep(l))).payload;
         lexer_expect(l, 1, "id");
@@ -1366,7 +1366,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
 
         if((*lexer_peep(l)).type == 6)
           lexer_expect(l, 6, ",");
-        else if(((*lexer_peep(l)).type == 5) == 0){
+        else if((*lexer_peep(l)).type != 5){
           printf("Expected to see ) or , \n");
           l.offset = l.count;
           exit(1);
@@ -1412,7 +1412,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
       lexer_expect(l, 14, "{");
       nt: *Token = lexer_peep(l);
       prev : *Statement = 0;
-      while((nt.type == 15) == 0){
+      while(nt.type != 15){
         tid := (*lexer_peep(l)).payload;
         lexer_expect(l, 1, "id");
         lexer_expect(l, 2, ":");
@@ -1549,7 +1549,7 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     while(t.type == 6){ // pointer, go back
       t = t.payload;
     }
-    if((t.type == 0)==0){
+    if(t.type != 0){
       printf("base of member should be a struct, but was %d\n", t.type);
       exit(1);
     }
@@ -1690,7 +1690,7 @@ exprgen_binop := (e: *Expression, cc: *CC) -> *any{
   if(op == 0){//==
     // TODO check type
     // TODO handle float properly
-    if((l_pt == r_pt) == 0){
+    if(l_pt != r_pt){
       // covnert to pointer
       if(l_pt){
         rhs = LLVMBuildIntToPtr(cc.builder, rhs, LLVMTypeOf(lhs), "rhs");
@@ -1715,7 +1715,7 @@ exprgen_binop := (e: *Expression, cc: *CC) -> *any{
   if(op == 6){//!=
     // TODO check type
     // TODO handle float properly
-    if((l_pt == r_pt) == 0){
+    if(l_pt != r_pt){
       // covnert to pointer
       if(l_pt){
         rhs = LLVMBuildIntToPtr(cc.builder, rhs, LLVMTypeOf(lhs), "rhs");
@@ -1790,12 +1790,12 @@ exprgen_binop := (e: *Expression, cc: *CC) -> *any{
     }
     return LLVMBuildBinOp(cc.builder, inst, lhs, rhs, "binop");
   } else { // handle pointer arithmetic 
-    if(((ltt.type == pt) == 0) * ((rtt.type == pt) == 0)){
+    if((ltt.type != pt) * (rtt.type == pt)){
       printf("unsupported binary operation %d %d %d\n", ltt.type, op, rtt.type);
       exit(1);
     }
     // lhs must be the pointer:
-    if(((ltt.type == pt) == 0) * (rtt.type == pt)){
+    if((ltt.type != pt) * (rtt.type == pt)){
       tmp := lhs;
       lhs = rhs;
       rhs = tmp;
@@ -2293,7 +2293,7 @@ compile := (s: *Statement, cc: *CC) -> void{
 
 main := (argc: s32,argv: *string) -> int{
   // We don't have a not operation yet
-  if((argc == 2) == 0) {
+  if(argc != 2){
     printf("not enough arguments provided\n");
     return 1;
   }
