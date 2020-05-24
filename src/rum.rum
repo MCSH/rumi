@@ -107,6 +107,8 @@ LLVMBuildStructGEP2 :=(b : *any, t: *any, ptr: *any, ind: int, name: string) -> 
 LLVMWriteBitcodeToFile := (m: *any, path: string) -> int;
 LLVMSetTarget := (m: *any, triple: string) -> void;
 LLVMSetDataLayout := (m: *any, dl: string) -> void;
+LLVMGetModuleDataLayout := (m: *any) -> *any;
+LLVMSizeOfTypeInBits := (td: *any, ty: *any) -> int;
 
 LLVMGetInsertBlock := (b: *any) -> *any;
 LLVMGetBasicBlockParent := (bb: *any) -> *any;
@@ -1880,54 +1882,10 @@ exprgen_pointer := (e: *Expression, cc: *CC) -> *any{
 }
 
 typesize := (e: *Type, cc: *CC) -> int{
-  ptr_size := 8; // TODO set based on arch
-  if(e.type == 0){
-    // recursively find the size
-    ans := 0;
-    s_name := e.payload;
-    tmp := cc_resolve_named(cc, s_name);
-    vp : *VariablePayload = tmp.payload;
-    f_mem : *Statement = vp.decl.p2;
-    while(f_mem){
-      tmp := typesize(f_mem.p2, cc);
-      ans = ans + typesize(f_mem.p2, cc);
-      f_mem = f_mem.next;
-    }
-    return ans;
-  }
-  if((e.type == 1) + (e.type == 2)){
-    // this is an int, we can divide payload by 8
-    intsize : int = e.payload;
-    if(intsize == 0){ // we have a default
-      return 8;
-    }
-    return intsize / 8;
-  }
-  if(e.type == 3){// float
-    fsize : int = e.payload;
-    return fsize / 8;
-  }
-  if(e.type == 4){// bool
-    return 1;
-  }
-  if(e.type == 5){// string
-    return ptr_size;
-  }
-  if(e.type == 6){// pointer
-    return ptr_size;
-  }
-  if(e.type == 7){// void
-    return 0;
-  }
-  if(e.type ==  8){// ftype
-    return ptr_size;
-  }
-  if(e.type == 9){// any
-    return ptr_size;
-  }
-  printf("Unknown typesize for type %d\n", e.type);
-  exit(1);
-  return 0;
+  t := typegen(e, cc);
+  td := LLVMGetModuleDataLayout(cc.module);
+  size := LLVMSizeOfTypeInBits(td, t);
+  return size / 8;
 }
 
 exprgen_sizeof := (e: *Expression, cc: *CC) -> *any{
@@ -2355,8 +2313,9 @@ main := (argc: s32,argv: *string) -> int{
   cc.module = LLVMModuleCreateWithNameInContext("module", cc.context);
   cc.builder = LLVMCreateBuilderInContext(cc.context);
 
-  // LLVMSetTarget(cc.module, "x86_64-pc-linux-gnu");
-  // LLVMSetDataLayout(cc.module, "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128");
+  // TODO change this based on arch
+  LLVMSetTarget(cc.module, "x86_64-pc-linux-gnu");
+  LLVMSetDataLayout(cc.module, "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128");
 
   compile(ast, cc);
 
