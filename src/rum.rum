@@ -1678,23 +1678,60 @@ typegen := (t: *Type, cc: *CC) -> *any{
 
 exprgen := (e: *Expression, cc: *CC) -> *any;
 
-exprgen_binop := (e: *Expression, cc: *CC) -> *any{
+exprgen_binop_icmp := (e: *Expression, cmpcode: int, cc: *CC) -> *any{
+
   lhs := exprgen(e.p1, cc);
   rhs := exprgen(e.p3, cc);
 
   ltt := typeresolve(e.p1, cc);
   rtt := typeresolve(e.p3, cc);
 
+  sit := 1; // signed int type
+  uit := 2; // unsigned int type
+  bit := 4;
+  pt := 6; // pointer type
+
+  l_pt : bool = ltt.type == pt; // lhs is pointer
+  r_pt : bool = rtt.type == pt;
+
+  l_int := (ltt.type == sit)+ (ltt.type == uit) + (ltt.type == bit);
+  r_int := (rtt.type == sit)+ (rtt.type == uit) + (rtt.type == bit);
+
+  // TODO check type
+  // TODO handle float properly
+  if(l_pt != r_pt){
+    if(l_pt){
+      rhs = LLVMBuildIntToPtr(cc.builder, rhs, LLVMTypeOf(lhs), "rhs");
+    } else {
+      lhs = LLVMBuildIntToPtr(cc.builder, lhs, LLVMTypeOf(rhs), "lhs");
+    }
+  } else if((LLVMTypeOf(lhs) == LLVMTypeOf(rhs))){} else { // TODO we need a !=
+    if(l_int){
+      rhs = LLVMBuildIntCast2(cc.builder, rhs, LLVMTypeOf(lhs), rtt.type == sit, "rhs");
+    } else {
+      printf("unimplemented icmp exprgen\n");
+      exit(1);
+    }
+  }
+  return LLVMBuildICmp(cc.builder, cmpcode, lhs, rhs, "cmp");
+}
+
+exprgen_binop := (e: *Expression, cc: *CC) -> *any{
+  // TODO reimplement this, it's terrible.
   op := e.p2;
-  if(ltt == 0){
-    printf("unknown type for lhs\n");
-    exit(1);
+  if(op == 0){
+    return exprgen_binop_icmp(e, 32, cc);
   }
 
-  if(rtt == 0){
-    printf("unknown type for rhs\n");
-    exit(1);
+  if(op == 6){
+    return exprgen_binop_icmp(e, 33, cc);
   }
+
+  lhs := exprgen(e.p1, cc);
+  rhs := exprgen(e.p3, cc);
+
+  ltt := typeresolve(e.p1, cc);
+  rtt := typeresolve(e.p3, cc);
 
   sit := 1; // signed int type
   uit := 2; // unsigned int type
@@ -1709,54 +1746,6 @@ exprgen_binop := (e: *Expression, cc: *CC) -> *any{
   r_int := (rtt.type == sit)+ (rtt.type == uit) + (rtt.type == bit);
 
   // TODO reimplement this, it's terrible.
-  if(op == 0){//==
-    // TODO check type
-    // TODO handle float properly
-    if(l_pt != r_pt){
-      // covnert to pointer
-      if(l_pt){
-        rhs = LLVMBuildIntToPtr(cc.builder, rhs, LLVMTypeOf(lhs), "rhs");
-      } else {
-        lhs = LLVMBuildIntToPtr(cc.builder, lhs, LLVMTypeOf(rhs), "lhs");
-      }
-    } else if((LLVMTypeOf(lhs) == LLVMTypeOf(rhs))){} else { // TODO we need a !=
-      // convert
-        if(l_int){
-          // TODO cast the bigger one to smaller one
-          rhs = LLVMBuildIntCast2(cc.builder, rhs, LLVMTypeOf(lhs), rtt.type == sit, "rhs");
-        } else {
-          // TODO float point, not doing now since we don't have floats yet
-          printf("Unimplemented in binop nested if\n");
-          exit(1);
-        }
-    }
-    return LLVMBuildICmp(cc.builder, 32, lhs, rhs, "eq");
-  }
-
-  // TODO reimplement this, it's terrible.
-  if(op == 6){//!=
-    // TODO check type
-    // TODO handle float properly
-    if(l_pt != r_pt){
-      // covnert to pointer
-      if(l_pt){
-        rhs = LLVMBuildIntToPtr(cc.builder, rhs, LLVMTypeOf(lhs), "rhs");
-      } else {
-        lhs = LLVMBuildIntToPtr(cc.builder, lhs, LLVMTypeOf(rhs), "lhs");
-      }
-    } else if((LLVMTypeOf(lhs) == LLVMTypeOf(rhs))){} else { // TODO we need a !=
-      // convert
-        if(l_int){
-          // TODO cast the bigger one to smaller one
-          rhs = LLVMBuildIntCast2(cc.builder, rhs, LLVMTypeOf(lhs), rtt.type == sit, "rhs");
-        } else {
-          // TODO float point, not doing now since we don't have floats yet
-          printf("Unimplemented in binop nested if\n");
-          exit(1);
-        }
-    }
-    return LLVMBuildICmp(cc.builder, 33, lhs, rhs, "eq");
-  }
 
   tmp : bool = l_pt + r_pt;
   // TODO this is a bug and needs to be fixed, l_pt + r_pt == 0 was becoming false
