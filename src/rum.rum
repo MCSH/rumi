@@ -455,7 +455,7 @@ handle_str := (buf: *u8, offset: int, end: int) -> string {
 }
 
 strcp := (buf: *u8, start: int, end: int) -> string{
-  out : *u8 = malloc(8 * (end - start));
+  out : *u8 = malloc(sizeof u64 * (end - start));
   counter := start;
   while((counter==end)==0){ // We don't have != yet
     *(out + (counter - start)) = *(buf + counter);
@@ -473,9 +473,9 @@ parse_num := (buf: *u8, start: int, end: int) -> int{
 lexer := (buf: *u8) -> *Lexer{
   l : *Lexer;
 
-  l = malloc(3 * 8); // no sizeof
+  l = malloc(3 * sizeof u8); // no sizeof
   l.count = 0;
-  l.ptr = malloc(9000000 * 2 * 8);
+  l.ptr = malloc(9000000 * sizeof Token);
 
   offset := 0;
 
@@ -486,7 +486,7 @@ lexer := (buf: *u8) -> *Lexer{
 
     if(*(buf+offset) == 0){
       // EOF
-      t : *Token = malloc(2*8);
+      t : *Token = malloc(sizeof Token);
       t.type = 0;
       t.payload = 0;
       *(l.ptr + l.count) = t;
@@ -498,133 +498,133 @@ lexer := (buf: *u8) -> *Lexer{
       offset = end;
       // capture different tokens
       if(streq(id, "int")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 21;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "return")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 22;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "if")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 23;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "while")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 24;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "else")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 25;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "string")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 26;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "any")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 27;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "struct")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 28;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "void")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 29;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "u8")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 30;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "u16")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 31;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "u32")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 32;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "u64")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 33;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "s8")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 34;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "s16")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 35;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "s32")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 36;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "s64")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 37;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "f32")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 38;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "f64")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 39;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "bool")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 40;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "sizeof")){
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 42;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else {
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 1;
         t.payload = id;
         *(l.ptr + l.count) = t;
@@ -634,7 +634,7 @@ lexer := (buf: *u8) -> *Lexer{
       end := lex_num(buf, offset); 
       num := parse_num(buf, offset, end);
       offset = end;
-      t : *Token = malloc(2*8);
+      t : *Token = malloc(sizeof Token);
       t.type = 16;
       t.payload = num;
       *(l.ptr + l.count) = t;
@@ -643,34 +643,34 @@ lexer := (buf: *u8) -> *Lexer{
       offset = offset + 1;
       if(*(buf+offset) == 61) { // :=
         offset = offset + 1;
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 3;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else { // only :
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 2;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       }
     } else if(*(buf+offset) == 40){ // lpar
-      t : *Token = malloc(2*8);
+      t : *Token = malloc(sizeof Token);
       t.type = 4;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
     } else if(*(buf+offset) == 41){ // rpar
-      t : *Token = malloc(2*8);
+      t : *Token = malloc(sizeof Token);
       t.type = 5;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
     } else if(*(buf+offset) == 44){ // ,
-      t : *Token = malloc(2*8);
+      t : *Token = malloc(sizeof Token);
       t.type = 6;
       t.payload = 0;
       *(l.ptr + l.count) = t;
@@ -681,14 +681,14 @@ lexer := (buf: *u8) -> *Lexer{
       tmp_bool : bool = *(buf+offset+1) == *(buf+offset+2);
       tmp_bool2 : bool = *(buf+offset+1) == 46;
       if(tmp_bool * tmp_bool2){ // ...
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 8;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
         offset = offset + 3;
       } else {
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 7;
         t.payload = 0;
         *(l.ptr + l.count) = t;
@@ -697,14 +697,14 @@ lexer := (buf: *u8) -> *Lexer{
       }
     } else if(*(buf+offset) == 45){ // -
       if(*(buf+offset+1) == 62){ // ->
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 10;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
         offset = offset + 2;
       } else {
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 9;
         t.payload = 0;
         *(l.ptr + l.count) = t;
@@ -712,14 +712,14 @@ lexer := (buf: *u8) -> *Lexer{
         offset = offset + 1;
       }
     } else if(*(buf+offset) == 59){ // ;
-      t : *Token = malloc(2*8);
+      t : *Token = malloc(sizeof Token);
       t.type = 11;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
     } else if(*(buf+offset) == 42){ // *
-      t : *Token = malloc(2*8);
+      t : *Token = malloc(sizeof Token);
       t.type = 12;
       t.payload = 0;
       *(l.ptr + l.count) = t;
@@ -750,7 +750,7 @@ lexer := (buf: *u8) -> *Lexer{
         while((*(buf+offset) == 10) == 0)
           offset = offset + 1;
       } else {
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 13;
         t.payload = 0;
         *(l.ptr + l.count) = t;
@@ -758,28 +758,28 @@ lexer := (buf: *u8) -> *Lexer{
         offset = offset + 1;
       }
     } else if(*(buf+offset) == 123){ // {
-      t : *Token = malloc(2*8);
+      t : *Token = malloc(sizeof Token);
       t.type = 14;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
     } else if(*(buf+offset) == 125){ // }
-      t : *Token = malloc(2*8);
+      t : *Token = malloc(sizeof Token);
       t.type = 15;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
     } else if(*(buf+offset) == 43){ // +
-      t : *Token = malloc(2*8);
+      t : *Token = malloc(sizeof Token);
       t.type = 19;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
     } else if(*(buf+offset) == 37){ // %
-      t : *Token = malloc(2*8);
+      t : *Token = malloc(sizeof Token);
       t.type = 41;
       t.payload = 0;
       *(l.ptr + l.count) = t;
@@ -787,14 +787,14 @@ lexer := (buf: *u8) -> *Lexer{
       offset = offset + 1;
     } else if(*(buf+offset) == 61){ // =
       if(*(buf+offset+1) == 61){ // ==
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 18;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
         offset = offset + 2;
       } else {
-        t : *Token = malloc(2*8);
+        t : *Token = malloc(sizeof Token);
         t.type = 17;
         t.payload = 0;
         *(l.ptr + l.count) = t;
@@ -805,7 +805,7 @@ lexer := (buf: *u8) -> *Lexer{
       end := lex_str(buf, offset);
       str := handle_str(buf, offset, end);
       offset = end;
-      t : *Token = malloc(2*8);
+      t : *Token = malloc(sizeof Token);
       t.type = 20;
       t.payload = str;
       *(l.ptr + l.count) = t;
@@ -848,7 +848,7 @@ lexer_expect := (l : *Lexer, t: int, description: string) -> bool{
 
 parse_type := (l: *Lexer) -> *Type{
   tn := lexer_pop(l);
-  ans : *Type = malloc(2 * 8);
+  ans : *Type = malloc(sizeof Type);
   if(tn.type == 26){
     ans.type = 5;
     ans.payload = 0;
@@ -950,7 +950,7 @@ parse_fcall_args := (l: *Lexer) -> *Statement{
   prev : *Statement = 0;
   while((nt.type == 5) == 0){
     val := parse_expr(l);
-    tmp : *Statement = malloc(5*8);
+    tmp : *Statement = malloc(sizeof Statement);
     tmp.type = 12;
     tmp.p1 = val;
     tmp.next = 0;
@@ -982,7 +982,7 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
   // GET EXPR
   // EXPECT )
   tn := lexer_pop(l);
-  ans : *Expression = malloc(5*8);
+  ans : *Expression = malloc(sizeof Expression);
 
   if(tn.type == 4){ // (
     e := parse_expr(l);
@@ -1027,7 +1027,7 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
         lexer_pop(l);
         tn2 := lexer_peep(l);
         lexer_expect(l, 1, "id");
-        tmp : *Expression = malloc(5*8);
+        tmp : *Expression = malloc(sizeof Expression);
         tmp.type = 1;
         tmp.p1 = ans;
         tmp.p2 = tn2.payload;
@@ -1100,7 +1100,7 @@ parse_expr_rec := (l: *Lexer, last: int) -> *Expression{
     opcode := prec % 10;
     expr1 := ans;
     expr2 : *Expression = parse_expr_rec(l, last);
-    ans = malloc(5*8);
+    ans = malloc(sizeof Expression);
 
     prec = prec / 10;
 
@@ -1135,7 +1135,7 @@ parse_expr := (l: *Lexer) -> *Expression{
 
 parse_statement := (l: *Lexer) -> *Statement{
   tn : *Token = lexer_pop(l);
-  ans : *Statement = malloc(5 * 8);
+  ans : *Statement = malloc(sizeof Statement);
   if(tn.type == 22){
     // Return
     tn : *Token = lexer_peep(l);
@@ -1185,7 +1185,7 @@ parse_statement := (l: *Lexer) -> *Statement{
       lexer_expect(l, 11, ";");
       return ans;
     } else if(tn.type == 7){ // id.id = expr; 
-      tmp : *Expression = malloc(5*8);
+      tmp : *Expression = malloc(sizeof Expression);
       tmp.type = 0;
       tmp.p1 = ans.p1;
       ans.p1 = tmp;
@@ -1193,7 +1193,7 @@ parse_statement := (l: *Lexer) -> *Statement{
         //
         tn = lexer_peep(l); // hack so I don't have to handle not seeing id
         lexer_expect(l, 1, "id");
-        tmp = malloc(5*8);
+        tmp = malloc(sizeof Expression);
         tmp.type = 1;
         tmp.p1 = ans.p1;
         tmp.p2 = tn.payload;
@@ -1278,7 +1278,7 @@ parse_statement := (l: *Lexer) -> *Statement{
 parse_function := (l: *Lexer) -> *Statement{
   // the function signature as well as opening { has been parsed
 
-  ans : *Statement = malloc(5 * 8);
+  ans : *Statement = malloc(sizeof Statement);
   ans.type = 9;
   ans.p3 = 0;
 
@@ -1316,16 +1316,16 @@ parse_top_level := (l: *Lexer) -> *Statement{
 
       lexer_expect(l, 4, "(");
 
-      args : *Type = malloc(2*8);
+      args : *Type = malloc(sizeof Type);
       args.type = 8;
-      ft : *FunctionType = malloc(2*8);
+      ft : *FunctionType = malloc(sizeof FunctionType);
       args.payload = ft;
 
       prev : * Statement = 0;
       ft.first = 0;
       // parse args
       while(((*lexer_peep(l)).type == 5) == 0){
-        tmp : *Statement = malloc(5*8);
+        tmp : *Statement = malloc(sizeof Statement);
         tmp.p1 = (*(lexer_peep(l))).payload;
         lexer_expect(l, 1, "id");
         lexer_expect(l, 2, ":");
@@ -1367,7 +1367,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
 
       if(nt.type == 11){
         // signature
-        s : *Statement = malloc(5*8);
+        s : *Statement = malloc(sizeof Statement);
         s.type = 10;
         s.p1 = id;
         s.p2 = args;
@@ -1386,7 +1386,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
       }
 
     } else if(nt.type == 2){
-      ans : *Statement = malloc(5 * 8);
+      ans : *Statement = malloc(sizeof Statement);
       ans.type = 11;
       ans.p1 = id;
       ans.p2 = 0;
@@ -1403,7 +1403,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
         lexer_expect(l, 11, ";");
         nt = lexer_peep(l);
 
-        tmp : *Statement = malloc(5 * 8);
+        tmp : *Statement = malloc(sizeof Statement);
         tmp.type = 1;
         tmp.p1 = tid;
         tmp.p2 = tp;
@@ -1460,7 +1460,7 @@ parser := (l: *Lexer) -> *Statement{
 }
 
 push_bb := (cc: *CC) -> void{
-  bb : *BB = malloc(2*8);
+  bb : *BB = malloc(sizeof BB);
   bb.prev = cc.lastB;
   bb.names = 0;
   cc.lastB = bb;
@@ -1492,7 +1492,7 @@ cc_resolve_named := (cc: *CC, name: string) -> *Names{
 cc_set_named := (cc: *CC, name: string, payload: *any) -> void {
   if(cc.lastB.names == 0){
     // just set it and be done
-    cc.lastB.names = malloc(3*8);
+    cc.lastB.names = malloc(sizeof Names);
     cc.lastB.names.name = name;
     cc.lastB.names.payload = payload;
     cc.lastB.names.next = 0;
@@ -1506,7 +1506,7 @@ cc_set_named := (cc: *CC, name: string, payload: *any) -> void {
       return;
     }
     if(names.next == 0){
-      names.next = malloc(3*8);
+      names.next = malloc(sizeof Names);
       names.next.name = name;
       names.next.payload = payload;
       names.next.next = 0;
@@ -1551,24 +1551,24 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
   } else if(e.type == 2){ // binary expression
     // TODO
     if(e.p2 == 0){//bool
-      t : *Type = malloc(2*8);
+      t : *Type = malloc(sizeof Type);
       t.type = 4;
       t.payload = 0;
       return t;
     }
     return typeresolve(e.p1, cc); // return p1, whatever it is.
   } else if(e.type == 4){ // const int
-    t : *Type = malloc(2*8);
+    t : *Type = malloc(sizeof Type);
     t.type = 1;
     t.payload = 0;
     return t;
   } else if(e.type == 5){ // const string
-    t : *Type = malloc(2*8);
+    t : *Type = malloc(sizeof Type);
     t.type = 5;
     t.payload = 0;
     return t;
   } else if(e.type == 6){ // pointer
-    t : * Type = malloc(2*8);
+    t : * Type = malloc(sizeof Type);
     t.type = 6;
     t.payload = typeresolve(e.p1, cc);
     return t;
@@ -1582,8 +1582,8 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     t : *Type = p.decl.p2;
     ft: *FunctionType = t.payload;
     return ft.returnType;
-  } else if(e.type == 8){ // sizeof
-    t : *Type = malloc(2*8);
+  } else if(e.type == 8){
+    t : *Type = malloc(sizeof Type);
     t.type = 1;
     t.payload = 0;
     return t;
@@ -1776,7 +1776,7 @@ exprgen_binop := (e: *Expression, cc: *CC) -> *any{
       rhs = LLVMBuildBinOp(cc.builder, 12, rhs, mone, "ptrop"); // TODO problem?
     }
 
-    indices := malloc(1 * 8);
+    indices := malloc(sizeof *any);
 
     *indices = rhs;
     return LLVMBuildInBoundsGEP2(cc.builder, t, lhs, indices, 1, "ptrarrptr");
@@ -1805,7 +1805,7 @@ exprgen_fcall := (e: *Expression, cc: *CC)-> *any{
     count = count + 1;
   }
 
-  args := malloc(count * 8);
+  args := malloc(count * sizeof *any);
 
   arg = e.p2;
   count = 0;
@@ -1853,7 +1853,7 @@ get_alloca := (e: *Expression, cc: *CC) -> *any{
     st := vp.alloc;
     while(f_mem){
       if(streq(f_mem.p1, e.p2)){ // found the member
-        indices := malloc(2*8);
+        indices := malloc(2*sizeof *any);
         *(indices) = LLVMConstInt(LLVMInt64TypeInContext(cc.context), 0, 0);
         *(indices + 1) = LLVMConstInt(LLVMInt64TypeInContext(cc.context), member_ind, 0);
         ans := LLVMBuildStructGEP2(cc.builder, st, alloc, member_ind, "memberptr");
@@ -1943,7 +1943,7 @@ compile_fs := (s: *Statement, cc: *CC) -> *any{
       tmp = tmp.next;
     }
   }
-  args := malloc(args_count * 8);
+  args := malloc(args_count * sizeof *any);
   arg : *Statement = ft.first;
   count := 0;
   while(arg){
@@ -1957,7 +1957,7 @@ compile_fs := (s: *Statement, cc: *CC) -> *any{
   ftype := LLVMFunctionType(typegen(ft.returnType, cc), args, args_count, 0);
   f := LLVMAddFunction(cc.module, s.p1, ftype);
 
-  payload: *VariablePayload = malloc(2*8);
+  payload: *VariablePayload = malloc(sizeof VariablePayload);
   payload.alloc = f;
   payload.decl = s;
   cc_set_named(cc, s.p1, payload);
@@ -1984,7 +1984,7 @@ compile_function := (s: *Statement, cc: *CC) -> void {
     LLVMSetValueName2(param, arg.p1, strlen(arg.p1));
     alloc := LLVMBuildAlloca(cc.builder, typegen(arg.p2, cc), arg.p1);
     // set variable name
-    payload: *VariablePayload = malloc(2*8);
+    payload: *VariablePayload = malloc(sizeof VariablePayload);
     payload.alloc = alloc;
     payload.decl = arg;
     cc_set_named(cc, arg.p1, payload);
@@ -2020,7 +2020,7 @@ compile_decl := (s: *Statement, cc: *CC) -> void{
 
   LLVMDisposeBuilder(tbuilder);
 
-  payload: *VariablePayload = malloc(2*8);
+  payload: *VariablePayload = malloc(sizeof VariablePayload);
   payload.alloc = alloc;
   payload.decl = s;
   cc_set_named(cc, s.p1, payload);
@@ -2033,7 +2033,7 @@ compile_decl := (s: *Statement, cc: *CC) -> void{
 
 compile_struct := (s: *Statement, cc: *CC) -> void{
   st := LLVMStructCreateNamed(cc.context, s.p1);
-  vp : *VariablePayload = malloc(2 * 8);
+  vp : *VariablePayload = malloc(sizeof VariablePayload);
   vp.alloc = st;
   vp.decl = s;
   cc_set_named(cc, s.p1, vp);
@@ -2043,7 +2043,7 @@ compile_struct := (s: *Statement, cc: *CC) -> void{
     count = count + 1;
     f = f.next;
   }
-  members : *any = malloc(8 * count);
+  members : *any = malloc(sizeof *any * count);
   f = s.p2;
   i := 0;
   while(f){
@@ -2177,7 +2177,7 @@ compile_base_assign := (base: *any, v: *Expression, cc: *CC) -> void{
 }
 
 compile_assign := (s: *Statement, cc: *CC) -> void{
-  e : *Expression = malloc(5*8);
+  e : *Expression = malloc(sizeof Expression);
   e.type = 0;
   e.p1 = s.p1;
   compile_base_assign(e, s.p2, cc);
@@ -2190,7 +2190,7 @@ compile_member_assign := (s: *Statement, cc: *CC) -> void{
 }
 
 compile_ptr_assign := (s: *Statement, cc: *CC) -> void{
-  e: *Expression = malloc(5*8);
+  e: *Expression = malloc(sizeof Expression);
   e.type = 6;
   e.p1 = s.p1;
   compile_base_assign(e, s.p2, cc);
@@ -2198,7 +2198,7 @@ compile_ptr_assign := (s: *Statement, cc: *CC) -> void{
 }
 
 compile_fcall := (s: *Statement, cc: *CC) -> void{
-  e : *Expression = malloc(5*8);
+  e : *Expression = malloc(sizeof Expression);
   e.type = 7;
   e.p1 = s.p1;
   e.p2 = s.p2;
@@ -2283,7 +2283,7 @@ main := (argc: s32,argv: *string) -> int{
     printf("unable to read file\n");
     exit(1);
   }
-  buf = malloc(1 *(bufsize+1));
+  buf = malloc(sizeof u8 *(bufsize+1));
 
   if(fseek(f, 0, 0)){ // go back
     printf("unable to seek file\n");
@@ -2304,7 +2304,7 @@ main := (argc: s32,argv: *string) -> int{
 
   ast := parser(l);
 
-  cc: *CC = malloc(4*8);
+  cc: *CC = malloc(sizeof CC);
   cc.lastB = 0;
 
   push_bb(cc);
@@ -2313,7 +2313,6 @@ main := (argc: s32,argv: *string) -> int{
   cc.module = LLVMModuleCreateWithNameInContext("module", cc.context);
   cc.builder = LLVMCreateBuilderInContext(cc.context);
 
-  // TODO change this based on arch
   LLVMSetTarget(cc.module, "x86_64-pc-linux-gnu");
   LLVMSetDataLayout(cc.module, "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128");
 
