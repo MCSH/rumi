@@ -168,7 +168,7 @@ Statement: struct {
       4 -> fcall (id, args, )
       5 -> if (expr, st1, st2)
       6 -> while(expr, st, )
-      7 -> codeblock(first, ,)
+      7 -> codeblock(first, ,) // {}
       8 -> pointer assign (alloca, val, )
       9 -> function define(id, type, first)
       10 -> function sign(id, type, )
@@ -263,6 +263,7 @@ Token: struct {
      40 -> bool
      41 -> %
      42 -> sizeof
+     43 -> !=
   */
   payload: *any;
 }
@@ -639,6 +640,19 @@ lexer := (buf: *u8) -> *Lexer{
       t.payload = num;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
+    } else if(*(buf+offset) == 33){ // !
+      offset = offset + 1;
+      if(*(buf+offset) == 61){// !=
+        offset = offset + 1;
+        t: *Token = malloc(sizeof Token);
+        t.type = 43;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else {
+        printf("unknown char !\n");
+        exit(1);
+      }
     } else if(*(buf+offset) == 58){ // :
       offset = offset + 1;
       if(*(buf+offset) == 61) { // :=
@@ -1078,6 +1092,9 @@ parse_expr_rec := (l: *Lexer, last: int) -> *Expression{
 
   if(nt.type == 18){
     prec = 10; // ==   
+  }
+  else if(nt.type == 43){
+    prec = 16; // !=
   }
   else if(nt.type == 19){
     prec = 21; // +   
@@ -1550,7 +1567,7 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     exit(1);
   } else if(e.type == 2){ // binary expression
     // TODO
-    if(e.p2 == 0){//bool
+    if((e.p2 == 0) + (e.p2 == 6)){//bool
       t : *Type = malloc(sizeof Type);
       t.type = 4;
       t.payload = 0;
@@ -1692,6 +1709,31 @@ exprgen_binop := (e: *Expression, cc: *CC) -> *any{
         }
     }
     return LLVMBuildICmp(cc.builder, 32, lhs, rhs, "eq");
+  }
+
+  // TODO reimplement this, it's terrible.
+  if(op == 6){//!=
+    // TODO check type
+    // TODO handle float properly
+    if((l_pt == r_pt) == 0){
+      // covnert to pointer
+      if(l_pt){
+        rhs = LLVMBuildIntToPtr(cc.builder, rhs, LLVMTypeOf(lhs), "rhs");
+      } else {
+        lhs = LLVMBuildIntToPtr(cc.builder, lhs, LLVMTypeOf(rhs), "lhs");
+      }
+    } else if((LLVMTypeOf(lhs) == LLVMTypeOf(rhs))){} else { // TODO we need a !=
+      // convert
+        if(l_int){
+          // TODO cast the bigger one to smaller one
+          rhs = LLVMBuildIntCast2(cc.builder, rhs, LLVMTypeOf(lhs), rtt.type == sit, "rhs");
+        } else {
+          // TODO float point, not doing now since we don't have floats yet
+          printf("Unimplemented in binop nested if\n");
+          exit(1);
+        }
+    }
+    return LLVMBuildICmp(cc.builder, 33, lhs, rhs, "eq");
   }
 
   tmp : bool = l_pt + r_pt;
