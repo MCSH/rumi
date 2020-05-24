@@ -1581,7 +1581,7 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     ft: *FunctionType = t.payload;
     return ft.returnType;
   } else if(e.type == 8){ // sizeof
-    t : *Type = malloc(sizeof Type);
+    t : *Type = malloc(2*8);
     t.type = 1;
     t.payload = 0;
     return t;

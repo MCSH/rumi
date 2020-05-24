@@ -12,7 +12,7 @@ fi
 
 mkdir -p "$IPATH/bin/"
 
-./self_compile.sh
+./compile.sh
 
 cp src/rum2 "$IPATH/bin/rum"
 
