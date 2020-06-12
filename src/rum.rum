@@ -1,3 +1,5 @@
+// TODO method call on pointers is not fully supported
+
 malloc := (size: u64) -> *any;
 
 exit := (s: int) -> void;
@@ -199,6 +201,7 @@ Expression: struct{
       7 -> fcall(id, args,)
       8 -> sizeof(type,,)
       9 -> not(expr,,)
+      10 -> methodcall(methodname, args, base expression)
   */
   p1: *any;
   p2: *any;
@@ -303,6 +306,24 @@ strlen := (s1: *u8) -> u64{
     size = size + 1;
   }
   return 0; // unreachable
+}
+
+strcat := (s1: *u8, s2: *u8) -> *u8{
+  size := strlen(s1) + strlen(s2) + 1;
+  ans : *u8 = malloc(size * sizeof u8);
+  ptr := 0;
+  ptr2 := 0;
+  while(*(s1+ptr) != 0){
+    *(ans+ptr) = *(s1+ptr);
+    ptr = ptr + 1;
+  }
+  while(*(s2+ptr2) != 0){
+    *(ans+ptr) = *(s2+ptr2);
+    ptr = ptr + 1;
+    ptr2 = ptr2 + 1;
+  }
+  *(ans+ptr) = 0;
+  return ans;
 }
 
 is_alpha := (c: u8) -> bool{
@@ -480,7 +501,7 @@ parse_num := (buf: *u8, start: int, end: int) -> int{
 lexer := (buf: *u8) -> *Lexer{
   l : *Lexer;
 
-  l = malloc(3 * sizeof u8); // no sizeof
+  l = malloc(sizeof Lexer);
   l.count = 0;
   l.ptr = malloc(9000000 * sizeof Token);
 
@@ -1096,6 +1117,25 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
         ans = tmp;
         tn = lexer_peep(l);
       }
+      if(tn.type == 4){// method call
+        lexer_pop(l);
+        tmp : *Expression = ans;
+
+        // Person.Account.Email.format();
+        // p1: Person.Account.Email
+
+        args : *Statement = malloc(sizeof Statement);
+        args.type = 12;
+        args.p1 = tmp.p1;
+        args.next = parse_fcall_args(l);
+
+        ans = malloc(sizeof Expression);
+        ans.type = 10;
+        ans.p1 = tmp.p2;
+        ans.p2 = args;
+        ans.p3 = tmp.p1;
+        return ans;
+      }
       return ans;
     } else if(tn.type == 4){ // function call
       lexer_pop(l);
@@ -1385,30 +1425,11 @@ parse_function := (l: *Lexer) -> *Statement{
   return ans;
 }
 
-parse_top_level := (l: *Lexer) -> *Statement{
-  if( (*lexer_peep(l)).type == 1 ){
-    test_tmp := lexer_peep(l);
-    id : string = (*lexer_pop(l)).payload;
 
-    // printf("Saw id %s \n", id);
-
-    nt : *Token = lexer_pop(l);
-
-    // id := () -> type { statements }
-    // id := () -> type ;
-    // id : struct { member define }
-    if(nt.type == 3){
-       // function sign or function define
+parse_function_top := (l: *Lexer, args: *Type, ft: *FunctionType, prev: *Statement,id: string) -> *Statement {
 
       lexer_expect(l, 4, "(");
 
-      args : *Type = malloc(sizeof Type);
-      args.type = 8;
-      ft : *FunctionType = malloc(sizeof FunctionType);
-      args.payload = ft;
-
-      prev : * Statement = 0;
-      ft.first = 0;
       // parse args
       while((*lexer_peep(l)).type != 5){
         tmp : *Statement = malloc(sizeof Statement);
@@ -1470,6 +1491,34 @@ parse_top_level := (l: *Lexer) -> *Statement{
         exit(1);
         return 0;
       }
+}
+
+parse_top_level := (l: *Lexer) -> *Statement{
+  if( (*lexer_peep(l)).type == 1 ){
+    test_tmp := lexer_peep(l);
+    id : string = (*lexer_pop(l)).payload;
+
+    // printf("Saw id %s \n", id);
+
+    nt : *Token = lexer_pop(l);
+
+    // id := () -> type { statements }
+    // id := () -> type ;
+    // id : struct { member define }
+    // id.id := () -> type { statements }
+    // id.id := () -> type ;
+    if(nt.type == 3){
+       // function sign or function define
+
+      args : *Type = malloc(sizeof Type);
+      args.type = 8;
+      ft : *FunctionType = malloc(sizeof FunctionType);
+      args.payload = ft;
+
+      prev : * Statement = 0;
+      ft.first = 0;
+
+      return parse_function_top(l, args, ft, prev, id);
 
     } else if(nt.type == 2){
       ans : *Statement = malloc(sizeof Statement);
@@ -1502,6 +1551,39 @@ parse_top_level := (l: *Lexer) -> *Statement{
       }
       lexer_pop(l); // }
       return ans;
+    } else if(nt.type == 7) { // method define
+      if( (*lexer_peep(l)).type != 1){
+        printf("Expected id, saw %d\n", (*lexer_peep(l)).type);
+        exit(1);
+      }
+      method_name : string = (*lexer_pop(l)).payload;
+      lexer_expect(l, 3, ":=");
+
+      args : * Type = malloc(sizeof Type);
+      args.type = 8;
+      ft : *FunctionType = malloc(sizeof FunctionType);
+      args.payload = ft;
+
+
+      tmpType : *Type = malloc(sizeof Type);
+      tmpType.payload = id;
+      tmpType.type = 0; // struct
+
+      tmp : *Statement = malloc(sizeof Statement);
+      tmp.p1 = "self";
+      tmp.p2 = tmpType;
+      tmp.p3 = 0;
+      tmp.next = 0;
+      tmp.type = 1;
+
+      ft.first = tmp;
+      prev : *Statement = tmp;
+
+      // id:= id$method_name
+      id = strcat(id, strcat("$", method_name));
+
+      return parse_function_top(l, args, ft, prev, id);
+
     } else {
       printf("Expected token : or :=, saw %d\n", nt.type);
       l.offset = l.count;
@@ -1949,6 +2031,36 @@ exprgen_fcall := (e: *Expression, cc: *CC)-> *any{
   return LLVMBuildCall(cc.builder, calleeF, args, count, name);
 }
 
+exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
+  tmpE : *Expression = malloc(sizeof Expression);
+  tmpE.type = 7;
+
+
+  classBase := typeresolve(e.p3, cc);
+  if(classBase == 0){
+    printf("Couldn't find the base class for method call\n");
+    exit(1);
+  }
+
+  // resolve pointer
+  while(classBase.type == 6){
+    classBase = classBase.payload;
+  }
+
+  if(classBase.type != 0){
+    printf("Tried to call method on type %d\n", classBase.type);
+    printf("Can't call methods on non-structs\n");
+    exit(1);
+  }
+
+  className := classBase.payload;
+
+  tmpE.p1 = strcat(className, strcat("$", e.p1)); // type(e.p3) + "$" + e.p1
+  tmpE.p2 = e.p2;
+
+  return exprgen_fcall(tmpE, cc);
+}
+
 get_alloca := (e: *Expression, cc: *CC) -> *any{
   if(e.type == 0){// variable
     name := cc_resolve_named(cc, e.p1);
@@ -2060,6 +2172,8 @@ exprgen := (e: *Expression, cc: *CC) -> *any{
     return exprgen_sizeof(e, cc);
   } else if(e.type == 9){ // not
     return exprgen_not(e, cc);
+  } else if(e.type == 10){ // methodcall
+    return exprgen_methodcall(e, cc);
   } else {
     printf("Unknown expression in exprgen %d\n", e.type);
     exit(1);
