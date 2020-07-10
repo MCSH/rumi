@@ -1,5 +1,3 @@
-// TODO method call on pointers is not fully supported
-
 malloc := (size: u64) -> *any;
 
 exit := (s: int) -> void;
@@ -202,6 +200,7 @@ Expression: struct{
       8 -> sizeof(type,,)
       9 -> not(expr,,)
       10 -> methodcall(methodname, args, base expression)
+      11 -> baseof(expr,,) // reverse of ptr
   */
   p1: *any;
   p2: *any;
@@ -1565,9 +1564,13 @@ parse_top_level := (l: *Lexer) -> *Statement{
       args.payload = ft;
 
 
+      atmpType : *Type = malloc(sizeof Type);
+      atmpType.payload = id;
+      atmpType.type = 0; // struct
+
       tmpType : *Type = malloc(sizeof Type);
-      tmpType.payload = id;
-      tmpType.type = 0; // struct
+      tmpType.payload = atmpType;
+      tmpType.type = 6; // pointer
 
       tmp : *Statement = malloc(sizeof Statement);
       tmp.p1 = "self";
@@ -2043,8 +2046,24 @@ exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
   }
 
   // resolve pointer
-  while(classBase.type == 6){
+  if(classBase.type == 6){
     classBase = classBase.payload;
+    // it's a pointer, all is well, just resolve base
+  } else {
+    // it's not a pointer, create a pointer to it
+    tmp : *Statement = e.p2;
+
+    baseE : *Statement = malloc(sizeof Statement);
+
+    eBase : *Expression = malloc(sizeof Expression);
+    eBase.type = 11; // base of
+    eBase.p1 = tmp.p1;
+
+    baseE.type = 12;
+    baseE.p1 = eBase;
+    baseE.next = tmp.next;
+
+    e.p2 = baseE;
   }
 
   if(classBase.type != 0){
@@ -2145,6 +2164,10 @@ exprgen_not := (e: *Expression, cc: *CC) -> *any{
   return LLVMBuildICmp(cc.builder, 32, val, LLVMConstInt(LLVMInt64TypeInContext(cc.context), 0, 0), "not");
 }
 
+exprgen_base := (e: *Expression, cc: *CC) -> * any{
+  return get_alloca(e.p1, cc);
+}
+
 exprgen := (e: *Expression, cc: *CC) -> *any{
   if(e.type == 0){// variable
     name := cc_resolve_named(cc, e.p1);
@@ -2174,6 +2197,8 @@ exprgen := (e: *Expression, cc: *CC) -> *any{
     return exprgen_not(e, cc);
   } else if(e.type == 10){ // methodcall
     return exprgen_methodcall(e, cc);
+  } else if(e.type == 11){ // base (reverse pointer)
+    return exprgen_base(e, cc);
   } else {
     printf("Unknown expression in exprgen %d\n", e.type);
     exit(1);
