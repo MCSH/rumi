@@ -1639,7 +1639,6 @@ parse_top_level := (l: *Lexer) -> *Statement{
         prev : *Statement = 0;
         last_value := 0;
         while(nt.type != TokenType.TRCB){
-          // TODO
           tid := (*lexer_peep(l)).payload;
           lexer_expect(l, TokenType.TID, "id");
           nt = lexer_peep(l);
@@ -1651,6 +1650,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
           } else{// assign a value ourselves
             last_value = last_value + 1;
           }
+          // TODO trailing comma is mandatory now, must be optional
           lexer_expect(l, TokenType.TCOMMA, ",");
 
           tmp : *Statement = malloc(sizeof Statement);
@@ -1884,9 +1884,9 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     exit(1);
   } else if(e.type == EType.binE){ // binary expression
     // TODO
-    if((e.p2 == 0) + (e.p2 == 6)
-    + (e.p2 == 7) + (e.p2 == 8)
-    + (e.p2 == 9) + (e.p2 == 10)){//bool
+    if((e.p2 == OpCode.eq) + (e.p2 == OpCode.neq)
+    + (e.p2 == OpCode.lt) + (e.p2 == OpCode.lte)
+    + (e.p2 == OpCode.gt) + (e.p2 == OpCode.gte)){//bool
       t : *Type = malloc(sizeof Type);
       t.type = TypeType.boolT;
       t.payload = 0;
@@ -2031,11 +2031,11 @@ exprgen_binop_icmp := (e: *Expression, cmpcode: int, cc: *CC) -> *any{
 exprgen_binop := (e: *Expression, cc: *CC) -> *any{
   // TODO reimplement this, it's terrible.
   op := e.p2;
-  if(op == 0){
+  if(op == OpCode.eq){
     return exprgen_binop_icmp(e, 32, cc);
   }
 
-  if(op == 6){
+  if(op == OpCode.neq){
     return exprgen_binop_icmp(e, 33, cc);
   }
 
