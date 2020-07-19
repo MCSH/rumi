@@ -1,3 +1,5 @@
+// TODO Create function pointer structures for interfaces
+
 malloc := (size: u64) -> *any;
 
 exit := (s: int) -> void;
@@ -97,6 +99,12 @@ LLVMBuildBinOp := (b: *any, op: int, lhs: *any, rhs: *any, name: string) -> *any
 
 LLVMConstInt := (t: *any, v: *any, signed: bool) -> *any;
 LLVMBuildGlobalStringPtr := (b: *any, str: string, name: string) -> *any;
+LLVMAddGlobal := (m: *any, ty: *any, name: string)-> *any;
+LLVMConstNamedStruct := (ty: *any, val: *any, count: int) -> *any;
+LLVMSetInitializer := (gv: *any, val: *any) -> void;
+LLVMSetGlobalConstant := (gv: *any, isConst: bool) -> void;
+LLVMGetNamedGlobal := (m: *any, name: string) -> *any;
+LLVMConstBitCast := (val: *any, ty: *any) -> *any;
 
 LLVMStructCreateNamed := (c: *any, name: *string) -> *any;
 LLVMStructSetBody := (t: *any, types: *any, count: int, packed: bool) -> void;
@@ -174,6 +182,8 @@ Statement: struct {
       10 -> function sign(id, type, )
       11 -> struct(id, variable decl, )
       12 -> arg(val, , )
+      13 -> interface(id, method decl,)
+      14 -> method call(methodname, args, base expression)
   */
   p1: *any;
   p2: *any;
@@ -272,6 +282,7 @@ Token: struct {
      46 -> <=
      47 -> >
      48 -> >=
+     49 -> interface
   */
   payload: *any;
 }
@@ -569,6 +580,12 @@ lexer := (buf: *u8) -> *Lexer{
       } else if(streq(id, "struct")){
         t : *Token = malloc(sizeof Token);
         t.type = 28;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "interface")){
+        t : *Token = malloc(sizeof Token);
+        t.type = 49;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
@@ -1276,7 +1293,7 @@ parse_statement := (l: *Lexer) -> *Statement{
       return ans;
     }
   } else if(tn.type == 1){
-    // var decl, var assign, function call, member_access
+    // var decl, var assign, function call, member_access, method_call
     ans.p1 = tn.payload;
     tn = lexer_pop(l);
     if(tn.type == 2){ // : variable decl
@@ -1328,11 +1345,34 @@ parse_statement := (l: *Lexer) -> *Statement{
         if(tn.type == 7)
           lexer_pop(l);
       }
-      lexer_expect(l, 17, "=");
-      ans.p2 = parse_expr(l);
-      lexer_expect(l, 11, ";");
-      ans.type = 3;
-      return ans;
+      // is it a method call or assignment?
+      tn = lexer_peep(l);
+      if(tn.type == 4){ // method call
+
+        lexer_expect(l, 4, "(");
+
+        lastExpr : *Expression = ans.p1;
+        ans.p1 = lastExpr.p2;
+        ans.p3 = lastExpr.p1;
+
+        args : *Statement = malloc(sizeof Statement);
+        args.type = 12;
+        args.p1 = lastExpr.p1;
+        // free(lastExpr); // TODO
+        args.next = parse_fcall_args(l);
+
+        lexer_expect(l, 11, ";");
+
+        ans.p2 = args;
+        ans.type =  14;
+        return ans;
+      } else { //assignment
+        lexer_expect(l, 17, "=");
+        ans.p2 = parse_expr(l);
+        lexer_expect(l, 11, ";");
+        ans.type = 3;
+        return ans;
+      }
     } else if(tn.type == 4){ // function call
       ans.p2 = parse_fcall_args(l);
       lexer_expect(l, 11, ";");
@@ -1485,7 +1525,7 @@ parse_function_top := (l: *Lexer, args: *Type, ft: *FunctionType, prev: *Stateme
         s.p2 = args;
         return s;
       } else {
-        printf("Expected to see ; or }, saw %d\n", nt.type);
+        printf("Expected to see ; or {, saw %d\n", nt.type);
         l.offset = l.count;
         exit(1);
         return 0;
@@ -1524,32 +1564,86 @@ parse_top_level := (l: *Lexer) -> *Statement{
       ans.type = 11;
       ans.p1 = id;
       ans.p2 = 0;
-      // struct
-      lexer_expect(l, 28, "struct");
-      lexer_expect(l, 14, "{");
-      nt: *Token = lexer_peep(l);
-      prev : *Statement = 0;
-      while(nt.type != 15){
-        tid := (*lexer_peep(l)).payload;
-        lexer_expect(l, 1, "id");
-        lexer_expect(l, 2, ":");
-        tp := parse_type(l);
-        lexer_expect(l, 11, ";");
-        nt = lexer_peep(l);
+      // is it interface?
+      nt : *Token = lexer_peep(l);
+      if(nt.type == 49){
+        // it is an interface
+        lexer_expect(l, 49, "interface");
+        lexer_expect(l, 14, "{");
+        nt: *Token = lexer_peep(l);
+        prev : *Statement = 0;
+        while(nt.type != 15){
+          // parse methods
+          tid := (*lexer_peep(l)).payload;
+          lexer_expect(l, 1, "id");
+          lexer_expect(l, 3, ":=");
 
-        tmp : *Statement = malloc(sizeof Statement);
-        tmp.type = 1;
-        tmp.p1 = tid;
-        tmp.p2 = tp;
-        tmp.next = 0;
-        if(ans.p2 == 0)
-          ans.p2 = tmp;
-        if(prev)
-          prev.next = tmp;
-        prev = tmp;
-      }
+          // augment *self*
+          args : * Type = malloc(sizeof Type);
+          args.type = 8;
+          ft : *FunctionType = malloc(sizeof FunctionType);
+          args.payload = ft;
+
+          atmpType : *Type = malloc(sizeof Type);
+          atmpType.payload = id;
+          atmpType.type = 0; // struct
+
+          tmpType : *Type = malloc(sizeof Type);
+          tmpType.payload = atmpType;
+          tmpType.type = 6; // pointer
+
+          tmp_prev : *Statement = malloc(sizeof Statement);
+          tmp_prev.p1 = "self";
+          tmp_prev.p2 = tmpType;// type
+          tmp_prev.p3 = 0;
+          tmp_prev.next = 0;
+          tmp_prev.type = 1;
+
+          ft.first = tmp_prev;
+
+          tmp_m := parse_function_top(l, args, ft, tmp_prev, tid);
+
+          if(prev)
+            prev.next = tmp_m;
+          if(ans.p2 == 0)
+            ans.p2 = tmp_m;
+
+          prev = tmp_m;
+          prev.next = 0;
+
+          nt = lexer_peep(l);
+        }
+        lexer_expect(l, 15, "}");
+        ans.type = 13;
+        return ans;
+      } else {
+        // struct
+        lexer_expect(l, 28, "struct");
+        lexer_expect(l, 14, "{");
+        nt: *Token = lexer_peep(l);
+        prev : *Statement = 0;
+        while(nt.type != 15){
+          tid := (*lexer_peep(l)).payload;
+          lexer_expect(l, 1, "id");
+          lexer_expect(l, 2, ":");
+          tp := parse_type(l);
+          lexer_expect(l, 11, ";");
+          nt = lexer_peep(l);
+
+          tmp : *Statement = malloc(sizeof Statement);
+          tmp.type = 1;
+          tmp.p1 = tid;
+          tmp.p2 = tp;
+          tmp.next = 0;
+          if(ans.p2 == 0)
+            ans.p2 = tmp;
+          if(prev)
+            prev.next = tmp;
+          prev = tmp;
+        }
       lexer_pop(l); // }
       return ans;
+      }
     } else if(nt.type == 7) { // method define
       if( (*lexer_peep(l)).type != 1){
         printf("Expected id, saw %d\n", (*lexer_peep(l)).type);
@@ -1816,6 +1910,7 @@ typegen := (t: *Type, cc: *CC) -> *any{
 }
 
 exprgen := (e: *Expression, cc: *CC) -> *any;
+get_alloca := (e: *Expression, cc: *CC) -> *any;
 
 exprgen_binop_icmp := (e: *Expression, cmpcode: int, cc: *CC) -> *any{
 
@@ -2003,17 +2098,33 @@ exprgen_binop := (e: *Expression, cc: *CC) -> *any{
   return 0;
 }
 
-exprgen_fcall := (e: *Expression, cc: *CC)-> *any{
-  // p1 id
-  // p2 args
-  calleeF := LLVMGetNamedFunction(cc.module, e.p1);
-  if(calleeF == 0){
-    printf("Function not found %s\n", e.p1);
-    exit(1);
+compile_ftype := (s: *Statement, cc: *CC) -> *any{
+  // count number of args
+  t : *Type = s.p2;
+  ft : *FunctionType = t.payload;
+  args_count := 0;
+  {
+    tmp : *Statement = ft.first;
+    while(tmp){
+      args_count = args_count + 1;
+      tmp = tmp.next;
+    }
   }
-  // TODO not used
-  is_void := LLVMGetTypeKind(LLVMGetReturnType(LLVMTypeOf(calleeF))) == 0;
+  args := malloc(args_count * sizeof *any);
+  arg : *Statement = ft.first;
+  count := 0;
+  while(arg){
+    // gen type
+    *(args + count) = typegen(arg.p2, cc);
+    count = count + 1;
+    arg = arg.next;
+  }
 
+  // TODO handle varargs
+  return LLVMFunctionType(typegen(ft.returnType, cc), args, args_count, 0);
+}
+
+fcall_util := (e: *Expression, cc: *CC, calleeF: *any) -> *any {
   count := 0;
   arg : *Statement = e.p2;
   while(arg){
@@ -2032,6 +2143,18 @@ exprgen_fcall := (e: *Expression, cc: *CC)-> *any{
   }
   name := "retval";
   return LLVMBuildCall(cc.builder, calleeF, args, count, name);
+}
+
+exprgen_fcall := (e: *Expression, cc: *CC)-> *any{
+  // p1 id
+  // p2 args
+  calleeF := LLVMGetNamedFunction(cc.module, e.p1);
+  if(calleeF == 0){
+    printf("Function not found %s\n", e.p1);
+    exit(1);
+  }
+
+  return fcall_util(e, cc, calleeF);
 }
 
 exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
@@ -2066,6 +2189,8 @@ exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
     e.p2 = baseE;
   }
 
+  tmpE.p2 = e.p2;
+
   if(classBase.type != 0){
     printf("Tried to call method on type %d\n", classBase.type);
     printf("Can't call methods on non-structs\n");
@@ -2074,8 +2199,56 @@ exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
 
   className := classBase.payload;
 
+
+  // struct or interface?
+  // let's see if className$$ exists in context
+  tmp_named := cc_resolve_named(cc, strcat(className, "$$"));
+  if(tmp_named){
+    itVP : *VariablePayload = tmp_named.payload;
+    // interface
+    // find the index
+    it : *Statement = itVP.decl;
+    ind := 1; // it starts from 1
+    f : *Statement = it.p2;
+    while(f){
+      if(streq(e.p1, f.p1)){
+        tmp_named = cc_resolve_named(cc, className);
+        itfpsVP : *VariablePayload = tmp_named.payload;
+        // found it
+        // find base
+        itbase := get_alloca(e.p3, cc);
+
+        base := LLVMBuildStructGEP2(cc.builder, itfpsVP.alloc, itbase, 1, "baseptr");
+        // find function pointer
+        calleeF := LLVMBuildStructGEP2(cc.builder, itVP.alloc, LLVMBuildLoad(cc.builder, base, "base_fptr"), ind, "fptr");
+        calleeF = LLVMBuildIntToPtr(cc.builder, calleeF, LLVMPointerType(LLVMPointerType(compile_ftype(f, cc), 0), 0), "fptr");
+        calleeF = LLVMBuildLoad(cc.builder, calleeF, "fptr");
+
+        tmp : *Statement = tmpE.p2;
+
+        be : *Statement = malloc(sizeof Statement);
+        be.type = 12;
+        be.next = tmp.next;
+
+        eBase : *Expression = malloc(sizeof Expression);
+        eBase.type = 6; // pointer
+        eBase.p1 = tmp.p1;
+
+        be.p1 = eBase;
+
+        tmpE.p2 = be;
+
+        return fcall_util(tmpE, cc, calleeF);
+      }
+      ind = ind + 1;
+      f = f.next;
+    }
+    // Interface doesn't have that method on it's own, maybe it's user defined, continue
+  }
+
+
   tmpE.p1 = strcat(className, strcat("$", e.p1)); // type(e.p3) + "$" + e.p1
-  tmpE.p2 = e.p2;
+
 
   return exprgen_fcall(tmpE, cc);
 }
@@ -2115,10 +2288,14 @@ get_alloca := (e: *Expression, cc: *CC) -> *any{
     st := vp.alloc;
     while(f_mem){
       if(streq(f_mem.p1, e.p2)){ // found the member
+
+        // TODO can I delete these???
         indices := malloc(2*sizeof *any);
         *(indices) = LLVMConstInt(LLVMInt64TypeInContext(cc.context), 0, 0);
         *(indices + 1) = LLVMConstInt(LLVMInt64TypeInContext(cc.context), member_ind, 0);
+
         ans := LLVMBuildStructGEP2(cc.builder, st, alloc, member_ind, "memberptr");
+
         return ans;
       }
       f_mem = f_mem.next;
@@ -2213,29 +2390,7 @@ compile_fs := (s: *Statement, cc: *CC) -> *any{
     // Overwriting existing function
     return LLVMGetNamedFunction(cc.module, s.p1);
   }
-  // count number of args
-  t : *Type = s.p2;
-  ft : *FunctionType = t.payload;
-  args_count := 0;
-  {
-    tmp : *Statement = ft.first;
-    while(tmp){
-      args_count = args_count + 1;
-      tmp = tmp.next;
-    }
-  }
-  args := malloc(args_count * sizeof *any);
-  arg : *Statement = ft.first;
-  count := 0;
-  while(arg){
-    // gen type
-    *(args + count) = typegen(arg.p2, cc);
-    count = count + 1;
-    arg = arg.next;
-  }
-
-  // TODO handle varargs
-  ftype := LLVMFunctionType(typegen(ft.returnType, cc), args, args_count, 0);
+  ftype := compile_ftype(s, cc);
   f := LLVMAddFunction(cc.module, s.p1, ftype);
 
   payload: *VariablePayload = malloc(sizeof VariablePayload);
@@ -2333,6 +2488,54 @@ compile_struct := (s: *Statement, cc: *CC) -> void{
     i = i + 1;
   }
   LLVMStructSetBody(st, members, count, 0); // TODO changed packed?
+
+  return;
+}
+
+compile_interface := (s: *Statement, cc: *CC) -> void {
+  // we need TWO interfaces
+  name_w_dollar_sign := strcat(s.p1, "$$");
+
+  // This is the interface function pointer structure ;; stored as name$$
+  it := LLVMStructCreateNamed(cc.context, name_w_dollar_sign); 
+  vp : *VariablePayload = malloc(sizeof VariablePayload);
+  vp.alloc = it;
+  vp.decl = s;
+  cc_set_named(cc, name_w_dollar_sign, vp);
+
+  count := 1; // we have one ref to orignial class
+  f : *Statement = s.p2;
+  while(f){
+    count = count + 1;
+    f = f.next;
+  }
+  members : *any = malloc(sizeof *any * count);
+  f = s.p2;
+
+  pointer_type := LLVMPointerType(LLVMInt64TypeInContext(cc.context), 0);
+
+  *members = pointer_type;
+  i := 1;
+  while(f){
+    *(members + i) = pointer_type;
+    f = f.next;
+    i = i + 1;
+  }
+  LLVMStructSetBody(it, members, count, 0); // TODO change packed?
+
+  // This is the interface holdre structure ;; stored as name
+  ith := LLVMStructCreateNamed(cc.context, s.p1);
+
+  vph : *VariablePayload = malloc(sizeof VariablePayload);
+  vph.alloc = ith;
+  vph.decl = s;
+  cc_set_named(cc, s.p1, vph);
+
+  members_2 : *any = malloc(sizeof *any * 2); // self, fps
+  *members_2 = pointer_type;
+  *(members_2 + 1) = LLVMPointerType(it, 0);
+
+  LLVMStructSetBody(ith, members_2, 2, 0); // TODO change packed?
 
   return;
 }
@@ -2444,9 +2647,180 @@ compile_ret := (s: *Statement, cc: *CC) -> void{
   return ;
 }
 
-compile_base_assign := (base: *any, v: *Expression, cc: *CC) -> void{
+compile_struct_to_interface := (it: *Statement, st: *Statement, cc: *CC) -> *any {
+  // Create the VPTR and other necessary structures
+  cc_name := strcat(st.p1, strcat("#", it.p1));
+
+  // the vptr type is...
+  cc_named := cc_resolve_named(cc, strcat(it.p1, "$$"));
+  if(!cc_named){
+    printf("Error in struct to interface, unknown interface scheme $s\n", it.p1);
+    exit(1);
+  }
+  cc_named_vp : *VariablePayload = cc_named.payload;
+  vptr_t := cc_named_vp.alloc;
+
+  // we need to create const array
+  vptr_ref := LLVMAddGlobal(cc.module, vptr_t, cc_name);
+
+  // create vptr
+  count := 1; // self
+  f : *Statement = it.p2;
+  while(f){
+    count = count + 1;
+    f = f.next;
+  }
+
+  vals := malloc(sizeof *any * count);
+  f = it.p2;
+
+  *vals = LLVMConstBitCast(LLVMConstInt(LLVMInt64TypeInContext(cc.context), 0, 0),
+                           LLVMPointerType(LLVMInt64TypeInContext(cc.context),0)); // first one is set to zero for now
+  i := 1;
+  while(f){
+    // find the function!
+    method_name := f.p1;
+    tmp_f := LLVMGetNamedFunction(cc.module, strcat(st.p1, strcat("$", method_name)));
+
+    if(!tmp_f){
+      printf("Couldn't find method %s on struct %s needed for interface %s\n", method_name, st.p1, it.p1);
+      exit(1);
+    }
+
+    *(vals + i) = LLVMConstBitCast(tmp_f, LLVMPointerType(LLVMInt64TypeInContext(cc.context), 0));
+    // tmp_f // TODO remove
+    f = f.next;
+    i = i + 1;
+  }
+
+  vptr := LLVMConstNamedStruct(vptr_t, vals, count);
+
+  // set const
+  LLVMSetInitializer(vptr_ref, vptr);
+  LLVMSetGlobalConstant(vptr_ref, 1);
+
+  return vptr_ref;
+}
+
+struct_to_interface_cast := (it: *Statement, st: *Statement, alloc: *any, val: *any, cc: *CC) -> void {
+  /**
+  * alloc is an alloca and val is a direct pointer
+  */
+  cc_name := strcat(st.p1, strcat("#", it.p1));
+
+  // try to find vptr
+  vptr := LLVMGetNamedGlobal(cc.module, cc_name);
+
+  // if not found, create it
+  if(!vptr)
+    vptr = compile_struct_to_interface(it, st, cc);
+
+  // assing shell's values
+
+  // assing self -> 1
+
+  // the vptr type is...
+  cc_named := cc_resolve_named(cc, it.p1);
+  if(!cc_named){
+    printf("Error in struct to interface cast, unknown interface scheme %s\n", it.p1);
+    exit(1);
+  }
+  cc_named_vp : *VariablePayload = cc_named.payload;
+  tp := cc_named_vp.alloc;
+
+
+  self_ptr := LLVMBuildStructGEP2(cc.builder, tp, alloc, 0, "selfptr");
+  LLVMBuildStore(cc.builder, val, self_ptr);
+
+  // assign vptr -> 1
+
+  vptr_ptr := LLVMBuildStructGEP2(cc.builder, tp, alloc, 1, "vptrptr");
+  LLVMBuildStore(cc.builder, vptr, vptr_ptr);
+
+  return;
+}
+
+resolve_struct := (e: *Expression, cc: *CC) -> *Statement {
+  // return pointer to struct statement or null
+  st := typeresolve(e, cc);
+  while(st.type == 6){
+    st = st.payload;
+  }
+  if(st.type == 0){
+    // might be a struct or interface
+    c_name := cc_resolve_named(cc, strcat(st.payload, "$$"));
+    if(!c_name){
+      // we have struct
+      c_name = cc_resolve_named(cc, st.payload);
+      vp : *VariablePayload = c_name.payload;
+      return vp.decl;
+    }
+  }
+  return 0;
+}
+
+resolve_interface := (e: *Expression, cc: *CC) -> *Statement {
+  // return pointer to interface statement or null
+  st := typeresolve(e, cc);
+  while(st.type == 6){
+    st = st.payload;
+  }
+  if(st.type == 0){
+    // might be a struct or interface
+    c_name := cc_resolve_named(cc, strcat(st.payload, "$$"));
+    if(c_name){
+      vp : *VariablePayload = c_name.payload;
+      return vp.decl;
+    }
+  }
+  return 0;
+}
+
+compile_base_assign := (base: *Expression, v: *Expression, cc: *CC) -> void{
   alloc := get_alloca(base, cc);
   val := exprgen(v, cc);
+
+  // are we handling struct to interface?
+  st := resolve_struct(v, cc);
+  if(st){
+    it := resolve_interface(base, cc);
+    if(it){
+      
+      // handle levels (i.e., load alloc or val to get to the required level)
+      // go down until there is exactly one level left!
+
+      stt := typeresolve(v, cc);
+      counter := 0;
+      while(stt.type == 6){
+        stt = stt.payload;
+        counter = counter + 1;
+      }
+      if(counter == 0){
+        // TODO free previous val
+        val = get_alloca(v, cc);
+      }
+      else while(counter > 1){
+        val = LLVMBuildLoad(cc.builder, val, "stptr");
+        counter = counter - 1;
+      }
+
+      itt := typeresolve(base, cc);
+      counter = 0;
+      while(itt.type == 6){
+        itt = itt.payload;
+        counter = counter + 1;
+      }
+
+      while(counter){
+        alloc = LLVMBuildLoad(cc.builder, alloc, "itptr");
+        counter = counter - 1;
+      }
+
+      struct_to_interface_cast(it, st, alloc, val, cc);
+      return;
+    }
+  }
+
   // TODO better conversion?
   if(LLVMGetTypeKind(LLVMTypeOf(alloc)) == 12){// alloc is pointer
       val = LLVMBuildBitCast(cc.builder, val,
@@ -2487,6 +2861,16 @@ compile_fcall := (s: *Statement, cc: *CC) -> void{
   return;
 }
 
+compile_mcall := (s: *Statement, cc: *CC) -> void{
+  e : *Expression = malloc(sizeof Expression);
+  e.type =  10;
+  e.p1 = s.p1;
+  e.p2 = s.p2;
+  e.p3 = s.p3;
+  exprgen_methodcall(e, cc);
+  return;
+}
+
 compile_cb := (s: *Statement, cc: *CC) -> void{
   f : *Statement = s.p1;
   if(f)
@@ -2519,6 +2903,10 @@ compile := (s: *Statement, cc: *CC) -> void{
     compile_fs(s, cc);
   } else if(s.type == 11){ // struct
     compile_struct(s, cc);
+  } else if(s.type == 13){ // interface
+    compile_interface(s, cc);
+  } else if(s.type == 14){ // method call
+    compile_mcall(s, cc);
   } else{
     printf("Unknown statement type %d\n", s.type);
     exit(1);
