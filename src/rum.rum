@@ -149,20 +149,21 @@ CC: struct{
   lastB: *BB;
 }
 
+TypeType: enum{
+  namedT = 0, // named type (mostly struct, including interface and enum as well)
+  intT = 1,
+  uintT = 2,
+  floatT = 3,
+  boolT = 4,
+  stringT = 5,
+  pointerT = 6,
+  voidT = 7,
+  funcT = 8,
+  anyT = 9,
+}
+
 Type: struct{
-  type: int;
-  /*
-     0 -> named type (mostly struct, including interface and enum as well)
-     1 -> int
-     2 -> unsigned int
-     3 -> float
-     4 -> bool
-     5 -> string
-     6 -> pointer
-     7 -> void
-     8 -> ftype
-     9 -> any
-  */
+  type: TypeType;
   payload: *any;
 }
 
@@ -985,88 +986,88 @@ parse_type := (l: *Lexer) -> *Type{
   tn := lexer_pop(l);
   ans : *Type = malloc(sizeof Type);
   if(tn.type == 26){
-    ans.type = 5;
+    ans.type = TypeType.stringT;
     ans.payload = 0;
     return ans;
   }
   if(tn.type == 29){
-    ans.type = 7;
+    ans.type = TypeType.voidT;
     ans.payload = 0;
     return ans;
   }
   if(tn.type == 30){
-    ans.type = 2;
+    ans.type = TypeType.uintT;
     ans.payload = 8;
     return ans;
   }
   if(tn.type == 31){
-    ans.type = 2;
+    ans.type = TypeType.uintT;
     ans.payload = 16;
     return ans;
   }
   if(tn.type == 32){
-    ans.type = 2;
+    ans.type = TypeType.uintT;
     ans.payload = 32;
     return ans;
   }
   if(tn.type == 33){
-    ans.type = 2;
+    ans.type = TypeType.uintT;
     ans.payload = 64;
     return ans;
   }
   if(tn.type == 34){
-    ans.type = 1;
+    ans.type = TypeType.intT;
     ans.payload = 8;
     return ans;
   }
   if(tn.type == 35){
-    ans.type = 1;
+    ans.type = TypeType.intT;
     ans.payload = 16;
     return ans;
   }
   if(tn.type == 36){
-    ans.type = 1;
+    ans.type = TypeType.intT;
     ans.payload = 32;
     return ans;
   }
   if(tn.type == 37){
-    ans.type = 1;
+    ans.type = TypeType.intT;
     ans.payload = 64;
     return ans;
   }
   if(tn.type == 38){
-    ans.type = 3;
+    ans.type = TypeType.floatT;
     ans.payload = 32;
     return ans;
   }
   if(tn.type == 39){
-    ans.type = 3;
+    ans.type = TypeType.floatT;
     ans.payload = 64;
     return ans;
   }
   if(tn.type == 40){
-    ans.type = 4;
+    ans.type = TypeType.boolT;
     ans.payload = 0;
     return ans;
   }
   if(tn.type == 21){
-    ans.type = 1;
+    ans.type = TypeType.intT;
     ans.payload = 0;
     return ans;
   }
   if(tn.type == 1){
-    ans.type = 0;
+    ans.type = TypeType.namedT;
     ans.payload = tn.payload;
     return ans;
   }
   if(tn.type == 27){
-    ans.type = 9;
+    ans.type = TypeType.anyT;
     return ans;
   }
 
   // pointer *
   if(tn.type == 12){
-    ans.type = 6;
+    ans.type = TypeType.pointerT;
     ans.payload = parse_type(l);
     return ans;
   }
@@ -1886,7 +1887,7 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     if(t.type == 16){ // it should be 15, not sure why 16 TODO
       // it's enum
       t : *Type = malloc(sizeof Type);
-      t.type = 1;
+      t.type = TypeType.intT;
       t.payload = 0;
       return t;
     }
@@ -1919,17 +1920,22 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     return typeresolve(e.p1, cc); // return p1, whatever it is.
   } else if(e.type == 4){ // const int
     t : *Type = malloc(sizeof Type);
-    t.type = 1;
+    t.type = TypeType.intT;
     t.payload = 0;
+    return t;
+  } else if(e.type == 12){ // const char
+    t : *Type = malloc(sizeof Type);
+    t.type = TypeType.uintT;
+    t.payload = 8;
     return t;
   } else if(e.type == 5){ // const string
     t : *Type = malloc(sizeof Type);
-    t.type = 5;
+    t.type = TypeType.stringT;
     t.payload = 0;
     return t;
   } else if(e.type == 6){ // pointer
     t : * Type = malloc(sizeof Type);
-    t.type = 6;
+    t.type = TypeType.pointerT;
     t.payload = typeresolve(e.p1, cc);
     return t;
   } else if(e.type == 7){ // fcall type resolve
@@ -1944,12 +1950,12 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     return ft.returnType;
   } else if(e.type == 8){
     t : *Type = malloc(sizeof Type);
-    t.type = 1;
+    t.type = TypeType.intT;
     t.payload = 0;
     return t;
   } else if(e.type == 9){ // not -> boolean
     t : *Type = malloc(sizeof Type);
-    t.type = 4;
+    t.type = TypeType.boolT;
     t.payload = 0;
     return t;
   } else {
@@ -1960,7 +1966,7 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
 }
 
 typegen := (t: *Type, cc: *CC) -> *any{
-  if(t.type == 0){// struct
+  if(t.type == TypeType.namedT){// struct
     tmp :* Names = cc_resolve_named(cc, t.payload);
     if(tmp ==0){
       printf("Couldn't find type %s\n", t.payload);
@@ -1972,7 +1978,7 @@ typegen := (t: *Type, cc: *CC) -> *any{
       return LLVMInt64TypeInContext(cc.context);
     }
     return vt.alloc;
-  } else if((t.type == 2) + (t.type == 1)){ // int
+  } else if((t.type == TypeType.uintT) + (t.type == TypeType.intT)){ // int
     if(t.payload == 0){
       return LLVMInt64TypeInContext(cc.context);
     } else if(t.payload == 8){
@@ -1988,16 +1994,16 @@ typegen := (t: *Type, cc: *CC) -> *any{
       printf("type = %d\n", t.payload);
       exit(1);
     }
-  } else if(t.type == 4){ // bool
+  } else if(t.type == TypeType.boolT){ // bool
     return LLVMInt1TypeInContext(cc.context);
-  } else if(t.type == 5){ // string
+  } else if(t.type == TypeType.stringT){ // string
     return LLVMPointerType(LLVMInt8TypeInContext(cc.context), 0);
-  } else if(t.type == 6){ // pointer
+  } else if(t.type == TypeType.pointerT){ // pointer
     base := typegen(t.payload, cc);
     return LLVMPointerType(base, 0);
-  } else if(t.type == 7){ // void
+  } else if(t.type == TypeType.voidT){ // void
     return LLVMVoidTypeInContext(cc.context);
-  } else if(t.type == 9){ // any
+  } else if(t.type == TypeType.anyT){ // any
     return LLVMPointerType(LLVMInt64TypeInContext(cc.context), 0);
   } else {
     printf("Unknown type in typegen %d\n", t.type);
@@ -2017,10 +2023,10 @@ exprgen_binop_icmp := (e: *Expression, cmpcode: int, cc: *CC) -> *any{
   ltt := typeresolve(e.p1, cc);
   rtt := typeresolve(e.p3, cc);
 
-  sit := 1; // signed int type
-  uit := 2; // unsigned int type
-  bit := 4;
-  pt := 6; // pointer type
+  sit := TypeType.intT; // signed int type
+  uit := TypeType.uintT; // unsigned int type
+  bit := TypeType.boolT;
+  pt := TypeType.pointerT; // pointer type
 
   l_pt : bool = ltt.type == pt; // lhs is pointer
   r_pt : bool = rtt.type == pt;
@@ -2064,11 +2070,11 @@ exprgen_binop := (e: *Expression, cc: *CC) -> *any{
   ltt := typeresolve(e.p1, cc);
   rtt := typeresolve(e.p3, cc);
 
-  sit := 1; // signed int type
-  uit := 2; // unsigned int type
-  bit := 4;
-  ft := 3; // float type
-  pt := 6; // pointer type
+  sit := TypeType.intT; // signed int type
+  uit := TypeType.uintT; // unsigned int type
+  bit := TypeType.boolT;
+  ft := TypeType.floatT; // float type
+  pt := TypeType.pointerT; // pointer type
 
   l_pt : bool = ltt.type == pt; // lhs is pointer
   r_pt : bool = rtt.type == pt;
@@ -2878,10 +2884,10 @@ struct_to_interface_cast := (it: *Statement, st: *Statement, alloc: *any, val: *
 resolve_struct := (e: *Expression, cc: *CC) -> *Statement {
   // return pointer to struct statement or null
   st := typeresolve(e, cc);
-  while(st.type == 6){
+  while(st.type == TypeType.pointerT){
     st = st.payload;
   }
-  if(st.type == 0){
+  if(st.type == TypeType.namedT){
     // might be a struct or interface
     c_name := cc_resolve_named(cc, strcat(st.payload, "$$"));
     if(!c_name){
@@ -2897,10 +2903,10 @@ resolve_struct := (e: *Expression, cc: *CC) -> *Statement {
 resolve_interface := (e: *Expression, cc: *CC) -> *Statement {
   // return pointer to interface statement or null
   st := typeresolve(e, cc);
-  while(st.type == 6){
+  while(st.type == TypeType.pointerT){
     st = st.payload;
   }
-  if(st.type == 0){
+  if(st.type == TypeType.namedT){
     // might be a struct or interface
     c_name := cc_resolve_named(cc, strcat(st.payload, "$$"));
     if(c_name){
@@ -2926,7 +2932,7 @@ compile_base_assign := (base: *Expression, v: *Expression, cc: *CC) -> void{
 
       stt := typeresolve(v, cc);
       counter := 0;
-      while(stt.type == 6){
+      while(stt.type == TypeType.pointerT){
         stt = stt.payload;
         counter = counter + 1;
       }
@@ -2941,7 +2947,7 @@ compile_base_assign := (base: *Expression, v: *Expression, cc: *CC) -> void{
 
       itt := typeresolve(base, cc);
       counter = 0;
-      while(itt.type == 6){
+      while(itt.type == TypeType.pointerT){
         itt = itt.payload;
         counter = counter + 1;
       }
