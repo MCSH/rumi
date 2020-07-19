@@ -152,7 +152,7 @@ CC: struct{
 Type: struct{
   type: int;
   /*
-     0 -> struct
+     0 -> named type (mostly struct, including interface and enum as well)
      1 -> int
      2 -> unsigned int
      3 -> float
@@ -184,6 +184,8 @@ Statement: struct {
       12 -> arg(val, , )
       13 -> interface(id, method decl,)
       14 -> method call(methodname, args, base expression)
+      15 -> enum(id, members, )
+      16 -> enum_member(id, val,)
   */
   p1: *any;
   p2: *any;
@@ -283,6 +285,7 @@ Token: struct {
      47 -> >
      48 -> >=
      49 -> interface
+     50 -> enum
   */
   payload: *any;
 }
@@ -586,6 +589,12 @@ lexer := (buf: *u8) -> *Lexer{
       } else if(streq(id, "interface")){
         t : *Token = malloc(sizeof Token);
         t.type = 49;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
+      } else if(streq(id, "enum")){
+        t : *Token = malloc(sizeof Token);
+        t.type = 50;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
@@ -1616,9 +1625,48 @@ parse_top_level := (l: *Lexer) -> *Statement{
         lexer_expect(l, 15, "}");
         ans.type = 13;
         return ans;
+      } else if(nt.type == 50){ // enum
+        lexer_expect(l, 50, "enum");
+        lexer_expect(l, 14, "{");
+        nt : *Token = lexer_peep(l);
+        prev : *Statement = 0;
+        last_value := 0;
+        while(nt.type != 15){
+          // TODO
+          tid := (*lexer_peep(l)).payload;
+          lexer_expect(l, 1, "id");
+          nt = lexer_peep(l);
+          if(nt.type == 17){// we have an assigned value
+            lexer_expect(l, 17, "="); // TODO this is optional though...
+            nt = lexer_peep(l);
+            lexer_expect(l, 16, "number");
+            last_value = nt.payload;
+          } else{// assign a value ourselves
+            last_value = last_value + 1;
+          }
+          lexer_expect(l, 6, ",");
+
+          tmp : *Statement = malloc(sizeof Statement);
+          tmp.type = 16;
+          tmp.p1 = tid;
+          tmp.p2 = last_value;
+          tmp.next = 0;
+
+          if(prev)
+            prev.next = tmp;
+          if(!ans.p2)
+            ans.p2 = tmp;
+          prev = tmp;
+
+          nt = lexer_peep(l);
+        }
+        lexer_expect(l, 15, "}");
+
+        ans.type = 15;
+        return ans;
       } else {
         // struct
-        lexer_expect(l, 28, "struct");
+        lexer_expect(l, 28, "struct, interface or enum");
         lexer_expect(l, 14, "{");
         nt: *Token = lexer_peep(l);
         prev : *Statement = 0;
@@ -1797,6 +1845,13 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     while(t.type == 6){ // pointer, go back
       t = t.payload;
     }
+    if(t.type == 16){ // it should be 15, not sure why 16 TODO
+      // it's enum
+      t : *Type = malloc(sizeof Type);
+      t.type = 1;
+      t.payload = 0;
+      return t;
+    }
     if(t.type != 0){
       printf("base of member should be a struct, but was %d\n", t.type);
       exit(1);
@@ -1874,6 +1929,10 @@ typegen := (t: *Type, cc: *CC) -> *any{
       exit(1);
     }
     vt : *VariablePayload = tmp.payload;
+    if(vt.alloc == 0){
+      // we have enum, return 64 int for now:
+      return LLVMInt64TypeInContext(cc.context);
+    }
     return vt.alloc;
   } else if((t.type == 2) + (t.type == 1)){ // int
     if(t.payload == 0){
@@ -2345,6 +2404,36 @@ exprgen_base := (e: *Expression, cc: *CC) -> * any{
   return get_alloca(e.p1, cc);
 }
 
+exprgen_enum_member := (e: *Expression, en: *Statement, cc: *CC) -> *any{
+  member: *Statement = en.p2;
+  while(member){
+    if(streq(e.p2, member.p1)){
+      // found it
+      // TODO maybe different types?
+      return LLVMConstInt(LLVMInt64TypeInContext(cc.context), member.p2,1);
+    }
+    member = member.next;
+  }
+  printf("Enum %s doesn't have member %s\n", en.p1, e.p2);
+  exit(1);
+  return 0;
+}
+
+resolve_enum := (e: *Expression, cc: *CC) -> *Statement {
+  // return pointer to struct statement or null
+  t := typeresolve(e.p1, cc);
+  if(t.type == 16){ // should it be 15? TODO
+    // it's enum
+    tmpE : *Expression = e.p1;
+    printf("c name was %s\n", tmpE.p1);
+    c_name := cc_resolve_named(cc, tmpE.p1);
+    vp : *VariablePayload = c_name.payload;
+    if(vp.alloc == 0)
+      return vp.decl;
+  }
+  return 0;
+}
+
 exprgen := (e: *Expression, cc: *CC) -> *any{
   if(e.type == 0){// variable
     name := cc_resolve_named(cc, e.p1);
@@ -2354,6 +2443,12 @@ exprgen := (e: *Expression, cc: *CC) -> *any{
     vp : *VariablePayload = name.payload;
     return LLVMBuildLoad(cc.builder, vp.alloc, e.p1);
   } else if(e.type == 1){// member access
+    // Are we dealing with struct or enum?
+    en := resolve_enum(e, cc);
+    printf("Here and en is %d\n", en);
+    if(en){
+      return exprgen_enum_member(e, en, cc);
+    }
     alloc := get_alloca(e, cc);
     return LLVMBuildLoad(cc.builder, alloc, "memberptr");
   } else if(e.type == 2){// binary operation
@@ -2750,7 +2845,7 @@ resolve_struct := (e: *Expression, cc: *CC) -> *Statement {
     // might be a struct or interface
     c_name := cc_resolve_named(cc, strcat(st.payload, "$$"));
     if(!c_name){
-      // we have struct
+      // struct
       c_name = cc_resolve_named(cc, st.payload);
       vp : *VariablePayload = c_name.payload;
       return vp.decl;
@@ -2878,6 +2973,16 @@ compile_cb := (s: *Statement, cc: *CC) -> void{
   return;
 }
 
+compile_enum := (s: *Statement, cc: *CC) -> void{
+  // TODO
+  // we don't need the extra field, but have to for struct compatibility
+  vp : *VariablePayload = malloc(sizeof VariablePayload);
+  vp.alloc = 0; // this means we have an enum
+  vp.decl = s;
+  cc_set_named(cc, s.p1, vp);
+  return;
+}
+
 compile := (s: *Statement, cc: *CC) -> void{
   if(s.type == 0){ // return
     compile_ret(s, cc);
@@ -2907,6 +3012,8 @@ compile := (s: *Statement, cc: *CC) -> void{
     compile_interface(s, cc);
   } else if(s.type == 14){ // method call
     compile_mcall(s, cc);
+  } else if(s.type == 15){ // enum
+    compile_enum(s, cc);
   } else{
     printf("Unknown statement type %d\n", s.type);
     exit(1);
