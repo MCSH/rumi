@@ -343,61 +343,24 @@ strcat := (s1: *u8, s2: *u8) -> *u8{
 }
 
 is_alpha := (c: u8) -> bool{
-  // We don't have < or >, so I have to improvise
-  a := 97;
-  z := 122;
-
-  while_cond := 1;
-  counter := a;
-  while(while_cond){
-    if(c == counter)
+  if(c >= 'a')
+    if(c <= 'z')
       return 1;
-
-    if(counter == z)
-      while_cond = 0;
-
-    counter = counter + 1;
-  }
-
-  A := 65;
-  Z := 90;
-
-  while_cond = 1;
-  counter = A;
-  while(while_cond){
-    if(c == counter)
+  if(c >= 'A')
+    if(c <= 'Z')
       return 1;
-
-    if(counter == Z)
-      while_cond = 0;
-
-    counter = counter + 1;
-  }
-
   return 0;
 }
 
 is_numeric := (c: u8) -> bool{
-  zero := 48;
-  nine := 57;
-
-  while_cond := 1;
-  counter := zero;
-  while(while_cond){
-    if(c == counter)
+  if(c >= '0')
+    if(c <= '9')
       return 1;
-
-    if(counter == nine)
-      while_cond = 0;
-
-    counter = counter + 1;
-  }
-
   return 0;
 }
 
 is_alphanumeric := (c: u8) -> bool{
-  if(c == 95) // underline
+  if(c == '_') // underline
     return 1;
 
   if(is_alpha(c))
@@ -449,17 +412,16 @@ lex_num := (buf: *u8, offset: int) -> int {
 
 lex_str := (buf: *u8, offset: int) -> int {
   end := offset+1;
-
   while(1){
-    if(*(buf+end) == 34){ // "
+    if(*(buf+end) == '"'){ // "
       return end + 1;
     }
-    if(*(buf+end) == 10){ // newline
+    if(*(buf+end) == '\n'){ // newline
       printf("Unclosed string literal\n");
       exit(1);
     }
 
-    if(*(buf+end) == 92){ // \ 
+    if(*(buf+end) == '\\'){ // \ 
       end = end + 1; // skip the next one, whatever it might be.
     }
     end = end + 1;
@@ -469,9 +431,9 @@ lex_str := (buf: *u8, offset: int) -> int {
 }
 
 resolve_escape := (c: u8) -> u8 {
-  if(c == 110){// \n
-    return 10;
-  } else { // TODO handle tab, etc
+  if(c == 'n'){// \n
+    return '\n';
+  } else { // TODO handle tab, etc, \' and \"
     return c;
   }
 }
@@ -699,9 +661,9 @@ lexer := (buf: *u8) -> *Lexer{
       t.payload = num;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
-    } else if(*(buf+offset) == 33){ // !
+    } else if(*(buf+offset) == '!'){ // !
       offset = offset + 1;
-      if(*(buf+offset) == 61){// !=
+      if(*(buf+offset) == '='){// !=
         offset = offset + 1;
         t: *Token = malloc(sizeof Token);
         t.type = 43;
@@ -715,9 +677,9 @@ lexer := (buf: *u8) -> *Lexer{
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       }
-    } else if(*(buf+offset) == 60){ // <
+    } else if(*(buf+offset) == '<'){ // <
       offset = offset + 1;
-      if(*(buf+offset) == 61){// <=
+      if(*(buf+offset) == '='){// <=
         offset = offset + 1;
         t: *Token = malloc(sizeof Token);
         t.type = 46;
@@ -731,9 +693,9 @@ lexer := (buf: *u8) -> *Lexer{
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       }
-    } else if(*(buf+offset) == 62){ // >
+    } else if(*(buf+offset) == '>'){ // >
       offset = offset + 1;
-      if(*(buf+offset) == 61){// >=
+      if(*(buf+offset) == '='){// >=
         offset = offset + 1;
         t: *Token = malloc(sizeof Token);
         t.type = 48;
@@ -747,9 +709,9 @@ lexer := (buf: *u8) -> *Lexer{
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       }
-    } else if(*(buf+offset) == 58){ // :
+    } else if(*(buf+offset) == ':'){ // :
       offset = offset + 1;
-      if(*(buf+offset) == 61) { // :=
+      if(*(buf+offset) == '=') { // :=
         offset = offset + 1;
         t : *Token = malloc(sizeof Token);
         t.type = 3;
@@ -763,28 +725,28 @@ lexer := (buf: *u8) -> *Lexer{
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       }
-    } else if(*(buf+offset) == 40){ // lpar
+    } else if(*(buf+offset) == '('){ // lpar
       t : *Token = malloc(sizeof Token);
       t.type = 4;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
-    } else if(*(buf+offset) == 41){ // rpar
+    } else if(*(buf+offset) == ')'){ // rpar
       t : *Token = malloc(sizeof Token);
       t.type = 5;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
-    } else if(*(buf+offset) == 44){ // ,
+    } else if(*(buf+offset) == ','){ // ,
       t : *Token = malloc(sizeof Token);
       t.type = 6;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
-    } else if(*(buf+offset) == 46){ // .
+    } else if(*(buf+offset) == '.'){ // .
       // we don't have and, so we multiply them
       tmp_bool : bool = *(buf+offset+1) == *(buf+offset+2);
       tmp_bool2 : bool = *(buf+offset+1) == 46;
@@ -803,8 +765,8 @@ lexer := (buf: *u8) -> *Lexer{
         l.count = l.count + 1;
         offset = offset + 1;
       }
-    } else if(*(buf+offset) == 45){ // -
-      if(*(buf+offset+1) == 62){ // ->
+    } else if(*(buf+offset) == '-'){ // -
+      if(*(buf+offset+1) == '>'){ // ->
         t : *Token = malloc(sizeof Token);
         t.type = 10;
         t.payload = 0;
@@ -819,43 +781,43 @@ lexer := (buf: *u8) -> *Lexer{
         l.count = l.count + 1;
         offset = offset + 1;
       }
-    } else if(*(buf+offset) == 59){ // ;
+    } else if(*(buf+offset) == ';'){ // ;
       t : *Token = malloc(sizeof Token);
       t.type = 11;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
-    } else if(*(buf+offset) == 42){ // *
+    } else if(*(buf+offset) == '*'){ // *
       t : *Token = malloc(sizeof Token);
       t.type = 12;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
-    } else if(*(buf+offset) == 47){ // /
-      if (*(buf+offset +1) == 42) {
+    } else if(*(buf+offset) == '/'){ // /
+      if (*(buf+offset +1) == '*') {
         // multiline comment
         whilecond := 1;
         while(whilecond){
           offset = offset +1;
-          if(*(buf+offset) == 42){
+          if(*(buf+offset) == '*'){
             offset = offset +1;
-            if(*(buf+offset) == 47){
+            if(*(buf+offset) == '/'){
               whilecond = whilecond - 1;
             }
           }
-          if(*(buf+offset) == 47){
+          if(*(buf+offset) == '/'){
             offset = offset +1;
-            if(*(buf+offset) == 42){
+            if(*(buf+offset) == '*'){
               whilecond = whilecond + 1;
             }
           }
         }
-      } else if(*(buf+offset+1) == 47){
+      } else if(*(buf+offset+1) == '/'){
         // comment
         offset = offset + 2;
-        while(*(buf+offset) != 10)
+        while(*(buf+offset) != '\n')
           offset = offset + 1;
       } else {
         t : *Token = malloc(sizeof Token);
@@ -865,36 +827,36 @@ lexer := (buf: *u8) -> *Lexer{
         l.count = l.count + 1;
         offset = offset + 1;
       }
-    } else if(*(buf+offset) == 123){ // {
+    } else if(*(buf+offset) == '{'){ // {
       t : *Token = malloc(sizeof Token);
       t.type = 14;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
-    } else if(*(buf+offset) == 125){ // }
+    } else if(*(buf+offset) == '}'){ // }
       t : *Token = malloc(sizeof Token);
       t.type = 15;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
-    } else if(*(buf+offset) == 43){ // +
+    } else if(*(buf+offset) == '+'){ // +
       t : *Token = malloc(sizeof Token);
       t.type = 19;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
-    } else if(*(buf+offset) == 37){ // %
+    } else if(*(buf+offset) == '%'){ // %
       t : *Token = malloc(sizeof Token);
       t.type = 41;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
-    } else if(*(buf+offset) == 61){ // =
-      if(*(buf+offset+1) == 61){ // ==
+    } else if(*(buf+offset) == '='){ // =
+      if(*(buf+offset+1) == '='){ // ==
         t : *Token = malloc(sizeof Token);
         t.type = 18;
         t.payload = 0;
@@ -909,7 +871,7 @@ lexer := (buf: *u8) -> *Lexer{
         l.count = l.count + 1;
         offset = offset + 1;
       }
-    } else if(*(buf+offset) == 34) { // "
+    } else if(*(buf+offset) == '"') { // "
       end := lex_str(buf, offset);
       str := handle_str(buf, offset, end);
       offset = end;
