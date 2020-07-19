@@ -1,5 +1,3 @@
-// TODO Create function pointer structures for interfaces
-
 malloc := (size: u64) -> *any;
 
 exit := (s: int) -> void;
@@ -160,6 +158,7 @@ TypeType: enum{
   voidT = 7,
   funcT = 8,
   anyT = 9,
+  enumT = 10,
 }
 
 Type: struct{
@@ -200,34 +199,40 @@ VariablePayload: struct{
   decl : *Statement;
 }
 
+EType: enum{
+  varE = 0, // variable(id, ,)
+  memE = 1, // member(expr, id, )
+  binE = 2, // binary expression(e1, op, e2)
+  binOrderE = 3, // binary expression (requires reordering in parent) REMOVE??
+  cIntE = 4, // const int(val, ,)
+  cStrE = 5, // const string(val, ,)
+  ptrE = 6, // ptr (expr,,)
+  fcallE = 7, // fcall(id, args,)
+  sizeE = 8, // sizeof(type,,)
+  notE = 9, // not(expr,,)
+  methodCallE = 10, // methodcall(methodname, args, base expression)
+  baseE = 11, // baseof(expr,,) // reverse of ptr
+  cCharE = 12, // const char(val,,)
+}
+
+OpCode: enum {
+  eq = 0, // ==
+  add = 1, // +
+  minus = 2, // -
+  mult = 3, // *
+  div = 4, // /
+  rem = 5, // %
+  neq = 6, // !=
+  lt = 7, // <
+  lte = 8, // <=
+  gt = 9, // >
+  gte = 10, // >=
+}
+
 Expression: struct{
-  type: int;
-  /*
-      0 -> variable(id, ,)
-      1 -> member(expr, id, )
-      2 -> binary expression(e1, op, e2)
-      3 -> binary expression (requires reordering in parent) REMOVE??
-      4 -> const int(val, ,)
-      5 -> const string(val, ,)
-      6 -> ptr (expr,,)
-      7 -> fcall(id, args,)
-      8 -> sizeof(type,,)
-      9 -> not(expr,,)
-      10 -> methodcall(methodname, args, base expression)
-      11 -> baseof(expr,,) // reverse of ptr
-      12 -> const char(val,,)
-  */
+  type: EType;
   p1: *any;
   p2: *any;
-  /*
-     opcode list:
-     0 -> ==
-     1 -> +
-     2 -> -
-     3 -> *
-     4 -> /
-     5 -> %
-  */
   p3: *any;
 
   prec: int; // precident
@@ -238,59 +243,63 @@ FunctionType: struct{
   first: *Statement; // variable decl
 }
 
+TokenType: enum{
+  TEOF = 0, // EOF
+  TID = 1, // id
+  TCOL = 2, // :
+  TDEF = 3, // :=
+  TLPAR = 4, // (
+  TRPAR = 5, // )
+  TCOMMA = 6, // ,
+  TDOT = 7, // .
+  T3DOT = 8, // ...
+  TDASH = 9, // -
+  TARROW = 10, // ->
+  TSEM = 11, // ;
+  TSTAR = 12, // *
+  TFSLASH = 13, // /
+  TLCB = 14, // {
+  TRCB = 15, // }
+  TNUM = 16, // num
+  TEQ = 17, // =
+  TEQEQ = 18, // ==
+  TPLUS = 19, // +
+  TSTRV = 20, // string value
+  TINT = 21, // int
+  TRET = 22, // return
+  TIF = 23, // if
+  TWHILE = 24, // while
+  TELSE = 25, // else
+  TSTR = 26, // string
+  TANY = 27, // any
+  TSTRUCT = 28, // struct
+  TVOID = 29, // void
+  TU8 = 30, // u8
+  TU16 = 31, // u16
+  TU32 = 32, // u32
+  TU64 = 33, // u64
+  TS8 = 34, // s8
+  TS16 = 35, // s16
+  TS32 = 36, // s32
+  TS64 = 37, // s64
+  TF32 = 38, // f32
+  TF64 = 39, // f64
+  TBOOL = 40, // bool
+  TPERC = 41, // %
+  TSIZE = 42, // sizeof
+  TNEQ = 43, // !=
+  TNOT = 44, // !
+  TLT = 45, // <
+  TLTE = 46, // <=
+  TGT = 47, // >
+  TGTE = 48, // >=
+  TINTERFACE = 49, // interface
+  TENUM = 50, // enum
+  TCHAR = 51, // character
+}
+
 Token: struct {
-  type: int; // We don't have enums yet
-  /*
-      0 -> EOF
-      1 -> id
-      2 -> :
-      3 -> :=
-      4 -> (
-      5 -> )
-      6 -> ,
-      7 -> .
-      8 -> ...
-      9 -> -
-     10 -> ->
-     11 -> ;
-     12 -> *
-     13 -> /
-     14 -> {
-     15 -> }
-     16 -> num
-     17 -> =
-     18 -> ==
-     19 -> +
-     20 -> string value
-     21 -> int
-     22 -> return
-     23 -> if
-     24 -> while
-     25 -> else
-     26 -> string
-     27 -> any
-     28 -> struct
-     29 -> void
-     30 -> u8
-     31 -> u16
-     32 -> u32
-     33 -> u64
-     34, 37 -> s8 ... s64
-     38 -> f32
-     39 -> f64
-     40 -> bool
-     41 -> %
-     42 -> sizeof
-     43 -> !=
-     44 -> !
-     45 -> <
-     46 -> <=
-     47 -> >
-     48 -> >=
-     49 -> interface
-     50 -> enum
-     51 -> character
-  */
+  type: TokenType; // We don't have enums yet
   payload: *any;
 }
 
@@ -392,7 +401,7 @@ lexer_skip_ws := (buf: *u8, offset: int) -> int {
     offset = offset + 1;
   }
 
-  return 0; // Never reaches here, just to precent segfault in compile
+  return 0; // Never reaches here, just to prevent segfault in compile
 }
 
 lex_id := (buf: *u8, offset: int) -> int {
@@ -450,7 +459,7 @@ handle_str := (buf: *u8, offset: int, end: int) -> string {
   while(end - offset){
     *(out + ind) = *(buf + offset);
 
-    if(*(buf + offset) == 92){
+    if(*(buf + offset) == '\\'){
       // handle special cases
       offset = offset + 1;
       *(out + ind) = resolve_escape(*(buf+offset));
@@ -498,7 +507,7 @@ lexer := (buf: *u8) -> *Lexer{
     if(*(buf+offset) == 0){
       // EOF
       t : *Token = malloc(sizeof Token);
-      t.type = 0;
+      t.type = TokenType.TEOF;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
@@ -510,145 +519,145 @@ lexer := (buf: *u8) -> *Lexer{
       // capture different tokens
       if(streq(id, "int")){
         t : *Token = malloc(sizeof Token);
-        t.type = 21;
+        t.type = TokenType.TINT;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "return")){
         t : *Token = malloc(sizeof Token);
-        t.type = 22;
+        t.type = TokenType.TRET;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "if")){
         t : *Token = malloc(sizeof Token);
-        t.type = 23;
+        t.type = TokenType.TIF;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "while")){
         t : *Token = malloc(sizeof Token);
-        t.type = 24;
+        t.type = TokenType.TWHILE;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "else")){
         t : *Token = malloc(sizeof Token);
-        t.type = 25;
+        t.type = TokenType.TELSE;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "string")){
         t : *Token = malloc(sizeof Token);
-        t.type = 26;
+        t.type = TokenType.TSTR;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "any")){
         t : *Token = malloc(sizeof Token);
-        t.type = 27;
+        t.type = TokenType.TANY;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "struct")){
         t : *Token = malloc(sizeof Token);
-        t.type = 28;
+        t.type = TokenType.TSTRUCT;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "interface")){
         t : *Token = malloc(sizeof Token);
-        t.type = 49;
+        t.type = TokenType.TINTERFACE;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "enum")){
         t : *Token = malloc(sizeof Token);
-        t.type = 50;
+        t.type = TokenType.TENUM;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "void")){
         t : *Token = malloc(sizeof Token);
-        t.type = 29;
+        t.type = TokenType.TVOID;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "u8")){
         t : *Token = malloc(sizeof Token);
-        t.type = 30;
+        t.type = TokenType.TU8;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "u16")){
         t : *Token = malloc(sizeof Token);
-        t.type = 31;
+        t.type = TokenType.TU16;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "u32")){
         t : *Token = malloc(sizeof Token);
-        t.type = 32;
+        t.type = TokenType.TU32;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "u64")){
         t : *Token = malloc(sizeof Token);
-        t.type = 33;
+        t.type = TokenType.TU64;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "s8")){
         t : *Token = malloc(sizeof Token);
-        t.type = 34;
+        t.type = TokenType.TS8;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "s16")){
         t : *Token = malloc(sizeof Token);
-        t.type = 35;
+        t.type = TokenType.TS16;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "s32")){
         t : *Token = malloc(sizeof Token);
-        t.type = 36;
+        t.type = TokenType.TS32;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "s64")){
         t : *Token = malloc(sizeof Token);
-        t.type = 37;
+        t.type = TokenType.TS64;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "f32")){
         t : *Token = malloc(sizeof Token);
-        t.type = 38;
+        t.type = TokenType.TF32;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "f64")){
         t : *Token = malloc(sizeof Token);
-        t.type = 39;
+        t.type = TokenType.TF64;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "bool")){
         t : *Token = malloc(sizeof Token);
-        t.type = 40;
+        t.type = TokenType.TBOOL;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "sizeof")){
         t : *Token = malloc(sizeof Token);
-        t.type = 42;
+        t.type = TokenType.TSIZE;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else {
         t : *Token = malloc(sizeof Token);
-        t.type = 1;
+        t.type = TokenType.TID;
         t.payload = id;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
@@ -658,7 +667,7 @@ lexer := (buf: *u8) -> *Lexer{
       num := parse_num(buf, offset, end);
       offset = end;
       t : *Token = malloc(sizeof Token);
-      t.type = 16;
+      t.type = TokenType.TNUM;
       t.payload = num;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
@@ -667,13 +676,13 @@ lexer := (buf: *u8) -> *Lexer{
       if(*(buf+offset) == '='){// !=
         offset = offset + 1;
         t: *Token = malloc(sizeof Token);
-        t.type = 43;
+        t.type = TokenType.TNEQ;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else { // !
         t: *Token = malloc(sizeof Token);
-        t.type = 44;
+        t.type = TokenType.TNOT;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
@@ -683,13 +692,13 @@ lexer := (buf: *u8) -> *Lexer{
       if(*(buf+offset) == '='){// <=
         offset = offset + 1;
         t: *Token = malloc(sizeof Token);
-        t.type = 46;
+        t.type = TokenType.TLTE;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else { // <
         t: *Token = malloc(sizeof Token);
-        t.type = 45;
+        t.type = TokenType.TLT;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
@@ -699,13 +708,13 @@ lexer := (buf: *u8) -> *Lexer{
       if(*(buf+offset) == '='){// >=
         offset = offset + 1;
         t: *Token = malloc(sizeof Token);
-        t.type = 48;
+        t.type = TokenType.TGTE;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else { // >
         t: *Token = malloc(sizeof Token);
-        t.type = 47;
+        t.type = TokenType.TGT;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
@@ -715,34 +724,34 @@ lexer := (buf: *u8) -> *Lexer{
       if(*(buf+offset) == '=') { // :=
         offset = offset + 1;
         t : *Token = malloc(sizeof Token);
-        t.type = 3;
+        t.type = TokenType.TDEF;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else { // only :
         t : *Token = malloc(sizeof Token);
-        t.type = 2;
+        t.type = TokenType.TCOL;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       }
     } else if(*(buf+offset) == '('){ // lpar
       t : *Token = malloc(sizeof Token);
-      t.type = 4;
+      t.type = TokenType.TLPAR;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
     } else if(*(buf+offset) == ')'){ // rpar
       t : *Token = malloc(sizeof Token);
-      t.type = 5;
+      t.type = TokenType.TRPAR;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
     } else if(*(buf+offset) == ','){ // ,
       t : *Token = malloc(sizeof Token);
-      t.type = 6;
+      t.type = TokenType.TCOMMA;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
@@ -753,14 +762,14 @@ lexer := (buf: *u8) -> *Lexer{
       tmp_bool2 : bool = *(buf+offset+1) == 46;
       if(tmp_bool * tmp_bool2){ // ...
         t : *Token = malloc(sizeof Token);
-        t.type = 8;
+        t.type = TokenType.T3DOT;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
         offset = offset + 3;
       } else {
         t : *Token = malloc(sizeof Token);
-        t.type = 7;
+        t.type = TokenType.TDOT;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
@@ -769,14 +778,14 @@ lexer := (buf: *u8) -> *Lexer{
     } else if(*(buf+offset) == '-'){ // -
       if(*(buf+offset+1) == '>'){ // ->
         t : *Token = malloc(sizeof Token);
-        t.type = 10;
+        t.type = TokenType.TARROW;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
         offset = offset + 2;
       } else {
         t : *Token = malloc(sizeof Token);
-        t.type = 9;
+        t.type = TokenType.TDASH;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
@@ -784,14 +793,14 @@ lexer := (buf: *u8) -> *Lexer{
       }
     } else if(*(buf+offset) == ';'){ // ;
       t : *Token = malloc(sizeof Token);
-      t.type = 11;
+      t.type = TokenType.TSEM;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
     } else if(*(buf+offset) == '*'){ // *
       t : *Token = malloc(sizeof Token);
-      t.type = 12;
+      t.type = TokenType.TSTAR;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
@@ -822,7 +831,7 @@ lexer := (buf: *u8) -> *Lexer{
           offset = offset + 1;
       } else {
         t : *Token = malloc(sizeof Token);
-        t.type = 13;
+        t.type = TokenType.TFSLASH;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
@@ -830,28 +839,28 @@ lexer := (buf: *u8) -> *Lexer{
       }
     } else if(*(buf+offset) == '{'){ // {
       t : *Token = malloc(sizeof Token);
-      t.type = 14;
+      t.type = TokenType.TLCB;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
     } else if(*(buf+offset) == '}'){ // }
       t : *Token = malloc(sizeof Token);
-      t.type = 15;
+      t.type = TokenType.TRCB;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
     } else if(*(buf+offset) == '+'){ // +
       t : *Token = malloc(sizeof Token);
-      t.type = 19;
+      t.type = TokenType.TPLUS;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
       offset = offset + 1;
     } else if(*(buf+offset) == '%'){ // %
       t : *Token = malloc(sizeof Token);
-      t.type = 41;
+      t.type = TokenType.TPERC;
       t.payload = 0;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
@@ -859,14 +868,14 @@ lexer := (buf: *u8) -> *Lexer{
     } else if(*(buf+offset) == '='){ // =
       if(*(buf+offset+1) == '='){ // ==
         t : *Token = malloc(sizeof Token);
-        t.type = 18;
+        t.type = TokenType.TEQEQ;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
         offset = offset + 2;
       } else {
         t : *Token = malloc(sizeof Token);
-        t.type = 17;
+        t.type = TokenType.TEQ;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
@@ -877,22 +886,22 @@ lexer := (buf: *u8) -> *Lexer{
       str := handle_str(buf, offset, end);
       offset = end;
       t : *Token = malloc(sizeof Token);
-      t.type = 20;
+      t.type = TokenType.TSTRV;
       t.payload = str;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
     
-    } else if(*(buf+offset) == 39){ // '
+    } else if(*(buf+offset) == '\''){ // '
       // single char OR escaped char
       offset = offset + 1;
       // is it escape?
       ch := *(buf + offset);
       offset = offset + 1;
-      if(ch == 92){// escape
+      if(ch == '\\'){// escape
         ch = resolve_escape(*(buf+offset));
         offset = offset + 1;
       }
-      if(*(buf+offset) != 39){
+      if(*(buf+offset) != '\''){
         printf("Unclosed character token at: ");
         offset = offset - 5;
         counter := 30;
@@ -905,7 +914,7 @@ lexer := (buf: *u8) -> *Lexer{
       }
       offset = offset + 1;
       t : *Token = malloc(sizeof Token);
-      t.type = 51;
+      t.type = TokenType.TCHAR;
       t.payload = ch;
       *(l.ptr + l.count) = t;
       l.count = l.count + 1;
@@ -948,88 +957,88 @@ lexer_expect := (l : *Lexer, t: int, description: string) -> bool{
 parse_type := (l: *Lexer) -> *Type{
   tn := lexer_pop(l);
   ans : *Type = malloc(sizeof Type);
-  if(tn.type == 26){
+  if(tn.type == TokenType.TSTR){
     ans.type = TypeType.stringT;
     ans.payload = 0;
     return ans;
   }
-  if(tn.type == 29){
+  if(tn.type == TokenType.TVOID){
     ans.type = TypeType.voidT;
     ans.payload = 0;
     return ans;
   }
-  if(tn.type == 30){
+  if(tn.type == TokenType.TU8){
     ans.type = TypeType.uintT;
     ans.payload = 8;
     return ans;
   }
-  if(tn.type == 31){
+  if(tn.type == TokenType.TU16){
     ans.type = TypeType.uintT;
     ans.payload = 16;
     return ans;
   }
-  if(tn.type == 32){
+  if(tn.type == TokenType.TU32){
     ans.type = TypeType.uintT;
     ans.payload = 32;
     return ans;
   }
-  if(tn.type == 33){
+  if(tn.type == TokenType.TU64){
     ans.type = TypeType.uintT;
     ans.payload = 64;
     return ans;
   }
-  if(tn.type == 34){
+  if(tn.type == TokenType.TS8){
     ans.type = TypeType.intT;
     ans.payload = 8;
     return ans;
   }
-  if(tn.type == 35){
+  if(tn.type == TokenType.TS16){
     ans.type = TypeType.intT;
     ans.payload = 16;
     return ans;
   }
-  if(tn.type == 36){
+  if(tn.type == TokenType.TS32){
     ans.type = TypeType.intT;
     ans.payload = 32;
     return ans;
   }
-  if(tn.type == 37){
+  if(tn.type == TokenType.TS64){
     ans.type = TypeType.intT;
     ans.payload = 64;
     return ans;
   }
-  if(tn.type == 38){
+  if(tn.type == TokenType.TF32){
     ans.type = TypeType.floatT;
     ans.payload = 32;
     return ans;
   }
-  if(tn.type == 39){
+  if(tn.type == TokenType.TF64){
     ans.type = TypeType.floatT;
     ans.payload = 64;
     return ans;
   }
-  if(tn.type == 40){
+  if(tn.type == TokenType.TBOOL){
     ans.type = TypeType.boolT;
     ans.payload = 0;
     return ans;
   }
-  if(tn.type == 21){
+  if(tn.type == TokenType.TINT){
     ans.type = TypeType.intT;
     ans.payload = 0;
     return ans;
   }
-  if(tn.type == 1){
+  if(tn.type == TokenType.TID){
     ans.type = TypeType.namedT;
     ans.payload = tn.payload;
     return ans;
   }
-  if(tn.type == 27){
+  if(tn.type == TokenType.TANY){
     ans.type = TypeType.anyT;
     return ans;
   }
 
   // pointer *
-  if(tn.type == 12){
+  if(tn.type == TokenType.TSTAR){
     ans.type = TypeType.pointerT;
     ans.payload = parse_type(l);
     return ans;
@@ -1047,7 +1056,7 @@ parse_fcall_args := (l: *Lexer) -> *Statement{
   nt : *Token = lexer_peep(l);
   ans : *Statement = 0;
   prev : *Statement = 0;
-  while(nt.type != 5){
+  while(nt.type != TokenType.TRPAR){
     val := parse_expr(l);
     tmp : *Statement = malloc(sizeof Statement);
     tmp.type = SType.argT;
@@ -1060,8 +1069,8 @@ parse_fcall_args := (l: *Lexer) -> *Statement{
     prev = tmp;
     nt = lexer_peep(l);
     // ,
-    if(nt.type != 6){
-      if(nt.type != 5){
+    if(nt.type != TokenType.TCOMMA){
+      if(nt.type != TokenType.TRPAR){
         printf("Expected to see , or ), saw %d\n", nt.type);
         l.offset = l.count;
         exit(1);
@@ -1083,16 +1092,16 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
   tn := lexer_pop(l);
   ans : *Expression = malloc(sizeof Expression);
 
-  if(tn.type == 4){ // (
+  if(tn.type == TokenType.TLPAR){ // (
     e := parse_expr(l);
-    e.prec = 4;
-    lexer_expect(l, 5, ")");
+    e.prec = 0;
+    lexer_expect(l, TokenType.TRPAR, ")");
     tn = lexer_peep(l);
-    if(tn.type == 7){ // .
+    if(tn.type == TokenType.TDOT){ // .
       lexer_pop(l);
       tn = lexer_peep(l);
-      lexer_expect(l, 1, "id"); // member
-      ans.type = 1;
+      lexer_expect(l, TokenType.TID, "id"); // member
+      ans.type = EType.memE;
       ans.p1 = e;
       ans.p2 = tn.payload;
       return ans;
@@ -1100,47 +1109,47 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
     return e;
   }
 
-  if(tn.type == 12){ // *
+  if(tn.type == TokenType.TSTAR){ // *
     v : *Expression = parse_exp_val(l);
     // check to ensure it is not const
-    if((v.type == 4) + (v.type == 5)){
+    if((v.type == EType.cIntE) + (v.type == EType.cStrE)){
       printf("Pointer is pointing to an expression %d\n", v.type);
       exit(1);
     }
-    ans.type = 6;
+    ans.type = EType.ptrE;
     ans.p1 = v;
     return ans;
   }
 
-  if(tn.type == 44){// !
+  if(tn.type == TokenType.TNOT){// !
     v : *Expression = parse_exp_val(l);
-    ans.type = 9;
+    ans.type = EType.notE;
     ans.p1 = v;
     return ans;
   }
 
   // TODO handle negative values
 
-  if(tn.type == 1){ // id
+  if(tn.type == TokenType.TID){ // id
     id := tn.payload;
     // EXPECT ID
     // CHECK FOR . ID
     tn = lexer_peep(l);
-    if(tn.type == 7){ // member value
-      ans.type = 0;
+    if(tn.type == TokenType.TDOT){ // member value
+      ans.type = EType.varE;
       ans.p1 = id;
-      while(tn.type == 7){
+      while(tn.type == TokenType.TDOT){
         lexer_pop(l);
         tn2 := lexer_peep(l);
-        lexer_expect(l, 1, "id");
+        lexer_expect(l, TokenType.TID, "id");
         tmp : *Expression = malloc(sizeof Expression);
-        tmp.type = 1;
+        tmp.type = EType.memE;
         tmp.p1 = ans;
         tmp.p2 = tn2.payload;
         ans = tmp;
         tn = lexer_peep(l);
       }
-      if(tn.type == 4){// method call
+      if(tn.type == TokenType.TLPAR){// method call
         lexer_pop(l);
         tmp : *Expression = ans;
 
@@ -1153,40 +1162,40 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
         args.next = parse_fcall_args(l);
 
         ans = malloc(sizeof Expression);
-        ans.type = 10;
+        ans.type = EType.methodCallE;
         ans.p1 = tmp.p2;
         ans.p2 = args;
         ans.p3 = tmp.p1;
         return ans;
       }
       return ans;
-    } else if(tn.type == 4){ // function call
+    } else if(tn.type == TokenType.TLPAR){ // function call
       lexer_pop(l);
       ans.p2 = parse_fcall_args(l);
       ans.p1 = id;
-      ans.type = 7;
+      ans.type = EType.fcallE;
       return ans;
     } else { // variable
-      ans.type = 0;
+      ans.type = EType.varE;
       ans.p1 = id;
       return ans;
     }
-  } else if(tn.type == 16) { // num
-    ans.type = 4;
+  } else if(tn.type == TokenType.TNUM) { // num
+    ans.type = EType.cIntE;
     ans.p1 = tn.payload;
     return ans;
-  } else if(tn.type == 20) { // string
-    ans.type = 5;
+  } else if(tn.type == TokenType.TSTRV) { // string
+    ans.type = EType.cStrE;
     ans.p1 = tn.payload;
     return ans;
-  } else if(tn.type == 42){ // sizeof
-    ans.type = 8;
+  } else if(tn.type == TokenType.TSIZE){ // sizeof
+    ans.type = EType.sizeE;
     // next is either a type or an id
     tmp := parse_type(l);
     ans.p1 = tmp;
     return ans;
-  } else if(tn.type == 51){ // char
-    ans.type = 12;
+  } else if(tn.type == TokenType.TCHAR){ // char
+    ans.type = EType.cCharE;
     ans.p1 = tn.payload;
     return ans;
   } else {
@@ -1202,53 +1211,53 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
 parse_expr_rec := (l: *Lexer, last: int) -> *Expression{
   ans : *Expression = parse_exp_val(l);
   // check op precedense
-  prec := 0; // hacky implementation, XY, X: prec, Y: opcode
+  prec := 0;
   opcode := 0;
   nt := lexer_peep(l);
 
-  if(nt.type == 18){
+  if(nt.type == TokenType.TEQEQ){
     prec = 1; // ==   
-    opcode = 0;
+    opcode = OpCode.eq;
   }
-  else if(nt.type == 43){
+  else if(nt.type == TokenType.TNEQ){
     prec = 1; // !=
-    opcode = 6;
+    opcode = OpCode.neq;
   }
-  else if(nt.type == 45){
+  else if(nt.type == TokenType.TLT){
     prec = 1; // <
-    opcode = 7;
+    opcode = OpCode.lt;
   }
-  else if(nt.type == 46){
+  else if(nt.type == TokenType.TLTE){
     prec = 1; // <=
-    opcode = 8;
+    opcode = OpCode.lte;
   }
-  else if(nt.type == 47){
+  else if(nt.type == TokenType.TGT){
     prec = 1; // >
-    opcode = 9;
+    opcode = OpCode.gt;
   }
-  else if(nt.type == 48){
+  else if(nt.type == TokenType.TGTE){
     prec = 1; // >=
-    opcode = 10;
+    opcode = OpCode.gte;
   }
-  else if(nt.type == 19){
+  else if(nt.type == TokenType.TPLUS){
     prec = 2; // +   
-    opcode = 1;
+    opcode = OpCode.add;
   }
-  else if(nt.type == 9){
+  else if(nt.type == TokenType.TDASH){
     prec = 2; // -   
-    opcode = 2;
+    opcode = OpCode.minus;
   }
-  else if(nt.type == 12){
+  else if(nt.type == TokenType.TSTAR){
     prec = 3; // *   
-    opcode = 3;
+    opcode = OpCode.mult;
   }
-  else if(nt.type == 13){
+  else if(nt.type == TokenType.TFSLASH){
     prec = 3; // /   
-    opcode = 4;
+    opcode = OpCode.div;
   }
-  else if(nt.type == 41){
+  else if(nt.type == TokenType.TPERC){
     prec = 3; // %   
-    opcode = 5;
+    opcode = OpCode.rem;
   }
 
   if(prec){
@@ -1258,17 +1267,13 @@ parse_expr_rec := (l: *Lexer, last: int) -> *Expression{
     ans = malloc(sizeof Expression);
 
     ans.prec = prec;
-    ans.type = 2;
+    ans.type = EType.binE;
     ans.p1 = expr1;
     ans.p2 = opcode;
     ans.p3 = expr2;
 
-    //if(expr2.prec < prec)
-    if(expr2.type == 2){
-      if(((prec == 1) * (expr2.prec == 0))
-      + ((prec == 2) * ((expr2.prec == 0) + (expr2.prec == 1)))
-      + ((prec == 3) * ((expr2.prec == 0) + (expr2.prec == 1) + (expr2.prec == 2)))
-      + (expr2.prec == 4)){
+    if(expr2.type == EType.binE){
+      if(prec > expr2.prec){
         ans.prec = prec;
         return ans;
       }
@@ -1289,34 +1294,34 @@ parse_expr := (l: *Lexer) -> *Expression{
 parse_statement := (l: *Lexer) -> *Statement{
   tn : *Token = lexer_pop(l);
   ans : *Statement = malloc(sizeof Statement);
-  if(tn.type == 22){
+  if(tn.type == TokenType.TRET){
     // Return
     tn : *Token = lexer_peep(l);
-    if(tn.type == 11){ // ;
-      lexer_expect(l, 11, ";");
+    if(tn.type == TokenType.TSEM){ // ;
+      lexer_expect(l, TokenType.TSEM, ";");
       ans.type = SType.returnT;
       ans.p1 = 0;
       return ans;
     } else { // return expr ;
       ans.type = SType.returnT;
       ans.p1 = parse_expr(l);
-      lexer_expect(l, 11, ";");
+      lexer_expect(l, TokenType.TSEM, ";");
       return ans;
     }
-  } else if(tn.type == 1){
+  } else if(tn.type == TokenType.TID){
     // var decl, var assign, function call, member_access, method_call
     ans.p1 = tn.payload;
     tn = lexer_pop(l);
-    if(tn.type == 2){ // : variable decl
+    if(tn.type == TokenType.TCOL){ // : variable decl
       ans.type = SType.declT;
       ans.p2 = parse_type(l);
       // = or ;
       tn =  lexer_pop(l);
-      if(tn.type == 17){// assign
+      if(tn.type == TokenType.TEQ){// assign
         ans.p3 = parse_expr(l);
-        lexer_expect(l, 11, ";");
+        lexer_expect(l, TokenType.TSEM, ";");
         return ans;
-      } else if(tn.type == 11){// decl only
+      } else if(tn.type == TokenType.TSEM){// decl only
         // Nothing
         ans.p3 = 0;
         return ans;
@@ -1326,41 +1331,41 @@ parse_statement := (l: *Lexer) -> *Statement{
         exit(1);
         return 0;
       }
-    } else if(tn.type == 3){ // := variable decl
+    } else if(tn.type == TokenType.TDEF){ // := variable decl
       ans.type = SType.declT;
       ans.p2 = 0;
       ans.p3 = parse_expr(l);
-      lexer_expect(l, 11, ";");
+      lexer_expect(l, TokenType.TSEM, ";");
       return ans;
-    } else if(tn.type == 17){ // = variable assign
+    } else if(tn.type == TokenType.TEQ){ // = variable assign
       ans.type = SType.assignT;
       ans.p2 = parse_expr(l);
-      lexer_expect(l, 11, ";");
+      lexer_expect(l, TokenType.TSEM, ";");
       return ans;
-    } else if(tn.type == 7){ // id.id = expr; 
+    } else if(tn.type == TokenType.TDOT){ // id.id = expr; 
       tmp : *Expression = malloc(sizeof Expression);
-      tmp.type = 0;
+      tmp.type = EType.varE;
       tmp.p1 = ans.p1;
       ans.p1 = tmp;
-      while(tn.type == 7){
+      while(tn.type == TokenType.TDOT){
         //
         tn = lexer_peep(l); // hack so I don't have to handle not seeing id
-        lexer_expect(l, 1, "id");
+        lexer_expect(l, TokenType.TID, "id");
         tmp = malloc(sizeof Expression);
-        tmp.type = 1;
+        tmp.type = EType.memE;
         tmp.p1 = ans.p1;
         tmp.p2 = tn.payload;
         ans.p1 = tmp;
         ans.p2 = tn.payload;
         tn = lexer_peep(l);
-        if(tn.type == 7)
+        if(tn.type == TokenType.TDOT)
           lexer_pop(l);
       }
       // is it a method call or assignment?
       tn = lexer_peep(l);
-      if(tn.type == 4){ // method call
+      if(tn.type == TokenType.TLPAR){ // method call
 
-        lexer_expect(l, 4, "(");
+        lexer_expect(l, TokenType.TLPAR, "(");
 
         lastExpr : *Expression = ans.p1;
         ans.p1 = lastExpr.p2;
@@ -1372,21 +1377,21 @@ parse_statement := (l: *Lexer) -> *Statement{
         // free(lastExpr); // TODO
         args.next = parse_fcall_args(l);
 
-        lexer_expect(l, 11, ";");
+        lexer_expect(l, TokenType.TSEM, ";");
 
         ans.p2 = args;
         ans.type =  SType.methodCallT;
         return ans;
       } else { //assignment
-        lexer_expect(l, 17, "=");
+        lexer_expect(l, TokenType.TEQ, "=");
         ans.p2 = parse_expr(l);
-        lexer_expect(l, 11, ";");
+        lexer_expect(l, TokenType.TSEM, ";");
         ans.type = SType.memAssignT;
         return ans;
       }
-    } else if(tn.type == 4){ // function call
+    } else if(tn.type == TokenType.TLPAR){ // function call
       ans.p2 = parse_fcall_args(l);
-      lexer_expect(l, 11, ";");
+      lexer_expect(l, TokenType.TSEM, ";");
       ans.type = SType.fcallT;
       return ans;
     } else {
@@ -1395,35 +1400,35 @@ parse_statement := (l: *Lexer) -> *Statement{
       exit(1);
       return 0;
     }
-  } else if(tn.type == 23){// if
+  } else if(tn.type == TokenType.TIF){// if
     ans.type = SType.ifT;
-    lexer_expect(l, 4, "(");
+    lexer_expect(l, TokenType.TLPAR, "(");
     ans.p1 = parse_expr(l);
-    lexer_expect(l, 5, ")");
+    lexer_expect(l, TokenType.TRPAR, ")");
 
     ans.p2 = parse_statement(l);
     ans.p3 = 0;
 
     tn = lexer_peep(l);
-    if(tn.type == 25){ // else
+    if(tn.type == TokenType.TELSE){ // else
       lexer_pop(l);
       ans.p3 = parse_statement(l);
     }
     return ans;
-  } else if(tn.type == 24){
+  } else if(tn.type == TokenType.TWHILE){
     // while
     ans.type = SType.whileT;
-    lexer_expect(l, 4, "(");
+    lexer_expect(l, TokenType.TLPAR, "(");
     ans.p1 = parse_expr(l);
-    lexer_expect(l, 5, ")");
+    lexer_expect(l, TokenType.TRPAR, ")");
     ans.p2 = parse_statement(l);
     return ans;
-  } else if(tn.type == 14){
+  } else if(tn.type == TokenType.TLCB){
     ans.type = SType.codeBlockT;
     prev : *Statement = 0;
     ans.p1 = 0;
     // {
-    while((*lexer_peep(l)).type != 15){
+    while((*lexer_peep(l)).type != TokenType.TRCB){
         tmp := parse_statement(l);
         if(ans.p1 == 0){
           ans.p1 = tmp;
@@ -1432,14 +1437,14 @@ parse_statement := (l: *Lexer) -> *Statement{
           prev.next = tmp;
         prev = tmp;
     }
-    lexer_expect(l, 15, "}");
+    lexer_expect(l, TokenType.TRCB, "}");
     return ans;
-  } else if(tn.type == 12){ // pointer access variable assign
+  } else if(tn.type == TokenType.TSTAR){ // pointer access variable assign
     ans.type = SType.ptrAssignT;
     ans.p1 = parse_expr(l);
-    lexer_expect(l, 17, "=");
+    lexer_expect(l, TokenType.TEQ, "=");
     ans.p2 = parse_expr(l);
-    lexer_expect(l, 11, ";");
+    lexer_expect(l, TokenType.TSEM, ";");
     return ans;
   } else {
     printf("Expected to see statement, saw %d\n", tn.type);
@@ -1460,7 +1465,7 @@ parse_function := (l: *Lexer) -> *Statement{
 
   // next token is not }
   prev : *Statement = 0;
-  while((*lexer_peep(l)).type != 15){
+  while((*lexer_peep(l)).type != TokenType.TRCB){
     tmp : *Statement = parse_statement(l);
     if(tmp)
       tmp.next = 0;
@@ -1471,24 +1476,24 @@ parse_function := (l: *Lexer) -> *Statement{
     prev = tmp;
   }
 
-  lexer_expect(l, 15, "}");
+  lexer_expect(l, TokenType.TRCB, "}");
   return ans;
 }
 
 
 parse_function_top := (l: *Lexer, args: *Type, ft: *FunctionType, prev: *Statement,id: string) -> *Statement {
 
-      lexer_expect(l, 4, "(");
+      lexer_expect(l, TokenType.TLPAR, "(");
 
       // parse args
-      while((*lexer_peep(l)).type != 5){
+      while((*lexer_peep(l)).type != TokenType.TRPAR){
         tmp : *Statement = malloc(sizeof Statement);
         tmp.p1 = (*(lexer_peep(l))).payload;
-        lexer_expect(l, 1, "id");
-        lexer_expect(l, 2, ":");
+        lexer_expect(l, TokenType.TID, "id");
+        lexer_expect(l, TokenType.TCOL, ":");
 
-        if((*lexer_peep(l)).type == 8){
-          lexer_expect(l, 8, "...");
+        if((*lexer_peep(l)).type == TokenType.T3DOT){
+          lexer_expect(l, TokenType.T3DOT, "...");
           // TODO ensure it is the last argument
         }
 
@@ -1504,9 +1509,9 @@ parse_function_top := (l: *Lexer, args: *Type, ft: *FunctionType, prev: *Stateme
           prev.next = tmp;
         prev = tmp;
 
-        if((*lexer_peep(l)).type == 6)
-          lexer_expect(l, 6, ",");
-        else if((*lexer_peep(l)).type != 5){
+        if((*lexer_peep(l)).type == TokenType.TCOMMA)
+          lexer_expect(l, TokenType.TCOMMA, ",");
+        else if((*lexer_peep(l)).type != TokenType.TRPAR){
           printf("Expected to see ) or , \n");
           l.offset = l.count;
           exit(1);
@@ -1515,21 +1520,21 @@ parse_function_top := (l: *Lexer, args: *Type, ft: *FunctionType, prev: *Stateme
       }
 
 
-      lexer_expect(l, 5, ")");
-      lexer_expect(l, 10, "->");
+      lexer_expect(l, TokenType.TRPAR, ")");
+      lexer_expect(l, TokenType.TARROW, "->");
 
       ft.returnType = parse_type(l);
 
       nt : *Token = lexer_pop(l);
 
-      if(nt.type == 11){
+      if(nt.type == TokenType.TSEM){
         // signature
         s : *Statement = malloc(sizeof Statement);
         s.type = SType.funcSignT;
         s.p1 = id;
         s.p2 = args;
         return s;
-      } else if(nt.type == 14){
+      } else if(nt.type == TokenType.TLCB){
         // body
         s : *Statement = parse_function(l);
         s.p1 = id;
@@ -1544,7 +1549,7 @@ parse_function_top := (l: *Lexer, args: *Type, ft: *FunctionType, prev: *Stateme
 }
 
 parse_top_level := (l: *Lexer) -> *Statement{
-  if( (*lexer_peep(l)).type == 1 ){
+  if( (*lexer_peep(l)).type == TokenType.TID){
     test_tmp := lexer_peep(l);
     id : string = (*lexer_pop(l)).payload;
 
@@ -1557,7 +1562,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
     // id : struct { member define }
     // id.id := () -> type { statements }
     // id.id := () -> type ;
-    if(nt.type == 3){
+    if(nt.type == TokenType.TDEF){
        // function sign or function define
 
       args : *Type = malloc(sizeof Type);
@@ -1570,38 +1575,38 @@ parse_top_level := (l: *Lexer) -> *Statement{
 
       return parse_function_top(l, args, ft, prev, id);
 
-    } else if(nt.type == 2){
+    } else if(nt.type == TokenType.TCOL){
       ans : *Statement = malloc(sizeof Statement);
       ans.type = SType.structDefT;
       ans.p1 = id;
       ans.p2 = 0;
       // is it interface?
       nt : *Token = lexer_peep(l);
-      if(nt.type == 49){
+      if(nt.type == TokenType.TINTERFACE){
         // it is an interface
-        lexer_expect(l, 49, "interface");
-        lexer_expect(l, 14, "{");
+        lexer_expect(l, TokenType.TINTERFACE, "interface");
+        lexer_expect(l, TokenType.TLCB, "{");
         nt: *Token = lexer_peep(l);
         prev : *Statement = 0;
-        while(nt.type != 15){
+        while(nt.type != TokenType.TRCB){
           // parse methods
           tid := (*lexer_peep(l)).payload;
-          lexer_expect(l, 1, "id");
-          lexer_expect(l, 3, ":=");
+          lexer_expect(l, TokenType.TID, "id");
+          lexer_expect(l, TokenType.TDEF, ":=");
 
           // augment *self*
           args : * Type = malloc(sizeof Type);
-          args.type = 8;
+          args.type = TypeType.funcT;
           ft : *FunctionType = malloc(sizeof FunctionType);
           args.payload = ft;
 
           atmpType : *Type = malloc(sizeof Type);
           atmpType.payload = id;
-          atmpType.type = 0; // struct
+          atmpType.type = TypeType.namedT; // struct
 
           tmpType : *Type = malloc(sizeof Type);
           tmpType.payload = atmpType;
-          tmpType.type = 6; // pointer
+          tmpType.type = TypeType.pointerT; // pointer
 
           tmp_prev : *Statement = malloc(sizeof Statement);
           tmp_prev.p1 = "self";
@@ -1624,29 +1629,29 @@ parse_top_level := (l: *Lexer) -> *Statement{
 
           nt = lexer_peep(l);
         }
-        lexer_expect(l, 15, "}");
+        lexer_expect(l, TokenType.TRCB, "}");
         ans.type = SType.interfaceDefT;
         return ans;
-      } else if(nt.type == 50){ // enum
-        lexer_expect(l, 50, "enum");
-        lexer_expect(l, 14, "{");
+      } else if(nt.type == TokenType.TENUM){ // enum
+        lexer_expect(l, TokenType.TENUM, "enum");
+        lexer_expect(l, TokenType.TLCB, "{");
         nt : *Token = lexer_peep(l);
         prev : *Statement = 0;
         last_value := 0;
-        while(nt.type != 15){
+        while(nt.type != TokenType.TRCB){
           // TODO
           tid := (*lexer_peep(l)).payload;
-          lexer_expect(l, 1, "id");
+          lexer_expect(l, TokenType.TID, "id");
           nt = lexer_peep(l);
-          if(nt.type == 17){// we have an assigned value
-            lexer_expect(l, 17, "="); // TODO this is optional though...
+          if(nt.type == TokenType.TEQ){// we have an assigned value
+            lexer_expect(l, TokenType.TEQ, "="); // TODO this is optional though...
             nt = lexer_peep(l);
-            lexer_expect(l, 16, "number");
+            lexer_expect(l, TokenType.TNUM, "number");
             last_value = nt.payload;
           } else{// assign a value ourselves
             last_value = last_value + 1;
           }
-          lexer_expect(l, 6, ",");
+          lexer_expect(l, TokenType.TCOMMA, ",");
 
           tmp : *Statement = malloc(sizeof Statement);
           tmp.type = SType.enumMemT;
@@ -1662,22 +1667,22 @@ parse_top_level := (l: *Lexer) -> *Statement{
 
           nt = lexer_peep(l);
         }
-        lexer_expect(l, 15, "}");
+        lexer_expect(l, TokenType.TRCB, "}");
 
         ans.type = SType.enumDefT;
         return ans;
       } else {
         // struct
-        lexer_expect(l, 28, "struct, interface or enum");
-        lexer_expect(l, 14, "{");
+        lexer_expect(l, TokenType.TSTRUCT, "struct, interface or enum");
+        lexer_expect(l, TokenType.TLCB, "{");
         nt: *Token = lexer_peep(l);
         prev : *Statement = 0;
-        while(nt.type != 15){
+        while(nt.type != TokenType.TRCB){
           tid := (*lexer_peep(l)).payload;
-          lexer_expect(l, 1, "id");
-          lexer_expect(l, 2, ":");
+          lexer_expect(l, TokenType.TID, "id");
+          lexer_expect(l, TokenType.TCOL, ":");
           tp := parse_type(l);
-          lexer_expect(l, 11, ";");
+          lexer_expect(l, TokenType.TSEM, ";");
           nt = lexer_peep(l);
 
           tmp : *Statement = malloc(sizeof Statement);
@@ -1694,27 +1699,27 @@ parse_top_level := (l: *Lexer) -> *Statement{
       lexer_pop(l); // }
       return ans;
       }
-    } else if(nt.type == 7) { // method define
-      if( (*lexer_peep(l)).type != 1){
+    } else if(nt.type == TokenType.TDOT) { // method define
+      if( (*lexer_peep(l)).type != TokenType.TID){
         printf("Expected id, saw %d\n", (*lexer_peep(l)).type);
         exit(1);
       }
       method_name : string = (*lexer_pop(l)).payload;
-      lexer_expect(l, 3, ":=");
+      lexer_expect(l, TokenType.TDEF, ":=");
 
       args : * Type = malloc(sizeof Type);
-      args.type = 8;
+      args.type = TypeType.funcT;
       ft : *FunctionType = malloc(sizeof FunctionType);
       args.payload = ft;
 
 
       atmpType : *Type = malloc(sizeof Type);
       atmpType.payload = id;
-      atmpType.type = 0; // struct
+      atmpType.type = TypeType.namedT; // struct
 
       tmpType : *Type = malloc(sizeof Type);
       tmpType.payload = atmpType;
-      tmpType.type = 6; // pointer
+      tmpType.type = TypeType.pointerT; // pointer
 
       tmp : *Statement = malloc(sizeof Statement);
       tmp.p1 = "self";
@@ -1737,7 +1742,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
       exit(1);
       return 0;
     }
-  } else if((*lexer_peep(l)).type == 0){
+  } else if((*lexer_peep(l)).type == TokenType.TEOF){
     // end of file
     lexer_pop(l);
     return 0;
@@ -1833,28 +1838,35 @@ cc_set_named := (cc: *CC, name: string, payload: *any) -> void {
 }
 
 typeresolve := (e: *Expression, cc: *CC) -> *Type{
-  if(e.type == 0){// variable
+  if(e.type == EType.varE){// variable
     n := cc_resolve_named(cc, e.p1);
     if(n == 0){
       printf("Variable %s not found\n", e.p1);
       exit(1);
     }
     p : *VariablePayload = n.payload;
+    if(p.alloc == 0){ // enum
+      // TODO do I want to find another way for finding enums?
+      t: *Type = malloc(sizeof Type);
+      t.type = TypeType.enumT;
+      t.payload = 0;
+      return t;
+    }
     return p.decl.p2;
-  } else if(e.type == 1){ // member access
+  } else if(e.type == EType.memE){ // member access
     t := typeresolve(e.p1, cc);
     // verify that t is a struct
-    while(t.type == 6){ // pointer, go back
+    while(t.type == TypeType.pointerT){ // pointer, go back
       t = t.payload;
     }
-    if(t.type == 16){ // it should be 15, not sure why 16 TODO
+    if(t.type == TypeType.enumT){
       // it's enum
       t : *Type = malloc(sizeof Type);
       t.type = TypeType.intT;
       t.payload = 0;
       return t;
     }
-    if(t.type != 0){
+    if(t.type != TypeType.namedT){
       printf("base of member should be a struct, but was %d\n", t.type);
       exit(1);
     }
@@ -1870,38 +1882,38 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     }
     printf("Couldn't find member\n");
     exit(1);
-  } else if(e.type == 2){ // binary expression
+  } else if(e.type == EType.binE){ // binary expression
     // TODO
     if((e.p2 == 0) + (e.p2 == 6)
     + (e.p2 == 7) + (e.p2 == 8)
     + (e.p2 == 9) + (e.p2 == 10)){//bool
       t : *Type = malloc(sizeof Type);
-      t.type = 4;
+      t.type = TypeType.boolT;
       t.payload = 0;
       return t;
     }
     return typeresolve(e.p1, cc); // return p1, whatever it is.
-  } else if(e.type == 4){ // const int
+  } else if(e.type == EType.cIntE){ // const int
     t : *Type = malloc(sizeof Type);
     t.type = TypeType.intT;
     t.payload = 0;
     return t;
-  } else if(e.type == 12){ // const char
+  } else if(e.type == EType.cCharE){ // const char
     t : *Type = malloc(sizeof Type);
     t.type = TypeType.uintT;
     t.payload = 8;
     return t;
-  } else if(e.type == 5){ // const string
+  } else if(e.type == EType.cStrE){ // const string
     t : *Type = malloc(sizeof Type);
     t.type = TypeType.stringT;
     t.payload = 0;
     return t;
-  } else if(e.type == 6){ // pointer
+  } else if(e.type == EType.ptrE){ // pointer
     t : * Type = malloc(sizeof Type);
     t.type = TypeType.pointerT;
     t.payload = typeresolve(e.p1, cc);
     return t;
-  } else if(e.type == 7){ // fcall type resolve
+  } else if(e.type == EType.fcallE){ // fcall type resolve
     n := cc_resolve_named(cc, e.p1);
     if(n == 0){
       printf("Unable to find function %s\n", e.p1);
@@ -1911,12 +1923,12 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     t : *Type = p.decl.p2;
     ft: *FunctionType = t.payload;
     return ft.returnType;
-  } else if(e.type == 8){
+  } else if(e.type == EType.sizeE){
     t : *Type = malloc(sizeof Type);
     t.type = TypeType.intT;
     t.payload = 0;
     return t;
-  } else if(e.type == 9){ // not -> boolean
+  } else if(e.type == EType.notE){ // not -> boolean
     t : *Type = malloc(sizeof Type);
     t.type = TypeType.boolT;
     t.payload = 0;
@@ -2048,22 +2060,22 @@ exprgen_binop := (e: *Expression, cc: *CC) -> *any{
   // TODO refine this
   is_unsigned := (ltt.type == uit) + (rtt.type == uit);
 
-  if(op == 7){// <
+  if(op == OpCode.lt){// <
     if(is_unsigned)
       return exprgen_binop_icmp(e, 36, cc);
     return exprgen_binop_icmp(e, 40, cc);
   }
-  if(op == 8){// <=
+  if(op == OpCode.lte){// <=
     if(is_unsigned)
       return exprgen_binop_icmp(e, 37, cc);
     return exprgen_binop_icmp(e, 41, cc);
   }
-  if(op == 9){// >
+  if(op == OpCode.gt){// >
     if(is_unsigned)
       return exprgen_binop_icmp(e, 34, cc);
     return exprgen_binop_icmp(e, 38, cc);
   }
-  if(op == 10){// >=
+  if(op == OpCode.gte){// >=
     if(is_unsigned)
       return exprgen_binop_icmp(e, 35, cc);
     return exprgen_binop_icmp(e, 39, cc);
@@ -2101,19 +2113,19 @@ exprgen_binop := (e: *Expression, cc: *CC) -> *any{
     }
     inst : int;
     // TODO handle fp
-    if(op == 1){ // +
+    if(op == OpCode.add){ // +
       inst = 8;
-    } else if(op == 2){ // -
+    } else if(op == OpCode.minus){ // -
       inst = 10;
-    } else if(op == 3){ // *
+    } else if(op == OpCode.mult){ // *
       inst = 12;
-    } else if(op == 4){ // /
+    } else if(op == OpCode.div){ // /
       // TODO handle other cases
       inst = 15;
       if((ltt.type == uit) * (rtt.type == uit)){// both are unsigned
         inst = 14;
       }
-    } else if(op == 5){ // %
+    } else if(op == OpCode.rem){ // %
       // TODO handle other cases
       inst = 18;
       if((ltt.type == uit) * (rtt.type == uit)){// both are unsigned
@@ -2148,7 +2160,7 @@ exprgen_binop := (e: *Expression, cc: *CC) -> *any{
     }
 
 
-    if(op == 2){// -
+    if(op == OpCode.minus){// -
       mone := LLVMConstInt(LLVMInt64TypeInContext(cc.context), 0-1, 1);
       rhs = LLVMBuildBinOp(cc.builder, 12, rhs, mone, "ptrop"); // TODO problem?
     }
@@ -2225,7 +2237,7 @@ exprgen_fcall := (e: *Expression, cc: *CC)-> *any{
 
 exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
   tmpE : *Expression = malloc(sizeof Expression);
-  tmpE.type = 7;
+  tmpE.type = EType.fcallE;
 
 
   classBase := typeresolve(e.p3, cc);
@@ -2235,7 +2247,7 @@ exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
   }
 
   // resolve pointer
-  if(classBase.type == 6){
+  if(classBase.type == TypeType.pointerT){
     classBase = classBase.payload;
     // it's a pointer, all is well, just resolve base
   } else {
@@ -2245,10 +2257,10 @@ exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
     baseE : *Statement = malloc(sizeof Statement);
 
     eBase : *Expression = malloc(sizeof Expression);
-    eBase.type = 11; // base of
+    eBase.type = EType.baseE; // base of
     eBase.p1 = tmp.p1;
 
-    baseE.type = 12;
+    baseE.type = SType.argT;
     baseE.p1 = eBase;
     baseE.next = tmp.next;
 
@@ -2257,7 +2269,7 @@ exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
 
   tmpE.p2 = e.p2;
 
-  if(classBase.type != 0){
+  if(classBase.type != TypeType.namedT){
     printf("Tried to call method on type %d\n", classBase.type);
     printf("Can't call methods on non-structs\n");
     exit(1);
@@ -2297,7 +2309,7 @@ exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
         be.next = tmp.next;
 
         eBase : *Expression = malloc(sizeof Expression);
-        eBase.type = 6; // pointer
+        eBase.type = EType.ptrE; // pointer
         eBase.p1 = tmp.p1;
 
         be.p1 = eBase;
@@ -2320,19 +2332,19 @@ exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
 }
 
 get_alloca := (e: *Expression, cc: *CC) -> *any{
-  if(e.type == 0){// variable
+  if(e.type == EType.varE){// variable
     name := cc_resolve_named(cc, e.p1);
     if(name == 0){
       printf("Variable not found %s\n", e.p1);
     }
     vp : *VariablePayload = name.payload;
     return vp.alloc;
-  } else if(e.type == 1){//member
+  } else if(e.type == EType.memE){//member
     member_ind := 0;
     tmpe := typeresolve(e.p1, cc);
     level := 0;
     p := tmpe;
-    while(p.type == 6){ // go til you reach the base
+    while(p.type == TypeType.pointerT){ // go til you reach the base
       level = level + 1;
       p = p.payload;
     }
@@ -2369,11 +2381,11 @@ get_alloca := (e: *Expression, cc: *CC) -> *any{
     }
     printf("Couldn't find member %s\n", e.p2);
     exit(1);
-  } else if(e.type == 2){// binop
+  } else if(e.type == EType.binE){// binop
     tmp := exprgen(e, cc);
     tmp = LLVMBuildLoad(cc.builder, tmp, "binopload");
     return tmp;
-  } else if(e.type == 6){//ptr
+  } else if(e.type == EType.ptrE){//ptr
     tmp := exprgen(e.p1, cc);
     return tmp;
   }
@@ -2429,7 +2441,7 @@ exprgen_enum_member := (e: *Expression, en: *Statement, cc: *CC) -> *any{
 resolve_enum := (e: *Expression, cc: *CC) -> *Statement {
   // return pointer to struct statement or null
   t := typeresolve(e.p1, cc);
-  if(t.type == 16){ // should it be 15? TODO
+  if(t.type == TypeType.enumT){ // should it be 15? TODO
     // it's enum
     tmpE : *Expression = e.p1;
     c_name := cc_resolve_named(cc, tmpE.p1);
@@ -2441,14 +2453,14 @@ resolve_enum := (e: *Expression, cc: *CC) -> *Statement {
 }
 
 exprgen := (e: *Expression, cc: *CC) -> *any{
-  if(e.type == 0){// variable
+  if(e.type == EType.varE){// variable
     name := cc_resolve_named(cc, e.p1);
     if(name == 0){
       printf("Variable not found %s\n", e.p1);
     }
     vp : *VariablePayload = name.payload;
     return LLVMBuildLoad(cc.builder, vp.alloc, e.p1);
-  } else if(e.type == 1){// member access
+  } else if(e.type == EType.memE){// member access
     // Are we dealing with struct or enum?
     en := resolve_enum(e, cc);
     if(en){
@@ -2456,27 +2468,27 @@ exprgen := (e: *Expression, cc: *CC) -> *any{
     }
     alloc := get_alloca(e, cc);
     return LLVMBuildLoad(cc.builder, alloc, "memberptr");
-  } else if(e.type == 2){// binary operation
+  } else if(e.type == EType.binE){// binary operation
     return exprgen_binop(e, cc);
-  } else if(e.type == 4){// const int
+  } else if(e.type == EType.cIntE){// const int
     // TODO refine int choice based on arch
     // TODO refine unsigned choice
     return LLVMConstInt(LLVMInt64TypeInContext(cc.context), e.p1, 1);
-  }  else if(e.type == 12){// const char
+  }  else if(e.type == EType.cCharE){// const char
     return LLVMConstInt(LLVMInt8TypeInContext(cc.context), e.p1, 0);
-  } else if(e.type == 5){// const string
+  } else if(e.type == EType.cStrE){// const string
     return LLVMBuildGlobalStringPtr(cc.builder, e.p1, "gstr");
-  } else if(e.type == 6){// pointer
+  } else if(e.type == EType.ptrE){// pointer
     return exprgen_pointer(e, cc);
-  } else if(e.type == 7){// fcall
+  } else if(e.type == EType.fcallE){// fcall
     return exprgen_fcall(e, cc);
-  } else if(e.type == 8){// sizeof
+  } else if(e.type == EType.sizeE){// sizeof
     return exprgen_sizeof(e, cc);
-  } else if(e.type == 9){ // not
+  } else if(e.type == EType.notE){ // not
     return exprgen_not(e, cc);
-  } else if(e.type == 10){ // methodcall
+  } else if(e.type == EType.methodCallE){ // methodcall
     return exprgen_methodcall(e, cc);
-  } else if(e.type == 11){ // base (reverse pointer)
+  } else if(e.type == EType.baseE){ // base (reverse pointer)
     return exprgen_base(e, cc);
   } else {
     printf("Unknown expression in exprgen %d\n", e.type);
@@ -2935,7 +2947,7 @@ compile_base_assign := (base: *Expression, v: *Expression, cc: *CC) -> void{
 
 compile_assign := (s: *Statement, cc: *CC) -> void{
   e : *Expression = malloc(sizeof Expression);
-  e.type = 0;
+  e.type = EType.varE;
   e.p1 = s.p1;
   compile_base_assign(e, s.p2, cc);
   return;
@@ -2948,7 +2960,7 @@ compile_member_assign := (s: *Statement, cc: *CC) -> void{
 
 compile_ptr_assign := (s: *Statement, cc: *CC) -> void{
   e: *Expression = malloc(sizeof Expression);
-  e.type = 6;
+  e.type = EType.ptrE;
   e.p1 = s.p1;
   compile_base_assign(e, s.p2, cc);
   return;
@@ -2956,7 +2968,7 @@ compile_ptr_assign := (s: *Statement, cc: *CC) -> void{
 
 compile_fcall := (s: *Statement, cc: *CC) -> void{
   e : *Expression = malloc(sizeof Expression);
-  e.type = 7;
+  e.type = EType.fcallE;
   e.p1 = s.p1;
   e.p2 = s.p2;
   exprgen_fcall(e, cc);
@@ -2965,7 +2977,7 @@ compile_fcall := (s: *Statement, cc: *CC) -> void{
 
 compile_mcall := (s: *Statement, cc: *CC) -> void{
   e : *Expression = malloc(sizeof Expression);
-  e.type =  10;
+  e.type =  EType.methodCallE;
   e.p1 = s.p1;
   e.p2 = s.p2;
   e.p3 = s.p3;
@@ -2981,7 +2993,7 @@ compile_cb := (s: *Statement, cc: *CC) -> void{
 }
 
 compile_enum := (s: *Statement, cc: *CC) -> void{
-  // TODO
+  // TODO do I want to find another way for finding enums?
   // we don't need the extra field, but have to for struct compatibility
   vp : *VariablePayload = malloc(sizeof VariablePayload);
   vp.alloc = 0; // this means we have an enum
