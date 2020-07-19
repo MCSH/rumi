@@ -167,27 +167,28 @@ Type: struct{
   payload: *any;
 }
 
+SType: enum{
+  returnT = 0, // (value,,)
+  declT = 1, // (name, type, expr)
+  assignT = 2, // (id, val,)
+  memAssignT = 3, // (expr, val, ) member is handled in expression
+  fcallT = 4, // (id, args, )
+  ifT = 5, // (expr, st1, st2)
+  whileT = 6, // (expr, st, )
+  codeBlockT = 7, // (first,,) {}
+  ptrAssignT = 8, //(alloca, val,)
+  funcDefT = 9, // (id, type, first)
+  funcSignT = 10, // (id, type,)
+  structDefT = 11, // (id, variable decl, )
+  argT = 12, //(val,,)
+  interfaceDefT = 13, //(id, method decl,)
+  methodCallT = 14, //(methodname, args, base expr)
+  enumDefT = 15, // (id, members, )
+  enumMemT = 16, // (id, val,)
+}
+
 Statement: struct {
-  type: int;
-  /*
-      0 -> return (value,,)
-      1 -> decl (name, type, expr)
-      2 -> assign (id, val,)
-      3 -> mem assign (expr, val,) // member is handled in expression
-      4 -> fcall (id, args, )
-      5 -> if (expr, st1, st2)
-      6 -> while(expr, st, )
-      7 -> codeblock(first, ,) // {}
-      8 -> pointer assign (alloca, val, )
-      9 -> function define(id, type, first)
-      10 -> function sign(id, type, )
-      11 -> struct(id, variable decl, )
-      12 -> arg(val, , )
-      13 -> interface(id, method decl,)
-      14 -> method call(methodname, args, base expression)
-      15 -> enum(id, members, )
-      16 -> enum_member(id, val,)
-  */
+  type: SType;
   p1: *any;
   p2: *any;
   p3: *any;
@@ -1049,7 +1050,7 @@ parse_fcall_args := (l: *Lexer) -> *Statement{
   while(nt.type != 5){
     val := parse_expr(l);
     tmp : *Statement = malloc(sizeof Statement);
-    tmp.type = 12;
+    tmp.type = SType.argT;
     tmp.p1 = val;
     tmp.next = 0;
     if(ans == 0)
@@ -1147,7 +1148,7 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
         // p1: Person.Account.Email
 
         args : *Statement = malloc(sizeof Statement);
-        args.type = 12;
+        args.type = SType.argT;
         args.p1 = tmp.p1;
         args.next = parse_fcall_args(l);
 
@@ -1293,11 +1294,11 @@ parse_statement := (l: *Lexer) -> *Statement{
     tn : *Token = lexer_peep(l);
     if(tn.type == 11){ // ;
       lexer_expect(l, 11, ";");
-      ans.type = 0;
+      ans.type = SType.returnT;
       ans.p1 = 0;
       return ans;
     } else { // return expr ;
-      ans.type = 0;
+      ans.type = SType.returnT;
       ans.p1 = parse_expr(l);
       lexer_expect(l, 11, ";");
       return ans;
@@ -1307,7 +1308,7 @@ parse_statement := (l: *Lexer) -> *Statement{
     ans.p1 = tn.payload;
     tn = lexer_pop(l);
     if(tn.type == 2){ // : variable decl
-      ans.type = 1;
+      ans.type = SType.declT;
       ans.p2 = parse_type(l);
       // = or ;
       tn =  lexer_pop(l);
@@ -1326,13 +1327,13 @@ parse_statement := (l: *Lexer) -> *Statement{
         return 0;
       }
     } else if(tn.type == 3){ // := variable decl
-      ans.type = 1;
+      ans.type = SType.declT;
       ans.p2 = 0;
       ans.p3 = parse_expr(l);
       lexer_expect(l, 11, ";");
       return ans;
     } else if(tn.type == 17){ // = variable assign
-      ans.type = 2;
+      ans.type = SType.assignT;
       ans.p2 = parse_expr(l);
       lexer_expect(l, 11, ";");
       return ans;
@@ -1366,7 +1367,7 @@ parse_statement := (l: *Lexer) -> *Statement{
         ans.p3 = lastExpr.p1;
 
         args : *Statement = malloc(sizeof Statement);
-        args.type = 12;
+        args.type = SType.argT;
         args.p1 = lastExpr.p1;
         // free(lastExpr); // TODO
         args.next = parse_fcall_args(l);
@@ -1374,19 +1375,19 @@ parse_statement := (l: *Lexer) -> *Statement{
         lexer_expect(l, 11, ";");
 
         ans.p2 = args;
-        ans.type =  14;
+        ans.type =  SType.methodCallT;
         return ans;
       } else { //assignment
         lexer_expect(l, 17, "=");
         ans.p2 = parse_expr(l);
         lexer_expect(l, 11, ";");
-        ans.type = 3;
+        ans.type = SType.memAssignT;
         return ans;
       }
     } else if(tn.type == 4){ // function call
       ans.p2 = parse_fcall_args(l);
       lexer_expect(l, 11, ";");
-      ans.type = 4;
+      ans.type = SType.fcallT;
       return ans;
     } else {
       printf("Expected to see :, =, . (, but got %d\n", tn.type);
@@ -1395,7 +1396,7 @@ parse_statement := (l: *Lexer) -> *Statement{
       return 0;
     }
   } else if(tn.type == 23){// if
-    ans.type = 5;
+    ans.type = SType.ifT;
     lexer_expect(l, 4, "(");
     ans.p1 = parse_expr(l);
     lexer_expect(l, 5, ")");
@@ -1411,14 +1412,14 @@ parse_statement := (l: *Lexer) -> *Statement{
     return ans;
   } else if(tn.type == 24){
     // while
-    ans.type = 6;
+    ans.type = SType.whileT;
     lexer_expect(l, 4, "(");
     ans.p1 = parse_expr(l);
     lexer_expect(l, 5, ")");
     ans.p2 = parse_statement(l);
     return ans;
   } else if(tn.type == 14){
-    ans.type = 7;
+    ans.type = SType.codeBlockT;
     prev : *Statement = 0;
     ans.p1 = 0;
     // {
@@ -1434,7 +1435,7 @@ parse_statement := (l: *Lexer) -> *Statement{
     lexer_expect(l, 15, "}");
     return ans;
   } else if(tn.type == 12){ // pointer access variable assign
-    ans.type = 8;
+    ans.type = SType.ptrAssignT;
     ans.p1 = parse_expr(l);
     lexer_expect(l, 17, "=");
     ans.p2 = parse_expr(l);
@@ -1454,7 +1455,7 @@ parse_function := (l: *Lexer) -> *Statement{
   // the function signature as well as opening { has been parsed
 
   ans : *Statement = malloc(sizeof Statement);
-  ans.type = 9;
+  ans.type = SType.funcDefT;
   ans.p3 = 0;
 
   // next token is not }
@@ -1494,7 +1495,7 @@ parse_function_top := (l: *Lexer, args: *Type, ft: *FunctionType, prev: *Stateme
         tmp.p2 = parse_type(l);
         tmp.p3 = 0;
         tmp.next = 0;
-        tmp.type = 1; // 1?
+        tmp.type = SType.declT; // 1?
 
         if(ft.first == 0)
           ft.first = tmp;
@@ -1519,12 +1520,12 @@ parse_function_top := (l: *Lexer, args: *Type, ft: *FunctionType, prev: *Stateme
 
       ft.returnType = parse_type(l);
 
-      nt : *Type = lexer_pop(l);
+      nt : *Token = lexer_pop(l);
 
       if(nt.type == 11){
         // signature
         s : *Statement = malloc(sizeof Statement);
-        s.type = 10;
+        s.type = SType.funcSignT;
         s.p1 = id;
         s.p2 = args;
         return s;
@@ -1560,7 +1561,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
        // function sign or function define
 
       args : *Type = malloc(sizeof Type);
-      args.type = 8;
+      args.type = TypeType.funcT;
       ft : *FunctionType = malloc(sizeof FunctionType);
       args.payload = ft;
 
@@ -1571,7 +1572,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
 
     } else if(nt.type == 2){
       ans : *Statement = malloc(sizeof Statement);
-      ans.type = 11;
+      ans.type = SType.structDefT;
       ans.p1 = id;
       ans.p2 = 0;
       // is it interface?
@@ -1607,7 +1608,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
           tmp_prev.p2 = tmpType;// type
           tmp_prev.p3 = 0;
           tmp_prev.next = 0;
-          tmp_prev.type = 1;
+          tmp_prev.type = SType.declT;
 
           ft.first = tmp_prev;
 
@@ -1624,7 +1625,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
           nt = lexer_peep(l);
         }
         lexer_expect(l, 15, "}");
-        ans.type = 13;
+        ans.type = SType.interfaceDefT;
         return ans;
       } else if(nt.type == 50){ // enum
         lexer_expect(l, 50, "enum");
@@ -1648,7 +1649,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
           lexer_expect(l, 6, ",");
 
           tmp : *Statement = malloc(sizeof Statement);
-          tmp.type = 16;
+          tmp.type = SType.enumMemT;
           tmp.p1 = tid;
           tmp.p2 = last_value;
           tmp.next = 0;
@@ -1663,7 +1664,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
         }
         lexer_expect(l, 15, "}");
 
-        ans.type = 15;
+        ans.type = SType.enumDefT;
         return ans;
       } else {
         // struct
@@ -1680,7 +1681,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
           nt = lexer_peep(l);
 
           tmp : *Statement = malloc(sizeof Statement);
-          tmp.type = 1;
+          tmp.type = SType.declT;
           tmp.p1 = tid;
           tmp.p2 = tp;
           tmp.next = 0;
@@ -1720,7 +1721,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
       tmp.p2 = tmpType;
       tmp.p3 = 0;
       tmp.next = 0;
-      tmp.type = 1;
+      tmp.type = SType.declT;
 
       ft.first = tmp;
       prev : *Statement = tmp;
@@ -2292,7 +2293,7 @@ exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
         tmp : *Statement = tmpE.p2;
 
         be : *Statement = malloc(sizeof Statement);
-        be.type = 12;
+        be.type = SType.argT;
         be.next = tmp.next;
 
         eBase : *Expression = malloc(sizeof Expression);
@@ -2431,7 +2432,6 @@ resolve_enum := (e: *Expression, cc: *CC) -> *Statement {
   if(t.type == 16){ // should it be 15? TODO
     // it's enum
     tmpE : *Expression = e.p1;
-    printf("c name was %s\n", tmpE.p1);
     c_name := cc_resolve_named(cc, tmpE.p1);
     vp : *VariablePayload = c_name.payload;
     if(vp.alloc == 0)
@@ -2451,7 +2451,6 @@ exprgen := (e: *Expression, cc: *CC) -> *any{
   } else if(e.type == 1){// member access
     // Are we dealing with struct or enum?
     en := resolve_enum(e, cc);
-    printf("Here and en is %d\n", en);
     if(en){
       return exprgen_enum_member(e, en, cc);
     }
@@ -2992,35 +2991,35 @@ compile_enum := (s: *Statement, cc: *CC) -> void{
 }
 
 compile := (s: *Statement, cc: *CC) -> void{
-  if(s.type == 0){ // return
+  if(s.type == SType.returnT){ // return
     compile_ret(s, cc);
-  } else if(s.type == 1){ // declaration
+  } else if(s.type == SType.declT){ // declaration
     compile_decl(s, cc);
-  } else if(s.type == 2){ // assign
+  } else if(s.type == SType.assignT){ // assign
     compile_assign(s, cc);
-  } else if(s.type == 3){ // member
+  } else if(s.type == SType.memAssignT){ // member
     compile_member_assign(s, cc);
-  } else if(s.type == 4){ // fcall
+  } else if(s.type == SType.fcallT){ // fcall
     compile_fcall(s, cc);
-  } else if(s.type == 5){ // if
+  } else if(s.type == SType.ifT){ // if
     compile_if(s, cc);
-  } else if(s.type == 6){ // while
+  } else if(s.type == SType.whileT){ // while
     compile_while(s, cc);
-  } else if(s.type == 7){ // codeblock
+  } else if(s.type == SType.codeBlockT){ // codeblock
     compile_cb(s, cc);
-  } else if(s.type == 8){ // ptr assign
+  } else if(s.type == SType.ptrAssignT){ // ptr assign
     compile_ptr_assign(s, cc);
-  } else if(s.type == 9){ // function
+  } else if(s.type == SType.funcDefT){ // function
     compile_function(s, cc);
-  } else if(s.type == 10){ // function signature
+  } else if(s.type == SType.funcSignT){ // function signature
     compile_fs(s, cc);
-  } else if(s.type == 11){ // struct
+  } else if(s.type == SType.structDefT){ // struct
     compile_struct(s, cc);
-  } else if(s.type == 13){ // interface
+  } else if(s.type == SType.interfaceDefT){ // interface
     compile_interface(s, cc);
-  } else if(s.type == 14){ // method call
+  } else if(s.type == SType.methodCallT){ // method call
     compile_mcall(s, cc);
-  } else if(s.type == 15){ // enum
+  } else if(s.type == SType.enumDefT){ // enum
     compile_enum(s, cc);
   } else{
     printf("Unknown statement type %d\n", s.type);
