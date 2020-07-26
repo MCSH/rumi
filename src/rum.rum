@@ -145,6 +145,7 @@ CC: struct{
   module: *any;
   builder: *any;
   lastB: *BB;
+  structNum: int;
 }
 
 TypeType: enum{
@@ -178,7 +179,7 @@ SType: enum{
   ptrAssignT = 8, //(alloca, val,)
   funcDefT = 9, // (id, type, first)
   funcSignT = 10, // (id, type,)
-  structDefT = 11, // (id, variable decl, )
+  structDefT = 11, // (id, variable decl, struct_num)
   argT = 12, //(val,,)
   interfaceDefT = 13, //(id, method decl,)
   methodCallT = 14, //(methodname, args, base expr)
@@ -213,6 +214,7 @@ EType: enum{
   methodCallE = 10, // methodcall(methodname, args, base expression)
   baseE = 11, // baseof(expr,,) // reverse of ptr
   cCharE = 12, // const char(val,,)
+  instanceE, // (id, type, )
 }
 
 OpCode: enum {
@@ -296,6 +298,7 @@ TokenType: enum{
   TINTERFACE = 49, // interface
   TENUM = 50, // enum
   TCHAR = 51, // character
+  TINSTANCEOF,
 }
 
 Token: struct {
@@ -655,6 +658,12 @@ lexer := (buf: *u8) -> *Lexer{
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
+      } else if(streq(id, "instanceof")){
+        t : *Token = malloc(sizeof Token);
+        t.type = TokenType.TINSTANCEOF;
+        t.payload = 0;
+        *(l.ptr + l.count) = t;
+        l.count = l.count + 1;
       } else {
         t : *Token = malloc(sizeof Token);
         t.type = TokenType.TID;
@@ -895,7 +904,7 @@ lexer := (buf: *u8) -> *Lexer{
       // single char OR escaped char
       offset = offset + 1;
       // is it escape?
-      ch := *(buf + offset);
+      ch : u8 = *(buf + offset);
       offset = offset + 1;
       if(ch == '\\'){// escape
         ch = resolve_escape(*(buf+offset));
@@ -904,7 +913,7 @@ lexer := (buf: *u8) -> *Lexer{
       if(*(buf+offset) != '\''){
         printf("Unclosed character token at: ");
         offset = offset - 5;
-        counter := 30;
+        counter := 80;
         while(counter){
           printf("%c", *(buf+(offset+30-counter)));
           counter = counter - 1;
@@ -1131,6 +1140,10 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
   // TODO handle negative values
 
   if(tn.type == TokenType.TID){ // id
+    // TODO some of these should be post value, not post id, ex: member and method call and instance of
+    /*
+        Converting to this style would eliminate the need for a while here.
+    */
     id := tn.payload;
     // EXPECT ID
     // CHECK FOR . ID
@@ -1168,6 +1181,18 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
         ans.p3 = tmp.p1;
         return ans;
       }
+      return ans;
+    } else if(tn.type == TokenType.TINSTANCEOF){
+      lexer_pop(l);
+
+      tmp : *Expression = ans;
+      tmp.type = EType.varE;
+      tmp.p1 = id;
+      
+      ans = malloc(sizeof Expression);
+      ans.p2 = parse_type(l);
+      ans.p1 = tmp;
+      ans.type = EType.instanceE;
       return ans;
     } else if(tn.type == TokenType.TLPAR){ // function call
       lexer_pop(l);
@@ -2419,6 +2444,157 @@ exprgen_not := (e: *Expression, cc: *CC) -> *any{
   return LLVMBuildICmp(cc.builder, 32, val, LLVMConstInt(LLVMInt64TypeInContext(cc.context), 0, 0), "not");
 }
 
+resolve_interface := (e: *Expression, cc: *CC) -> *Statement {
+  // return pointer to interface statement or null
+  st := typeresolve(e, cc);
+  while(st.type == TypeType.pointerT){
+    st = st.payload;
+  }
+  if(st.type == TypeType.namedT){
+    // might be a struct or interface
+    c_name := cc_resolve_named(cc, strcat(st.payload, "$$"));
+    if(c_name){
+      vp : *VariablePayload = c_name.payload;
+      return vp.decl;
+    }
+  }
+  return 0;
+}
+
+compile_struct_to_interface := (it: *Statement, st: *Statement, cc: *CC) -> *any {
+  // Create the VPTR and other necessary structures
+  cc_name := strcat(st.p1, strcat("#", it.p1));
+
+  // the vptr type is...
+  cc_named := cc_resolve_named(cc, strcat(it.p1, "$$"));
+  if(!cc_named){
+    printf("Error in struct to interface, unknown interface scheme $s\n", it.p1);
+    exit(1);
+  }
+  cc_named_vp : *VariablePayload = cc_named.payload;
+  vptr_t := cc_named_vp.alloc;
+
+  // we need to create const array
+  vptr_ref := LLVMAddGlobal(cc.module, vptr_t, cc_name);
+
+  // create vptr
+  count := 1; // self
+  f : *Statement = it.p2;
+  while(f){
+    count = count + 1;
+    f = f.next;
+  }
+
+  vals := malloc(sizeof *any * count);
+  f = it.p2;
+
+  *vals = LLVMConstInt(LLVMInt64TypeInContext(cc.context), st.p3, 0); // struct num
+
+  i := 1;
+  while(f){
+    // find the function!
+    method_name := f.p1;
+    tmp_f := LLVMGetNamedFunction(cc.module, strcat(st.p1, strcat("$", method_name)));
+
+    if(!tmp_f){
+      printf("Couldn't find method %s on struct %s needed for interface %s\n", method_name, st.p1, it.p1);
+      exit(1);
+    }
+
+    *(vals + i) = LLVMConstBitCast(tmp_f, LLVMPointerType(LLVMInt64TypeInContext(cc.context), 0));
+    // tmp_f // TODO remove
+    f = f.next;
+    i = i + 1;
+  }
+
+  vptr := LLVMConstNamedStruct(vptr_t, vals, count);
+
+  // set const
+  LLVMSetInitializer(vptr_ref, vptr);
+  LLVMSetGlobalConstant(vptr_ref, 1);
+
+  return vptr_ref;
+}
+
+
+exprgen_instance := (e: *Expression, cc: *CC) -> *any{
+  // TODO
+  // ensure lhs is interface variable
+  it := resolve_interface(e.p1, cc);
+  if(!it){
+    printf("LHS of instance must be variable of interface\n");
+    exit(1);
+  }
+  cc_named := cc_resolve_named(cc, it.p1);
+  if(!cc_named){
+    printf("Error in struct to interface cast, unknown interface scheme %s\n", it.p1);
+    exit(1);
+  }
+  cc_named_vp : *VariablePayload = cc_named.payload;
+  tp := cc_named_vp.alloc;
+
+
+  cc_named := cc_resolve_named(cc, strcat(it.p1, "$$"));
+  if(!cc_named){
+    printf("Error in struct to interface, unknown interface scheme $s\n", it.p1);
+    exit(1);
+  }
+  cc_named_vp : *VariablePayload = cc_named.payload;
+  tpp := cc_named_vp.alloc;
+
+  // ensure rhs is struct
+  t : *Type = e.p2;
+  if(t.type != TypeType.namedT){
+    printf("RHS of instance of must be a struct\n");
+    exit(1);
+  }
+  s_name := t.payload;
+  c_name:= cc_resolve_named(cc, strcat(s_name, "$$"));
+  if(c_name){
+    // interface
+    printf("RHS of instance of must be a struct\n");
+    exit(1);
+  }
+
+  c_name = cc_resolve_named(cc, s_name);
+  if(!c_name){
+    printf("Couldn't find struct %s\n", s_name);
+    exit(1);
+  }
+  vp: *VariablePayload = c_name.payload;
+  if(vp.alloc == 0){
+    // enum
+    printf("RHS of instance of must be a struct\n");
+    exit(1);
+  }
+
+  // TODO it might be a variable, fix that!!!!!
+
+  // we are ok, it's a struct
+  st : *Statement = vp.decl;
+
+  // resolve vptr
+  cc_name := strcat(st.p1, strcat("#", it.p1));
+  vptr := LLVMGetNamedGlobal(cc.module, cc_name);
+
+  // ensure they are compatible
+  if(!vptr)
+    vptr = compile_struct_to_interface(it, st, cc);
+
+  // compare lhs -> vptr to rhs's vptr
+  lhs := get_alloca(e.p1, cc);
+  
+  vptr_ptr := LLVMBuildStructGEP2(cc.builder, tp, lhs, 1, "vptrptr");
+  vptr_ptr = LLVMBuildLoad(cc.builder, vptr_ptr, "vptr_val");
+
+  vptr_ptr = LLVMBuildStructGEP2(cc.builder, tpp, vptr_ptr, 0, "basevptr_ptr");
+
+  vptr_ptr = LLVMBuildLoad(cc.builder, vptr_ptr, "bvptr_val");
+  vptr := LLVMConstInt(LLVMInt64TypeInContext(cc.context), st.p3, 0);
+
+  return LLVMBuildICmp(cc.builder, 32, vptr_ptr, vptr, "instance");
+}
+
 exprgen_base := (e: *Expression, cc: *CC) -> * any{
   return get_alloca(e.p1, cc);
 }
@@ -2490,6 +2666,8 @@ exprgen := (e: *Expression, cc: *CC) -> *any{
     return exprgen_methodcall(e, cc);
   } else if(e.type == EType.baseE){ // base (reverse pointer)
     return exprgen_base(e, cc);
+  } else if(e.type == EType.instanceE){
+    return exprgen_instance(e, cc);
   } else {
     printf("Unknown expression in exprgen %d\n", e.type);
     exit(1);
@@ -2582,6 +2760,9 @@ compile_decl := (s: *Statement, cc: *CC) -> void{
 }
 
 compile_struct := (s: *Statement, cc: *CC) -> void{
+  cc.structNum = cc.structNum + 1;
+  s.p3 = cc.structNum;
+
   st := LLVMStructCreateNamed(cc.context, s.p1);
   vp : *VariablePayload = malloc(sizeof VariablePayload);
   vp.alloc = st;
@@ -2628,7 +2809,7 @@ compile_interface := (s: *Statement, cc: *CC) -> void {
 
   pointer_type := LLVMPointerType(LLVMInt64TypeInContext(cc.context), 0);
 
-  *members = pointer_type;
+  *members = LLVMInt64TypeInContext(cc.context);
   i := 1;
   while(f){
     *(members + i) = pointer_type;
@@ -2761,61 +2942,6 @@ compile_ret := (s: *Statement, cc: *CC) -> void{
   return ;
 }
 
-compile_struct_to_interface := (it: *Statement, st: *Statement, cc: *CC) -> *any {
-  // Create the VPTR and other necessary structures
-  cc_name := strcat(st.p1, strcat("#", it.p1));
-
-  // the vptr type is...
-  cc_named := cc_resolve_named(cc, strcat(it.p1, "$$"));
-  if(!cc_named){
-    printf("Error in struct to interface, unknown interface scheme $s\n", it.p1);
-    exit(1);
-  }
-  cc_named_vp : *VariablePayload = cc_named.payload;
-  vptr_t := cc_named_vp.alloc;
-
-  // we need to create const array
-  vptr_ref := LLVMAddGlobal(cc.module, vptr_t, cc_name);
-
-  // create vptr
-  count := 1; // self
-  f : *Statement = it.p2;
-  while(f){
-    count = count + 1;
-    f = f.next;
-  }
-
-  vals := malloc(sizeof *any * count);
-  f = it.p2;
-
-  *vals = LLVMConstBitCast(LLVMConstInt(LLVMInt64TypeInContext(cc.context), 0, 0),
-                           LLVMPointerType(LLVMInt64TypeInContext(cc.context),0)); // first one is set to zero for now
-  i := 1;
-  while(f){
-    // find the function!
-    method_name := f.p1;
-    tmp_f := LLVMGetNamedFunction(cc.module, strcat(st.p1, strcat("$", method_name)));
-
-    if(!tmp_f){
-      printf("Couldn't find method %s on struct %s needed for interface %s\n", method_name, st.p1, it.p1);
-      exit(1);
-    }
-
-    *(vals + i) = LLVMConstBitCast(tmp_f, LLVMPointerType(LLVMInt64TypeInContext(cc.context), 0));
-    // tmp_f // TODO remove
-    f = f.next;
-    i = i + 1;
-  }
-
-  vptr := LLVMConstNamedStruct(vptr_t, vals, count);
-
-  // set const
-  LLVMSetInitializer(vptr_ref, vptr);
-  LLVMSetGlobalConstant(vptr_ref, 1);
-
-  return vptr_ref;
-}
-
 struct_to_interface_cast := (it: *Statement, st: *Statement, alloc: *any, val: *any, cc: *CC) -> void {
   /**
   * alloc is an alloca and val is a direct pointer
@@ -2866,23 +2992,6 @@ resolve_struct := (e: *Expression, cc: *CC) -> *Statement {
     if(!c_name){
       // struct
       c_name = cc_resolve_named(cc, st.payload);
-      vp : *VariablePayload = c_name.payload;
-      return vp.decl;
-    }
-  }
-  return 0;
-}
-
-resolve_interface := (e: *Expression, cc: *CC) -> *Statement {
-  // return pointer to interface statement or null
-  st := typeresolve(e, cc);
-  while(st.type == TypeType.pointerT){
-    st = st.payload;
-  }
-  if(st.type == TypeType.namedT){
-    // might be a struct or interface
-    c_name := cc_resolve_named(cc, strcat(st.payload, "$$"));
-    if(c_name){
       vp : *VariablePayload = c_name.payload;
       return vp.decl;
     }
@@ -3100,6 +3209,7 @@ main := (argc: s32,argv: *string) -> int{
   ast := parser(l);
 
   cc: *CC = malloc(sizeof CC);
+  cc.structNum = 0;
   cc.lastB = 0;
 
   push_bb(cc);
