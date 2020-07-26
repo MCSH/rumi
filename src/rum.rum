@@ -129,6 +129,17 @@ LLVMGetInstructionOpcode := (inst: *any) -> int;
 
 CompileLLVM := (m :* any, path: string) -> void;
 
+DBGInfo: struct{
+  pos: int;
+  line: int;
+}
+
+printDBGandExit := (d: *DBGInfo)-> void{
+  printf("line: %d, pos: %d\n", d.line, d.pos);
+  exit(1);
+  return;
+}
+
 Names: struct{
   name: string;
   next: *Names;
@@ -165,6 +176,7 @@ TypeType: enum{
 Type: struct{
   type: TypeType;
   payload: *any;
+  dbg: *DBGInfo;
 }
 
 SType: enum{
@@ -193,6 +205,7 @@ Statement: struct {
   p2: *any;
   p3: *any;
   next: *Statement;
+  dbg: *DBGInfo;
 }
 
 VariablePayload: struct{
@@ -238,6 +251,7 @@ Expression: struct{
   p3: *any;
 
   prec: int; // precident
+  dbg: *DBGInfo;
 }
 
 FunctionType: struct{
@@ -304,12 +318,15 @@ TokenType: enum{
 Token: struct {
   type: TokenType; // We don't have enums yet
   payload: *any;
+  dbg: *DBGInfo;
 }
 
 Lexer : struct {
   ptr    : **Token;
   count  : int;
   offset : int;
+  dbg: *DBGInfo;
+  line : int;
 }
 
 streq := (s1: *u8, s2: *u8) -> bool{
@@ -382,15 +399,17 @@ is_alphanumeric := (c: u8) -> bool{
   return is_numeric(c);
 }
 
-lexer_skip_ws := (buf: *u8, offset: int) -> int {
+lexer_skip_ws := (l: *Lexer, buf: *u8, offset: int) -> int {
   while(1){
     is_ws := 0;
 
     c : u8 = *(buf + offset);
 
 
-    if(c == 10) // \n
+    if(c == 10){ // \n
       is_ws = 1;
+      l.line = l.line + 1;
+    }
 
     if(c == 32) // space
       is_ws = 1;
@@ -493,11 +512,20 @@ parse_num := (buf: *u8, start: int, end: int) -> int{
   return atoi(str);
 }
 
+copy_debug_info := (d: *DBGInfo) -> *DBGInfo {
+  ans : *DBGInfo = malloc(sizeof DBGInfo);
+  ans.pos = d.pos;
+  ans.line = d.line;
+  return ans;
+}
+
 lexer := (buf: *u8) -> *Lexer{
   l : *Lexer;
 
   l = malloc(sizeof Lexer);
   l.count = 0;
+  l.line = 1;
+  l.dbg = malloc(sizeof DBGInfo);
   l.ptr = malloc(9000000 * sizeof Token);
 
   offset := 0;
@@ -505,11 +533,14 @@ lexer := (buf: *u8) -> *Lexer{
   // we don't have a break yet
   while_cond := 1;
   while(while_cond){
-    offset = lexer_skip_ws(buf, offset);
+    offset = lexer_skip_ws(l, buf, offset);
+    l.dbg.pos = offset;
+    l.dbg.line = l.line;
 
     if(*(buf+offset) == 0){
       // EOF
       t : *Token = malloc(sizeof Token);
+      t.dbg = copy_debug_info(l.dbg);
       t.type = TokenType.TEOF;
       t.payload = 0;
       *(l.ptr + l.count) = t;
@@ -522,150 +553,175 @@ lexer := (buf: *u8) -> *Lexer{
       // capture different tokens
       if(streq(id, "int")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TINT;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "return")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TRET;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "if")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TIF;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "while")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TWHILE;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "else")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TELSE;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "string")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TSTR;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "any")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TANY;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "struct")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TSTRUCT;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "interface")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TINTERFACE;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "enum")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TENUM;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "void")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TVOID;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "u8")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TU8;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "u16")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TU16;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "u32")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TU32;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "u64")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TU64;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "s8")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TS8;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "s16")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TS16;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "s32")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TS32;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "s64")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TS64;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "f32")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TF32;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "f64")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TF64;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "bool")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TBOOL;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "sizeof")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TSIZE;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else if(streq(id, "instanceof")){
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TINSTANCEOF;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else {
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TID;
         t.payload = id;
         *(l.ptr + l.count) = t;
@@ -676,6 +732,7 @@ lexer := (buf: *u8) -> *Lexer{
       num := parse_num(buf, offset, end);
       offset = end;
       t : *Token = malloc(sizeof Token);
+      t.dbg = copy_debug_info(l.dbg);
       t.type = TokenType.TNUM;
       t.payload = num;
       *(l.ptr + l.count) = t;
@@ -685,12 +742,14 @@ lexer := (buf: *u8) -> *Lexer{
       if(*(buf+offset) == '='){// !=
         offset = offset + 1;
         t: *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TNEQ;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else { // !
         t: *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TNOT;
         t.payload = 0;
         *(l.ptr + l.count) = t;
@@ -701,12 +760,14 @@ lexer := (buf: *u8) -> *Lexer{
       if(*(buf+offset) == '='){// <=
         offset = offset + 1;
         t: *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TLTE;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else { // <
         t: *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TLT;
         t.payload = 0;
         *(l.ptr + l.count) = t;
@@ -717,12 +778,14 @@ lexer := (buf: *u8) -> *Lexer{
       if(*(buf+offset) == '='){// >=
         offset = offset + 1;
         t: *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TGTE;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else { // >
         t: *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TGT;
         t.payload = 0;
         *(l.ptr + l.count) = t;
@@ -733,12 +796,14 @@ lexer := (buf: *u8) -> *Lexer{
       if(*(buf+offset) == '=') { // :=
         offset = offset + 1;
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TDEF;
         t.payload = 0;
         *(l.ptr + l.count) = t;
         l.count = l.count + 1;
       } else { // only :
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TCOL;
         t.payload = 0;
         *(l.ptr + l.count) = t;
@@ -746,6 +811,7 @@ lexer := (buf: *u8) -> *Lexer{
       }
     } else if(*(buf+offset) == '('){ // lpar
       t : *Token = malloc(sizeof Token);
+      t.dbg = copy_debug_info(l.dbg);
       t.type = TokenType.TLPAR;
       t.payload = 0;
       *(l.ptr + l.count) = t;
@@ -753,6 +819,7 @@ lexer := (buf: *u8) -> *Lexer{
       offset = offset + 1;
     } else if(*(buf+offset) == ')'){ // rpar
       t : *Token = malloc(sizeof Token);
+      t.dbg = copy_debug_info(l.dbg);
       t.type = TokenType.TRPAR;
       t.payload = 0;
       *(l.ptr + l.count) = t;
@@ -760,6 +827,7 @@ lexer := (buf: *u8) -> *Lexer{
       offset = offset + 1;
     } else if(*(buf+offset) == ','){ // ,
       t : *Token = malloc(sizeof Token);
+      t.dbg = copy_debug_info(l.dbg);
       t.type = TokenType.TCOMMA;
       t.payload = 0;
       *(l.ptr + l.count) = t;
@@ -771,6 +839,7 @@ lexer := (buf: *u8) -> *Lexer{
       tmp_bool2 : bool = *(buf+offset+1) == 46;
       if(tmp_bool * tmp_bool2){ // ...
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.T3DOT;
         t.payload = 0;
         *(l.ptr + l.count) = t;
@@ -778,6 +847,7 @@ lexer := (buf: *u8) -> *Lexer{
         offset = offset + 3;
       } else {
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TDOT;
         t.payload = 0;
         *(l.ptr + l.count) = t;
@@ -787,6 +857,7 @@ lexer := (buf: *u8) -> *Lexer{
     } else if(*(buf+offset) == '-'){ // -
       if(*(buf+offset+1) == '>'){ // ->
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TARROW;
         t.payload = 0;
         *(l.ptr + l.count) = t;
@@ -794,6 +865,7 @@ lexer := (buf: *u8) -> *Lexer{
         offset = offset + 2;
       } else {
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TDASH;
         t.payload = 0;
         *(l.ptr + l.count) = t;
@@ -802,6 +874,7 @@ lexer := (buf: *u8) -> *Lexer{
       }
     } else if(*(buf+offset) == ';'){ // ;
       t : *Token = malloc(sizeof Token);
+      t.dbg = copy_debug_info(l.dbg);
       t.type = TokenType.TSEM;
       t.payload = 0;
       *(l.ptr + l.count) = t;
@@ -809,6 +882,7 @@ lexer := (buf: *u8) -> *Lexer{
       offset = offset + 1;
     } else if(*(buf+offset) == '*'){ // *
       t : *Token = malloc(sizeof Token);
+      t.dbg = copy_debug_info(l.dbg);
       t.type = TokenType.TSTAR;
       t.payload = 0;
       *(l.ptr + l.count) = t;
@@ -820,11 +894,15 @@ lexer := (buf: *u8) -> *Lexer{
         whilecond := 1;
         while(whilecond){
           offset = offset +1;
+          if(*(buf+offset) == '\n')
+            l.line = l.line + 1;
           if(*(buf+offset) == '*'){
             offset = offset +1;
             if(*(buf+offset) == '/'){
               whilecond = whilecond - 1;
             }
+            if(*(buf+offset) == '\n')
+              l.line = l.line + 1;
           }
           if(*(buf+offset) == '/'){
             offset = offset +1;
@@ -840,6 +918,7 @@ lexer := (buf: *u8) -> *Lexer{
           offset = offset + 1;
       } else {
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TFSLASH;
         t.payload = 0;
         *(l.ptr + l.count) = t;
@@ -848,6 +927,7 @@ lexer := (buf: *u8) -> *Lexer{
       }
     } else if(*(buf+offset) == '{'){ // {
       t : *Token = malloc(sizeof Token);
+      t.dbg = copy_debug_info(l.dbg);
       t.type = TokenType.TLCB;
       t.payload = 0;
       *(l.ptr + l.count) = t;
@@ -855,6 +935,7 @@ lexer := (buf: *u8) -> *Lexer{
       offset = offset + 1;
     } else if(*(buf+offset) == '}'){ // }
       t : *Token = malloc(sizeof Token);
+      t.dbg = copy_debug_info(l.dbg);
       t.type = TokenType.TRCB;
       t.payload = 0;
       *(l.ptr + l.count) = t;
@@ -862,6 +943,7 @@ lexer := (buf: *u8) -> *Lexer{
       offset = offset + 1;
     } else if(*(buf+offset) == '+'){ // +
       t : *Token = malloc(sizeof Token);
+      t.dbg = copy_debug_info(l.dbg);
       t.type = TokenType.TPLUS;
       t.payload = 0;
       *(l.ptr + l.count) = t;
@@ -869,6 +951,7 @@ lexer := (buf: *u8) -> *Lexer{
       offset = offset + 1;
     } else if(*(buf+offset) == '%'){ // %
       t : *Token = malloc(sizeof Token);
+      t.dbg = copy_debug_info(l.dbg);
       t.type = TokenType.TPERC;
       t.payload = 0;
       *(l.ptr + l.count) = t;
@@ -877,6 +960,7 @@ lexer := (buf: *u8) -> *Lexer{
     } else if(*(buf+offset) == '='){ // =
       if(*(buf+offset+1) == '='){ // ==
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TEQEQ;
         t.payload = 0;
         *(l.ptr + l.count) = t;
@@ -884,6 +968,7 @@ lexer := (buf: *u8) -> *Lexer{
         offset = offset + 2;
       } else {
         t : *Token = malloc(sizeof Token);
+        t.dbg = copy_debug_info(l.dbg);
         t.type = TokenType.TEQ;
         t.payload = 0;
         *(l.ptr + l.count) = t;
@@ -895,6 +980,7 @@ lexer := (buf: *u8) -> *Lexer{
       str := handle_str(buf, offset, end);
       offset = end;
       t : *Token = malloc(sizeof Token);
+      t.dbg = copy_debug_info(l.dbg);
       t.type = TokenType.TSTRV;
       t.payload = str;
       *(l.ptr + l.count) = t;
@@ -919,10 +1005,11 @@ lexer := (buf: *u8) -> *Lexer{
           counter = counter - 1;
         }
         printf("\n");
-        exit(1);
+        printDBGandExit(l.dbg);
       }
       offset = offset + 1;
       t : *Token = malloc(sizeof Token);
+      t.dbg = copy_debug_info(l.dbg);
       t.type = TokenType.TCHAR;
       t.payload = ch;
       *(l.ptr + l.count) = t;
@@ -959,13 +1046,14 @@ lexer_expect := (l : *Lexer, t: int, description: string) -> bool{
   printf("On token %d\n", l.offset);
   printf("Expected to see %s, but saw %d\n", description, tk);
   l.offset = l.count;
-  exit(1);
+  printDBGandExit(tn.dbg);
   return 1;
 }
 
 parse_type := (l: *Lexer) -> *Type{
   tn := lexer_pop(l);
   ans : *Type = malloc(sizeof Type);
+  ans.dbg = copy_debug_info(tn.dbg);
   if(tn.type == TokenType.TSTR){
     ans.type = TypeType.stringT;
     ans.payload = 0;
@@ -1054,7 +1142,7 @@ parse_type := (l: *Lexer) -> *Type{
   }
 
   printf("Expected to see type, but saw %d\n", tn.type);
-  exit(1);
+  printDBGandExit(tn.dbg);
   return 0;
 }
 
@@ -1068,6 +1156,7 @@ parse_fcall_args := (l: *Lexer) -> *Statement{
   while(nt.type != TokenType.TRPAR){
     val := parse_expr(l);
     tmp : *Statement = malloc(sizeof Statement);
+    tmp.dbg = copy_debug_info(nt.dbg);
     tmp.type = SType.argT;
     tmp.p1 = val;
     tmp.next = 0;
@@ -1082,7 +1171,7 @@ parse_fcall_args := (l: *Lexer) -> *Statement{
       if(nt.type != TokenType.TRPAR){
         printf("Expected to see , or ), saw %d\n", nt.type);
         l.offset = l.count;
-        exit(1);
+        printDBGandExit(nt.dbg);
         return 0;
       }
     } else {
@@ -1100,6 +1189,7 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
   // EXPECT )
   tn := lexer_pop(l);
   ans : *Expression = malloc(sizeof Expression);
+  ans.dbg = copy_debug_info(tn.dbg);
 
   if(tn.type == TokenType.TLPAR){ // (
     e := parse_expr(l);
@@ -1123,7 +1213,7 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
     // check to ensure it is not const
     if((v.type == EType.cIntE) + (v.type == EType.cStrE)){
       printf("Pointer is pointing to an expression %d\n", v.type);
-      exit(1);
+      printDBGandExit(v.dbg);
     }
     ans.type = EType.ptrE;
     ans.p1 = v;
@@ -1156,6 +1246,7 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
         tn2 := lexer_peep(l);
         lexer_expect(l, TokenType.TID, "id");
         tmp : *Expression = malloc(sizeof Expression);
+        tmp.dbg = copy_debug_info(tn2.dbg);
         tmp.type = EType.memE;
         tmp.p1 = ans;
         tmp.p2 = tn2.payload;
@@ -1170,11 +1261,13 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
         // p1: Person.Account.Email
 
         args : *Statement = malloc(sizeof Statement);
+        args.dbg = copy_debug_info(tn.dbg);
         args.type = SType.argT;
         args.p1 = tmp.p1;
         args.next = parse_fcall_args(l);
 
         ans = malloc(sizeof Expression);
+        ans.dbg = copy_debug_info(tn.dbg);
         ans.type = EType.methodCallE;
         ans.p1 = tmp.p2;
         ans.p2 = args;
@@ -1190,6 +1283,7 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
       tmp.p1 = id;
       
       ans = malloc(sizeof Expression);
+      ans.dbg = copy_debug_info(tn.dbg);
       ans.p2 = parse_type(l);
       ans.p1 = tmp;
       ans.type = EType.instanceE;
@@ -1226,7 +1320,7 @@ parse_exp_val:=(l: *Lexer) -> *Expression{
   } else {
     printf("Expected to see value, saw %d\n", tn.type);
     l.offset = l.count;
-    exit(1);
+    printDBGandExit(tn.dbg);
     return 0;
   }
 
@@ -1290,6 +1384,7 @@ parse_expr_rec := (l: *Lexer, last: int) -> *Expression{
     expr1 := ans;
     expr2 : *Expression = parse_expr_rec(l, last);
     ans = malloc(sizeof Expression);
+    ans.dbg = copy_debug_info(nt.dbg);
 
     ans.prec = prec;
     ans.type = EType.binE;
@@ -1319,6 +1414,7 @@ parse_expr := (l: *Lexer) -> *Expression{
 parse_statement := (l: *Lexer) -> *Statement{
   tn : *Token = lexer_pop(l);
   ans : *Statement = malloc(sizeof Statement);
+  ans.dbg = copy_debug_info(tn.dbg);
   if(tn.type == TokenType.TRET){
     // Return
     tn : *Token = lexer_peep(l);
@@ -1353,7 +1449,7 @@ parse_statement := (l: *Lexer) -> *Statement{
       } else {
         printf("Expected to see = or ;, but saw %d instead", tn.type);
         l.offset = l.count;
-        exit(1);
+        printDBGandExit(tn.dbg);
         return 0;
       }
     } else if(tn.type == TokenType.TDEF){ // := variable decl
@@ -1369,6 +1465,7 @@ parse_statement := (l: *Lexer) -> *Statement{
       return ans;
     } else if(tn.type == TokenType.TDOT){ // id.id = expr; 
       tmp : *Expression = malloc(sizeof Expression);
+      tmp.dbg = copy_debug_info(tn.dbg);
       tmp.type = EType.varE;
       tmp.p1 = ans.p1;
       ans.p1 = tmp;
@@ -1377,6 +1474,7 @@ parse_statement := (l: *Lexer) -> *Statement{
         tn = lexer_peep(l); // hack so I don't have to handle not seeing id
         lexer_expect(l, TokenType.TID, "id");
         tmp = malloc(sizeof Expression);
+        tmp.dbg = copy_debug_info(tn.dbg);
         tmp.type = EType.memE;
         tmp.p1 = ans.p1;
         tmp.p2 = tn.payload;
@@ -1397,6 +1495,7 @@ parse_statement := (l: *Lexer) -> *Statement{
         ans.p3 = lastExpr.p1;
 
         args : *Statement = malloc(sizeof Statement);
+        args.dbg = copy_debug_info(tn.dbg);
         args.type = SType.argT;
         args.p1 = lastExpr.p1;
         // free(lastExpr); // TODO
@@ -1422,7 +1521,7 @@ parse_statement := (l: *Lexer) -> *Statement{
     } else {
       printf("Expected to see :, =, . (, but got %d\n", tn.type);
       l.offset = l.count;
-      exit(1);
+      printDBGandExit(tn.dbg);
       return 0;
     }
   } else if(tn.type == TokenType.TIF){// if
@@ -1474,7 +1573,7 @@ parse_statement := (l: *Lexer) -> *Statement{
   } else {
     printf("Expected to see statement, saw %d\n", tn.type);
     l.offset = l.count;
-    exit(1);
+    printDBGandExit(tn.dbg);
     return 0;
   }
 
@@ -1485,6 +1584,10 @@ parse_function := (l: *Lexer) -> *Statement{
   // the function signature as well as opening { has been parsed
 
   ans : *Statement = malloc(sizeof Statement);
+  {
+    tn := lexer_peep(l);
+    ans.dbg = copy_debug_info(tn.dbg);
+  }
   ans.type = SType.funcDefT;
   ans.p3 = 0;
 
@@ -1513,6 +1616,10 @@ parse_function_top := (l: *Lexer, args: *Type, ft: *FunctionType, prev: *Stateme
       // parse args
       while((*lexer_peep(l)).type != TokenType.TRPAR){
         tmp : *Statement = malloc(sizeof Statement);
+        {
+          tn := lexer_peep(l);
+          tmp.dbg = copy_debug_info(tn.dbg);
+        }
         tmp.p1 = (*(lexer_peep(l))).payload;
         lexer_expect(l, TokenType.TID, "id");
         lexer_expect(l, TokenType.TCOL, ":");
@@ -1539,7 +1646,7 @@ parse_function_top := (l: *Lexer, args: *Type, ft: *FunctionType, prev: *Stateme
         else if((*lexer_peep(l)).type != TokenType.TRPAR){
           printf("Expected to see ) or , \n");
           l.offset = l.count;
-          exit(1);
+          printDBGandExit(tmp.dbg);
           return 0;
         }
       }
@@ -1555,6 +1662,7 @@ parse_function_top := (l: *Lexer, args: *Type, ft: *FunctionType, prev: *Stateme
       if(nt.type == TokenType.TSEM){
         // signature
         s : *Statement = malloc(sizeof Statement);
+        s.dbg = copy_debug_info(nt.dbg);
         s.type = SType.funcSignT;
         s.p1 = id;
         s.p2 = args;
@@ -1568,7 +1676,7 @@ parse_function_top := (l: *Lexer, args: *Type, ft: *FunctionType, prev: *Stateme
       } else {
         printf("Expected to see ; or {, saw %d\n", nt.type);
         l.offset = l.count;
-        exit(1);
+        printDBGandExit(nt.dbg);
         return 0;
       }
 }
@@ -1591,6 +1699,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
        // function sign or function define
 
       args : *Type = malloc(sizeof Type);
+      args.dbg = copy_debug_info(nt.dbg);
       args.type = TypeType.funcT;
       ft : *FunctionType = malloc(sizeof FunctionType);
       args.payload = ft;
@@ -1607,6 +1716,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
       ans.p2 = 0;
       // is it interface?
       nt : *Token = lexer_peep(l);
+      ans.dbg = copy_debug_info(nt.dbg);
       if(nt.type == TokenType.TINTERFACE){
         // it is an interface
         lexer_expect(l, TokenType.TINTERFACE, "interface");
@@ -1621,19 +1731,23 @@ parse_top_level := (l: *Lexer) -> *Statement{
 
           // augment *self*
           args : * Type = malloc(sizeof Type);
+          args.dbg = copy_debug_info(nt.dbg);
           args.type = TypeType.funcT;
           ft : *FunctionType = malloc(sizeof FunctionType);
           args.payload = ft;
 
           atmpType : *Type = malloc(sizeof Type);
+          atmpType.dbg = copy_debug_info(nt.dbg);
           atmpType.payload = id;
           atmpType.type = TypeType.namedT; // struct
 
           tmpType : *Type = malloc(sizeof Type);
+          tmpType.dbg = copy_debug_info(nt.dbg);
           tmpType.payload = atmpType;
           tmpType.type = TypeType.pointerT; // pointer
 
           tmp_prev : *Statement = malloc(sizeof Statement);
+          tmp_prev.dbg = copy_debug_info((*lexer_peep(l)).dbg);
           tmp_prev.p1 = "self";
           tmp_prev.p2 = tmpType;// type
           tmp_prev.p3 = 0;
@@ -1679,6 +1793,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
           lexer_expect(l, TokenType.TCOMMA, ",");
 
           tmp : *Statement = malloc(sizeof Statement);
+          tmp.dbg = copy_debug_info(nt.dbg);
           tmp.type = SType.enumMemT;
           tmp.p1 = tid;
           tmp.p2 = last_value;
@@ -1711,6 +1826,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
           nt = lexer_peep(l);
 
           tmp : *Statement = malloc(sizeof Statement);
+          tmp.dbg = copy_debug_info(nt.dbg);
           tmp.type = SType.declT;
           tmp.p1 = tid;
           tmp.p2 = tp;
@@ -1727,26 +1843,30 @@ parse_top_level := (l: *Lexer) -> *Statement{
     } else if(nt.type == TokenType.TDOT) { // method define
       if( (*lexer_peep(l)).type != TokenType.TID){
         printf("Expected id, saw %d\n", (*lexer_peep(l)).type);
-        exit(1);
+        printDBGandExit(nt.dbg);
       }
       method_name : string = (*lexer_pop(l)).payload;
       lexer_expect(l, TokenType.TDEF, ":=");
 
       args : * Type = malloc(sizeof Type);
+      args.dbg = copy_debug_info(nt.dbg);
       args.type = TypeType.funcT;
       ft : *FunctionType = malloc(sizeof FunctionType);
       args.payload = ft;
 
 
       atmpType : *Type = malloc(sizeof Type);
+      atmpType.dbg = copy_debug_info(nt.dbg);
       atmpType.payload = id;
       atmpType.type = TypeType.namedT; // struct
 
       tmpType : *Type = malloc(sizeof Type);
+      tmpType.dbg = copy_debug_info(nt.dbg);
       tmpType.payload = atmpType;
       tmpType.type = TypeType.pointerT; // pointer
 
       tmp : *Statement = malloc(sizeof Statement);
+      tmp.dbg = copy_debug_info((*lexer_peep(l)).dbg);
       tmp.p1 = "self";
       tmp.p2 = tmpType;
       tmp.p3 = 0;
@@ -1764,7 +1884,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
     } else {
       printf("Expected token : or :=, saw %d\n", nt.type);
       l.offset = l.count;
-      exit(1);
+      printDBGandExit(nt.dbg);
       return 0;
     }
   } else if((*lexer_peep(l)).type == TokenType.TEOF){
@@ -1775,7 +1895,7 @@ parse_top_level := (l: *Lexer) -> *Statement{
   } else {
     printf("Top level token, expect id saw %d\n", (*(l.ptr + l.offset)).type);
     l.offset = l.count;
-    exit(1);
+    printDBGandExit((*(l.ptr+l.offset)).dbg);
     return 0;
   }
 
@@ -1867,12 +1987,13 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     n := cc_resolve_named(cc, e.p1);
     if(n == 0){
       printf("Variable %s not found\n", e.p1);
-      exit(1);
+      printDBGandExit(e.dbg);
     }
     p : *VariablePayload = n.payload;
     if(p.alloc == 0){ // enum
       // TODO do I want to find another way for finding enums?
       t: *Type = malloc(sizeof Type);
+      t.dbg = copy_debug_info(e.dbg);
       t.type = TypeType.enumT;
       t.payload = 0;
       return t;
@@ -1887,13 +2008,14 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     if(t.type == TypeType.enumT){
       // it's enum
       t : *Type = malloc(sizeof Type);
+      t.dbg = copy_debug_info(e.dbg);
       t.type = TypeType.intT;
       t.payload = 0;
       return t;
     }
     if(t.type != TypeType.namedT){
       printf("base of member should be a struct, but was %d\n", t.type);
-      exit(1);
+      printDBGandExit(e.dbg);
     }
     s_name : string = t.payload;
     tmp := cc_resolve_named(cc, s_name);
@@ -1906,13 +2028,14 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
       f_mem = f_mem.next;
     }
     printf("Couldn't find member\n");
-    exit(1);
+    printDBGandExit(e.dbg);
   } else if(e.type == EType.binE){ // binary expression
     // TODO
     if((e.p2 == OpCode.eq) + (e.p2 == OpCode.neq)
     + (e.p2 == OpCode.lt) + (e.p2 == OpCode.lte)
     + (e.p2 == OpCode.gt) + (e.p2 == OpCode.gte)){//bool
       t : *Type = malloc(sizeof Type);
+      t.dbg = copy_debug_info(e.dbg);
       t.type = TypeType.boolT;
       t.payload = 0;
       return t;
@@ -1920,21 +2043,25 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     return typeresolve(e.p1, cc); // return p1, whatever it is.
   } else if(e.type == EType.cIntE){ // const int
     t : *Type = malloc(sizeof Type);
+    t.dbg = copy_debug_info(e.dbg);
     t.type = TypeType.intT;
     t.payload = 0;
     return t;
   } else if(e.type == EType.cCharE){ // const char
     t : *Type = malloc(sizeof Type);
+    t.dbg = copy_debug_info(e.dbg);
     t.type = TypeType.uintT;
     t.payload = 8;
     return t;
   } else if(e.type == EType.cStrE){ // const string
     t : *Type = malloc(sizeof Type);
+    t.dbg = copy_debug_info(e.dbg);
     t.type = TypeType.stringT;
     t.payload = 0;
     return t;
   } else if(e.type == EType.ptrE){ // pointer
     t : * Type = malloc(sizeof Type);
+    t.dbg = copy_debug_info(e.dbg);
     t.type = TypeType.pointerT;
     t.payload = typeresolve(e.p1, cc);
     return t;
@@ -1942,7 +2069,7 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     n := cc_resolve_named(cc, e.p1);
     if(n == 0){
       printf("Unable to find function %s\n", e.p1);
-      exit(1);
+      printDBGandExit(e.dbg);
     }
     p : *VariablePayload = n.payload;
     t : *Type = p.decl.p2;
@@ -1950,17 +2077,19 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     return ft.returnType;
   } else if(e.type == EType.sizeE){
     t : *Type = malloc(sizeof Type);
+    t.dbg = copy_debug_info(e.dbg);
     t.type = TypeType.intT;
     t.payload = 0;
     return t;
   } else if(e.type == EType.notE){ // not -> boolean
     t : *Type = malloc(sizeof Type);
+    t.dbg = copy_debug_info(e.dbg);
     t.type = TypeType.boolT;
     t.payload = 0;
     return t;
   } else {
     printf("unknwon type resolve for expression type %d\n", e.type);
-    exit(1);
+    printDBGandExit(e.dbg);
   }
   return 0;
 }
@@ -1970,7 +2099,7 @@ typegen := (t: *Type, cc: *CC) -> *any{
     tmp :* Names = cc_resolve_named(cc, t.payload);
     if(tmp ==0){
       printf("Couldn't find type %s\n", t.payload);
-      exit(1);
+      printDBGandExit(t.dbg);
     }
     vt : *VariablePayload = tmp.payload;
     if(vt.alloc == 0){
@@ -1992,7 +2121,7 @@ typegen := (t: *Type, cc: *CC) -> *any{
     } else {
       printf("unknown int type\n");
       printf("type = %d\n", t.payload);
-      exit(1);
+      printDBGandExit(t.dbg);
     }
   } else if(t.type == TypeType.boolT){ // bool
     return LLVMInt1TypeInContext(cc.context);
@@ -2007,7 +2136,7 @@ typegen := (t: *Type, cc: *CC) -> *any{
     return LLVMPointerType(LLVMInt64TypeInContext(cc.context), 0);
   } else {
     printf("Unknown type in typegen %d\n", t.type);
-    exit(1);
+    printDBGandExit(t.dbg);
   }
   return 0;
 }
@@ -2047,7 +2176,7 @@ exprgen_binop_icmp := (e: *Expression, cmpcode: int, cc: *CC) -> *any{
       rhs = LLVMBuildIntCast2(cc.builder, rhs, LLVMTypeOf(lhs), rtt.type == sit, "rhs");
     } else {
       printf("unimplemented icmp exprgen\n");
-      exit(1);
+      printDBGandExit(e.dbg);
     }
   }
   return LLVMBuildICmp(cc.builder, cmpcode, lhs, rhs, "cmp");
@@ -2124,16 +2253,16 @@ exprgen_binop := (e: *Expression, cc: *CC) -> *any{
         } else {
           // TODO float point, not doing now since we don't have floats yet
           printf("Unimplemented in binop nested if\n");
-          exit(1);
+          printDBGandExit(e.dbg);
         }
       } else if(l_int){
         // TODO rhs is float
         printf("Unimplemented in binop else if\n");
-        exit(1);
+        printDBGandExit(e.dbg);
       } else {
         // TODO lhs is float
         printf("Unimplemented in binop else\n");
-        exit(1);
+        printDBGandExit(e.dbg);
       }
     }
     inst : int;
@@ -2158,13 +2287,13 @@ exprgen_binop := (e: *Expression, cc: *CC) -> *any{
       }
     } else {
       printf("Unknown op %d\n", op);
-      exit(1);
+      printDBGandExit(e.dbg);
     }
     return LLVMBuildBinOp(cc.builder, inst, lhs, rhs, "binop");
   } else { // handle pointer arithmetic 
     if((ltt.type != pt) * (rtt.type == pt)){
       printf("unsupported binary operation %d %d %d\n", ltt.type, op, rtt.type);
-      exit(1);
+      printDBGandExit(e.dbg);
     }
     // lhs must be the pointer:
     if((ltt.type != pt) * (rtt.type == pt)){
@@ -2197,7 +2326,7 @@ exprgen_binop := (e: *Expression, cc: *CC) -> *any{
   }
 
   printf("unknown binary operation %d %d %d\n", ltt.type, op, rtt.type);
-  exit(1);
+  printDBGandExit(e.dbg);
   return 0;
 }
 
@@ -2254,7 +2383,7 @@ exprgen_fcall := (e: *Expression, cc: *CC)-> *any{
   calleeF := LLVMGetNamedFunction(cc.module, e.p1);
   if(calleeF == 0){
     printf("Function not found %s\n", e.p1);
-    exit(1);
+    printDBGandExit(e.dbg);
   }
 
   return fcall_util(e, cc, calleeF);
@@ -2262,13 +2391,14 @@ exprgen_fcall := (e: *Expression, cc: *CC)-> *any{
 
 exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
   tmpE : *Expression = malloc(sizeof Expression);
+  tmpE.dbg = copy_debug_info(e.dbg);
   tmpE.type = EType.fcallE;
 
 
   classBase := typeresolve(e.p3, cc);
   if(classBase == 0){
     printf("Couldn't find the base class for method call\n");
-    exit(1);
+    printDBGandExit(e.dbg);
   }
 
   // resolve pointer
@@ -2280,8 +2410,10 @@ exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
     tmp : *Statement = e.p2;
 
     baseE : *Statement = malloc(sizeof Statement);
+    baseE.dbg = copy_debug_info(e.dbg);
 
     eBase : *Expression = malloc(sizeof Expression);
+    eBase.dbg = copy_debug_info(e.dbg);
     eBase.type = EType.baseE; // base of
     eBase.p1 = tmp.p1;
 
@@ -2297,7 +2429,7 @@ exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
   if(classBase.type != TypeType.namedT){
     printf("Tried to call method on type %d\n", classBase.type);
     printf("Can't call methods on non-structs\n");
-    exit(1);
+    printDBGandExit(e.dbg);
   }
 
   className := classBase.payload;
@@ -2330,10 +2462,12 @@ exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
         tmp : *Statement = tmpE.p2;
 
         be : *Statement = malloc(sizeof Statement);
+        be.dbg = copy_debug_info(e.dbg);
         be.type = SType.argT;
         be.next = tmp.next;
 
         eBase : *Expression = malloc(sizeof Expression);
+        eBase.dbg = copy_debug_info(e.dbg);
         eBase.type = EType.ptrE; // pointer
         eBase.p1 = tmp.p1;
 
@@ -2405,7 +2539,7 @@ get_alloca := (e: *Expression, cc: *CC) -> *any{
       member_ind = member_ind + 1;
     }
     printf("Couldn't find member %s\n", e.p2);
-    exit(1);
+    printDBGandExit(e.dbg);
   } else if(e.type == EType.binE){// binop
     tmp := exprgen(e, cc);
     tmp = LLVMBuildLoad(cc.builder, tmp, "binopload");
@@ -2415,7 +2549,7 @@ get_alloca := (e: *Expression, cc: *CC) -> *any{
     return tmp;
   }
   printf("Unknown expression in alloca %d\n", e.type);
-  exit(1);
+  printDBGandExit(e.dbg);
   return 0;
 }
 
@@ -2469,7 +2603,7 @@ compile_struct_to_interface := (it: *Statement, st: *Statement, cc: *CC) -> *any
   cc_named := cc_resolve_named(cc, strcat(it.p1, "$$"));
   if(!cc_named){
     printf("Error in struct to interface, unknown interface scheme $s\n", it.p1);
-    exit(1);
+    printDBGandExit(it.dbg);
   }
   cc_named_vp : *VariablePayload = cc_named.payload;
   vptr_t := cc_named_vp.alloc;
@@ -2498,7 +2632,7 @@ compile_struct_to_interface := (it: *Statement, st: *Statement, cc: *CC) -> *any
 
     if(!tmp_f){
       printf("Couldn't find method %s on struct %s needed for interface %s\n", method_name, st.p1, it.p1);
-      exit(1);
+      printDBGandExit(st.dbg);
     }
 
     *(vals + i) = LLVMConstBitCast(tmp_f, LLVMPointerType(LLVMInt64TypeInContext(cc.context), 0));
@@ -2523,12 +2657,12 @@ exprgen_instance := (e: *Expression, cc: *CC) -> *any{
   it := resolve_interface(e.p1, cc);
   if(!it){
     printf("LHS of instance must be variable of interface\n");
-    exit(1);
+    printDBGandExit(e.dbg);
   }
   cc_named := cc_resolve_named(cc, it.p1);
   if(!cc_named){
     printf("Error in struct to interface cast, unknown interface scheme %s\n", it.p1);
-    exit(1);
+    printDBGandExit(e.dbg);
   }
   cc_named_vp : *VariablePayload = cc_named.payload;
   tp := cc_named_vp.alloc;
@@ -2537,7 +2671,7 @@ exprgen_instance := (e: *Expression, cc: *CC) -> *any{
   cc_named := cc_resolve_named(cc, strcat(it.p1, "$$"));
   if(!cc_named){
     printf("Error in struct to interface, unknown interface scheme $s\n", it.p1);
-    exit(1);
+    printDBGandExit(e.dbg);
   }
   cc_named_vp : *VariablePayload = cc_named.payload;
   tpp := cc_named_vp.alloc;
@@ -2546,26 +2680,26 @@ exprgen_instance := (e: *Expression, cc: *CC) -> *any{
   t : *Type = e.p2;
   if(t.type != TypeType.namedT){
     printf("RHS of instance of must be a struct\n");
-    exit(1);
+    printDBGandExit(e.dbg);
   }
   s_name := t.payload;
   c_name:= cc_resolve_named(cc, strcat(s_name, "$$"));
   if(c_name){
     // interface
     printf("RHS of instance of must be a struct\n");
-    exit(1);
+    printDBGandExit(e.dbg);
   }
 
   c_name = cc_resolve_named(cc, s_name);
   if(!c_name){
     printf("Couldn't find struct %s\n", s_name);
-    exit(1);
+    printDBGandExit(e.dbg);
   }
   vp: *VariablePayload = c_name.payload;
   if(vp.alloc == 0){
     // enum
     printf("RHS of instance of must be a struct\n");
-    exit(1);
+    printDBGandExit(e.dbg);
   }
 
   // TODO it might be a variable, fix that!!!!!
@@ -2610,7 +2744,7 @@ exprgen_enum_member := (e: *Expression, en: *Statement, cc: *CC) -> *any{
     member = member.next;
   }
   printf("Enum %s doesn't have member %s\n", en.p1, e.p2);
-  exit(1);
+  printDBGandExit(e.dbg);
   return 0;
 }
 
@@ -2670,7 +2804,7 @@ exprgen := (e: *Expression, cc: *CC) -> *any{
     return exprgen_instance(e, cc);
   } else {
     printf("Unknown expression in exprgen %d\n", e.type);
-    exit(1);
+    printDBGandExit(e.dbg);
   }
   return 0;
 }
@@ -2963,7 +3097,7 @@ struct_to_interface_cast := (it: *Statement, st: *Statement, alloc: *any, val: *
   cc_named := cc_resolve_named(cc, it.p1);
   if(!cc_named){
     printf("Error in struct to interface cast, unknown interface scheme %s\n", it.p1);
-    exit(1);
+    printDBGandExit(st.dbg);
   }
   cc_named_vp : *VariablePayload = cc_named.payload;
   tp := cc_named_vp.alloc;
@@ -3056,6 +3190,7 @@ compile_base_assign := (base: *Expression, v: *Expression, cc: *CC) -> void{
 
 compile_assign := (s: *Statement, cc: *CC) -> void{
   e : *Expression = malloc(sizeof Expression);
+  e.dbg = copy_debug_info(s.dbg);
   e.type = EType.varE;
   e.p1 = s.p1;
   compile_base_assign(e, s.p2, cc);
@@ -3069,6 +3204,7 @@ compile_member_assign := (s: *Statement, cc: *CC) -> void{
 
 compile_ptr_assign := (s: *Statement, cc: *CC) -> void{
   e: *Expression = malloc(sizeof Expression);
+  e.dbg = copy_debug_info(s.dbg);
   e.type = EType.ptrE;
   e.p1 = s.p1;
   compile_base_assign(e, s.p2, cc);
@@ -3077,6 +3213,7 @@ compile_ptr_assign := (s: *Statement, cc: *CC) -> void{
 
 compile_fcall := (s: *Statement, cc: *CC) -> void{
   e : *Expression = malloc(sizeof Expression);
+  e.dbg = copy_debug_info(s.dbg);
   e.type = EType.fcallE;
   e.p1 = s.p1;
   e.p2 = s.p2;
@@ -3086,6 +3223,7 @@ compile_fcall := (s: *Statement, cc: *CC) -> void{
 
 compile_mcall := (s: *Statement, cc: *CC) -> void{
   e : *Expression = malloc(sizeof Expression);
+  e.dbg = copy_debug_info(s.dbg);
   e.type =  EType.methodCallE;
   e.p1 = s.p1;
   e.p2 = s.p2;
@@ -3144,7 +3282,7 @@ compile := (s: *Statement, cc: *CC) -> void{
     compile_enum(s, cc);
   } else{
     printf("Unknown statement type %d\n", s.type);
-    exit(1);
+    printDBGandExit(s.dbg);
     return;
   }
   if(s.next){
