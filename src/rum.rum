@@ -1065,6 +1065,36 @@ parse_type := (l: *Lexer) -> *Type{
   tn := lexer_pop(l);
   ans : *Type = malloc(sizeof Type);
   ans.dbg = copy_debug_info(tn.dbg);
+  if(tn.type == TokenType.TLPAR){
+    ft: *FunctionType = malloc(sizeof FunctionType);
+    ft.first = 0;
+    prev: *Type = 0;
+    tn := lexer_peep(l);
+    whilecond := tn.type != TokenType.TRPAR;
+    while(whilecond){
+      tmp : *Type = parse_type(l);
+      tn = lexer_peep(l);
+      if(tn.type == TokenType.T3DOT){
+        // vararg, TODO
+        tn = lexer_pop(l);
+      }
+      if(tn.type == TokenType.TCOMMA){
+        whilecond = 1;
+        tn = lexer_pop(l);
+      } else {
+        whilecond = 0;
+      }
+    }
+
+    lexer_expect(l, TokenType.TRPAR, ")");
+    lexer_expect(l, TokenType.TARROW, "->");
+
+    ft.returnType = parse_type(l);
+
+    ans.type = TypeType.funcT;
+    ans.payload = ft;
+    return ans;
+  }
   if(tn.type == TokenType.TSTR){
     ans.type = TypeType.stringT;
     ans.payload = 0;
@@ -1626,7 +1656,6 @@ parse_function := (l: *Lexer) -> *Statement{
   return ans;
 }
 
-
 parse_function_top := (l: *Lexer, args: *Type, ft: *FunctionType, prev: *Statement,id: string) -> *Statement {
 
       lexer_expect(l, TokenType.TLPAR, "(");
@@ -2156,6 +2185,9 @@ typegen := (t: *Type, cc: *CC) -> *any{
     return LLVMVoidTypeInContext(cc.context);
   } else if(t.type == TypeType.anyT){ // any
     return LLVMPointerType(LLVMInt64TypeInContext(cc.context), 0);
+  } else if(t.type == TypeType.funcT){
+    // return compile_ftype_by_type(t.payload, cc);
+    return LLVMPointerType(LLVMPointerType(LLVMInt64TypeInContext(cc.context), 0), 0);
   } else {
     printf("Unknown type in typegen %d\n", t.type);
     printDBGandExit(t.dbg);
@@ -2395,6 +2427,7 @@ fcall_util := (e: *Expression, cc: *CC, calleeF: *any) -> *any {
   arg = e.p2;
   count = 0;
   while(arg){
+    // TODO possible casts here
     *(args + count) = exprgen(arg.p1, cc);
     arg = arg.next;
     count = count + 1;
@@ -2916,37 +2949,6 @@ compile_function := (s: *Statement, cc: *CC) -> void {
   pop_bb(cc);
   return;
 }
-
-compile_decl := (s: *Statement, cc: *CC) -> void{
-  // check to see if it has type
-  type : *any = 0;
-  if(s.p2 == 0){
-    //resolve type using expr
-    s.p2 = typeresolve(s.p3, cc);
-  }
-  type = typegen(s.p2, cc);
-
-  tbuilder := LLVMCreateBuilderInContext(cc.context);
-
-  f := LLVMGetFirstBasicBlock(LLVMGetBasicBlockParent(LLVMGetInsertBlock(cc.builder)));
-  instr := LLVMGetFirstInstruction(f);
-  LLVMPositionBuilder(tbuilder, f, instr);
-
-  alloc := LLVMBuildAlloca(tbuilder, type, s.p1);
-
-  LLVMDisposeBuilder(tbuilder);
-
-  payload: *VariablePayload = malloc(sizeof VariablePayload);
-  payload.alloc = alloc;
-  payload.decl = s;
-  cc_set_named(cc, s.p1, payload);
-
-  if(s.p3){
-    LLVMBuildStore(cc.builder, exprgen(s.p3, cc), alloc);
-  }
-  return ;
-}
-
 compile_struct := (s: *Statement, cc: *CC) -> void{
   cc.structNum = cc.structNum + 1;
   s.p3 = cc.structNum;
@@ -3232,6 +3234,7 @@ compile_base_assign := (base: *Expression, v: *Expression, cc: *CC) -> void{
     }
   }
   // TODO is this a function?
+  printf("The type kind is %d\n", LLVMGetTypeKind(LLVMTypeOf(val)));
   if(LLVMGetTypeKind(LLVMTypeOf(val)) == 9){
     LLVMInstructionEraseFromParent(val);
     val = get_alloca(v, cc);
@@ -3267,6 +3270,42 @@ compile_ptr_assign := (s: *Statement, cc: *CC) -> void{
   compile_base_assign(e, s.p2, cc);
   return;
 }
+
+compile_decl := (s: *Statement, cc: *CC) -> void{
+  // check to see if it has type
+  type : *any = 0;
+  if(s.p2 == 0){
+    //resolve type using expr
+    s.p2 = typeresolve(s.p3, cc);
+  }
+  type = typegen(s.p2, cc);
+
+  tbuilder := LLVMCreateBuilderInContext(cc.context);
+
+  f := LLVMGetFirstBasicBlock(LLVMGetBasicBlockParent(LLVMGetInsertBlock(cc.builder)));
+  instr := LLVMGetFirstInstruction(f);
+  LLVMPositionBuilder(tbuilder, f, instr);
+
+  alloc := LLVMBuildAlloca(tbuilder, type, s.p1);
+
+  LLVMDisposeBuilder(tbuilder);
+
+  payload: *VariablePayload = malloc(sizeof VariablePayload);
+  payload.alloc = alloc;
+  payload.decl = s;
+  cc_set_named(cc, s.p1, payload);
+
+  if(s.p3){
+    // LLVMBuildStore(cc.builder, exprgen(s.p3, cc), alloc);
+    e : *Expression = malloc(sizeof Expression);
+    e.dbg = copy_debug_info(s.dbg);
+    e.type = EType.varE;
+    e.p1 = s.p1;
+    compile_base_assign(e, s.p3, cc);
+  }
+  return ;
+}
+
 
 compile_fcall := (s: *Statement, cc: *CC) -> void{
   e : *Expression = malloc(sizeof Expression);
