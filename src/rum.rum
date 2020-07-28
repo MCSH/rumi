@@ -3234,7 +3234,6 @@ compile_base_assign := (base: *Expression, v: *Expression, cc: *CC) -> void{
     }
   }
   // TODO is this a function?
-  printf("The type kind is %d\n", LLVMGetTypeKind(LLVMTypeOf(val)));
   if(LLVMGetTypeKind(LLVMTypeOf(val)) == 9){
     LLVMInstructionEraseFromParent(val);
     val = get_alloca(v, cc);
