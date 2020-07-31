@@ -57,6 +57,7 @@ LLVMBuildAlloca := (b: *any, type: *any, name: string) -> *any;
 LLVMBuildStore := (b: *any, val: *any, ptr: *any) -> void;
 LLVMBuildLoad := (b: *any, ptr: *any, name: string) -> *any;
 LLVMBuildIntToPtr := (b: *any, val: *any, dest: *any, name: string) -> *any;
+LLVMBuildPtrToInt := (b: *any, val: *any, dest: *any, name: string) -> *any;
 LLVMBuildIntCast2 := (b: *any, val: *any, dest: *any, signed: bool, name: string) -> *any;
 LLVMBuildBitCast := (b: *any, val: *any, dest: *any, name: string) -> *any;
 LLVMBuildICmp := (b: *any, op: int, lhs: *any, rhs: *any, name: string) -> *any;
@@ -199,6 +200,7 @@ SType: enum{
   methodCallT = 14, //(methodname, args, base expr)
   enumDefT = 15, // (id, members, )
   enumMemT = 16, // (id, val,)
+  declLambda, // (id, statement,)
 }
 
 Statement: struct {
@@ -1049,6 +1051,22 @@ lexer_peep := (l : *Lexer) -> *Token{
   return *(l.ptr + l.offset);
 }
 
+lexer_scan := (l: *Lexer, t1: TokenType, t2: TokenType) -> bool {
+  offset := l.offset;
+  tn :*Token = *(l.ptr+offset);
+  while(tn.type != t2){
+    if(tn.type == t1){
+      return 1;
+    }
+    if(tn.type == TokenType.TEOF){
+      return 0;
+    }
+    offset = offset + 1;
+    tn = *(l.ptr+offset);
+  }
+  return 0;
+}
+
 lexer_expect := (l : *Lexer, t: int, description: string) -> bool{
   tn : *Token = lexer_pop(l);
   tk := tn.type;
@@ -1459,6 +1477,8 @@ parse_expr := (l: *Lexer) -> *Expression{
   return parse_expr_rec(l, 0);
 }
 
+parse_function_top := (l: *Lexer, args: *Type, ft: *FunctionType, prev: *Statement,id: string) -> *Statement;
+
 parse_statement := (l: *Lexer) -> *Statement{
   tn : *Token = lexer_pop(l);
   ans : *Statement = malloc(sizeof Statement);
@@ -1501,6 +1521,26 @@ parse_statement := (l: *Lexer) -> *Statement{
         return 0;
       }
     } else if(tn.type == TokenType.TDEF){ // := variable decl
+      tn = lexer_peep(l);
+      // TODO I don't like this, fix it later
+      if(tn.type == TokenType.TLPAR){
+        // we might have an expression...
+        has_col := lexer_scan(l, TokenType.TCOL, TokenType.TRPAR);
+        if(has_col){// we have a lambda
+          ans.type = SType.declLambda;
+
+          args : *Type = malloc(sizeof Type);
+          args.dbg = copy_debug_info(tn.dbg);
+          args.type = TypeType.funcT;
+          ft : *FunctionType = malloc(sizeof FunctionType);
+          args.payload = ft;
+          prev : * Statement = 0;
+          ft.first = 0;
+
+          ans.p2 = parse_function_top(l, args, ft, prev, ans.p1);
+          return ans;
+        }
+      }
       ans.type = SType.declT;
       ans.p2 = 0;
       ans.p3 = parse_expr(l);
@@ -2126,6 +2166,47 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
     t : *Type = p.decl.p2;
     ft: *FunctionType = t.payload;
     return ft.returnType;
+  } else if(e.type == EType.methodCallE){
+    classBase := typeresolve(e.p3, cc);
+    if(classBase == 0){
+      printf("Couldn't find the base class for method call\n");
+      printDBGandExit(e.dbg);
+    }
+    if(classBase.type == TypeType.pointerT){
+      classBase = classBase.payload;
+    }
+
+    if(classBase.type != TypeType.namedT){
+      printf("Tried to call method on type %d\n", classBase.type);
+      printf("Can't call methods on non-structs\n");
+      printDBGandExit(e.dbg);
+    }
+
+    className := classBase.payload;
+
+    f_named := cc_resolve_named(cc, strcat(className, "$$"));
+    if(f_named){
+      // interface
+      itVP: *VariablePayload = f_named.payload;
+      it: *Statement = itVP.decl;
+      ind := 1; // 0 is classptr
+      f: *Statement = it.p2;
+      while(f){
+        if(streq(e.p1, f.p1)){
+          t: *Type = f.p2;
+          ft: *FunctionType = t.payload;
+          return ft.returnType;
+        }
+        ind = ind+1;
+        f = f.next;
+      }
+    }
+    n := cc_resolve_named(cc, strcat(className, strcat("$", e.p1)));
+    p: *VariablePayload = n.payload;
+    t: *Type = p.decl.p2;
+    ft: *FunctionType = t.payload;
+    return ft.returnType;
+    
   } else if(e.type == EType.sizeE){
     t : *Type = malloc(sizeof Type);
     t.dbg = copy_debug_info(e.dbg);
@@ -2489,8 +2570,10 @@ exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
   }
 
   // resolve pointer
+  is_pointer := 0;
   if(classBase.type == TypeType.pointerT){
     classBase = classBase.payload;
+    is_pointer = 1;
     // it's a pointer, all is well, just resolve base
   } else {
     // it's not a pointer, create a pointer to it
@@ -2539,6 +2622,8 @@ exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
         // found it
         // find base
         itbase := get_alloca(e.p3, cc);
+        if(is_pointer)
+          itbase = LLVMBuildLoad(cc.builder, itbase, "intptrresolv");
 
         base := LLVMBuildStructGEP2(cc.builder, itfpsVP.alloc, itbase, 1, "baseptr");
         // find function pointer
@@ -2585,6 +2670,10 @@ get_alloca := (e: *Expression, cc: *CC) -> *any{
     }
     vp : *VariablePayload = name.payload;
     return vp.alloc;
+  } else if(e.type == EType.baseE){
+    // TODO check this logic
+    alloc := get_alloca(e.p1, cc);
+    return alloc;
   } else if(e.type == EType.memE){//member
     member_ind := 0;
     tmpe := typeresolve(e.p1, cc);
@@ -3344,6 +3433,10 @@ compile_enum := (s: *Statement, cc: *CC) -> void{
   return;
 }
 
+compile_lambda := (s: *Statement, cc: *CC) -> void{
+  return;
+}
+
 compile := (s: *Statement, cc: *CC) -> void{
   if(s.type == SType.returnT){ // return
     compile_ret(s, cc);
@@ -3375,6 +3468,8 @@ compile := (s: *Statement, cc: *CC) -> void{
     compile_mcall(s, cc);
   } else if(s.type == SType.enumDefT){ // enum
     compile_enum(s, cc);
+  } else if(s.type == SType.declLambda){
+    compile_lambda(s, cc);
   } else{
     printf("Unknown statement type %d\n", s.type);
     printDBGandExit(s.dbg);
