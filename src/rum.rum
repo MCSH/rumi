@@ -2114,7 +2114,7 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
       }
       f_mem = f_mem.next;
     }
-    printf("Couldn't find member\n");
+    printf("Couldn't find member %s in struct %s\n", e.p2, s_name);
     printDBGandExit(e.dbg);
   } else if(e.type == EType.binE){ // binary expression
     // TODO
@@ -2202,6 +2202,10 @@ typeresolve := (e: *Expression, cc: *CC) -> *Type{
       }
     }
     n := cc_resolve_named(cc, strcat(className, strcat("$", e.p1)));
+    if(!n){
+      printf("Unknown method %s on struct %s\n", e.p1, className);
+      printDBGandExit(e.dbg);
+    }
     p: *VariablePayload = n.payload;
     t: *Type = p.decl.p2;
     ft: *FunctionType = t.payload;
@@ -2657,6 +2661,10 @@ exprgen_methodcall := (e: *Expression, cc: *CC) -> *any{
 
 
   tmpE.p1 = strcat(className, strcat("$", e.p1)); // type(e.p3) + "$" + e.p1
+  if(!LLVMGetNamedFunction(cc.module, tmpE.p1)){
+    printf("Method %s not found on struct %s\n", e.p1, className);
+    printDBGandExit(e.dbg);
+  }
 
 
   return exprgen_fcall(tmpE, cc);
@@ -3067,7 +3075,7 @@ compile_struct := (s: *Statement, cc: *CC) -> void{
 }
 
 compile_interface := (s: *Statement, cc: *CC) -> void {
-  // we need TWO interfaces
+  // we need TWO structs
   name_w_dollar_sign := strcat(s.p1, "$$");
 
   // This is the interface function pointer structure ;; stored as name$$
@@ -3097,7 +3105,7 @@ compile_interface := (s: *Statement, cc: *CC) -> void {
   }
   LLVMStructSetBody(it, members, count, 0); // TODO change packed?
 
-  // This is the interface holdre structure ;; stored as name
+  // This is the interface holder structure ;; stored as name
   ith := LLVMStructCreateNamed(cc.context, s.p1);
 
   vph : *VariablePayload = malloc(sizeof VariablePayload);
