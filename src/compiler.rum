@@ -21,6 +21,19 @@ LLVMVoidTypeInContext := (c: *any) -> *any;
 LLVMPointerType := (elemntType: *any, addresspace: u64) -> *any;
 LLVMGetNamedFunction := (m: *any, name: string) -> *any;
 LLVMAppendBasicBlockInContext := (c: *any, f: *any, name: string)-> *any;
+LLVMGetInsertBlock := (b: *any) -> *any;
+LLVMGetBasicBlockTerminator := (bb: *any) -> *any; // instruction
+LLVMBuildBr := (b: *any, bb: *any) -> *any;
+LLVMAppendExistingBasicBlock := (f: *any, bb: *any) -> void;
+LLVMGetInstructionOpcode := (inst: *any) -> int;
+LLVMCreateBasicBlockInContext := (c: *any, name: string) -> *any;
+LLVMTypeOf := (val: *any) -> *any;
+LLVMBuildIntCast2 := (b: *any, val: *any, dest: *any, signed: bool, name: string) -> *any;
+LLVMPositionBuilder := (b: *any, bb: *any, inst: *any) -> void;
+LLVMBuildICmp := (b: *any, op: int, lhs: *any, rhs: *any, name: string) -> *any;
+LLVMConstInt := (t: *any, v: *any, signed: bool) -> *any;
+LLVMBuildCondBr := (b: *any, cond: *any, bt: *any, bf: *any) -> *any;
+LLVMGetBasicBlockParent := (bb: *any) -> *any;
 LLVMGetParam := (f: *any, ind: u64) -> *any;
 LLVMSetValueName2 := (v: *any, name: string, size: u64) -> void;
 LLVMBuildCall := (b: *any, f: *any, args: *any, count: int, name: string) -> *any;
@@ -201,6 +214,7 @@ BB.init := () -> void{
 
 CC: struct{
   cp: *LinkedNode;
+  sp: *LinkedNode;
   bb: *LinkedNode;
   module: *any;
   context: *any;
@@ -217,6 +231,7 @@ CC: struct{
 
 CC.init := () -> void{
   self.cp = 0;
+  self.sp = 0;
   self.bb = malloc(sizeof LinkedNode);
   self.bb.p = malloc(sizeof BB);
   bb : *BB = self.bb.p;
@@ -532,6 +547,14 @@ SParser: interface{
   getName := (cc: *CC) -> string;
 }
 
+CC.registerSP := (sp: *SParser) -> void{
+  tmp : *LinkedNode = malloc(sizeof LinkedNode);
+  tmp.p = sp;
+  tmp.next = self.sp;
+  self.sp = tmp;
+  return;
+}
+
 TParser: interface{
   parse := (cc: *CC) -> *Type;
   getName := (cc: *CC) -> string;
@@ -543,6 +566,12 @@ Expression: interface{
   exprgen := (cc: *CC) -> *any;
   typeresolve := (cc: *CC) -> *Type;
 }
+
+CC.expectExpression := () -> *Expression{
+  // TODO
+  return 0;
+}
+
 
 // ==== TOP LEVELs
 FunctionConcept: struct{
@@ -1132,7 +1161,7 @@ EnumConcept.getName := (cc: *CC) -> string{
 EnumConcept.typegen := (cc: *CC) -> *any{
   return LLVMInt16TypeInContext(cc.context);
 }
-EnumConcept.getInstance := (cc: *CC, val: *any, name: string) -> *Value {return 0;} // TODO?
+EnumConcept.getInstance := (cc: *CC, val: *any, name: string) -> *Value {return 0;} // TODO return Int Instance
 EnumConcept.preOpType := (cc: *CC, op: string) -> *Type {return 0;}
 EnumConcept.preOpGen := (cc: *CC, op:string) -> *Value {return 0;}
 EnumConcept.postOpType := (cc: *CC, op: string) -> *Type {return 0;}
@@ -1280,6 +1309,109 @@ MethodDefineParser.parse := (cc: *CC) -> *Concept{
   return c;
 }
 
+IfStatement: struct{
+  dbg: *DBG;
+  exp: *Expression;
+  st1: *Statement;
+  st2: *Statement;
+}
+
+is_br_ok := (cc: *CC) -> bool{
+  instr := LLVMGetBasicBlockTerminator(LLVMGetInsertBlock(cc.builder));
+  if(instr == 0){ // if there aren't any instruction, it's okay
+    return 1;
+  }
+  opcode := LLVMGetInstructionOpcode(instr);
+  if(opcode == 0){// ret
+    return 0;
+  }
+  if(opcode == 1){// br
+    return 0;
+  }
+  return 1;
+}
+IfStatement.getName := (cc: *CC) -> string{
+  return "if";
+}
+IfStatement.codegen := (cc: *CC) -> void{
+  // TODO
+  f := LLVMGetBasicBlockParent(LLVMGetInsertBlock(cc.builder));
+
+  ifB := LLVMAppendBasicBlockInContext(cc.context, f, "if");
+  elseB :*any;
+  mergeB := LLVMCreateBasicBlockInContext(cc.context, "ifcont");
+  if(self.st2){// we have else
+    elseB = LLVMCreateBasicBlockInContext(cc.context, "else");
+  } else {
+    elseB = mergeB;
+  }
+
+  cond := self.exp.exprgen(cc);
+
+  correct_type : bool = LLVMTypeOf(cond) == LLVMInt64TypeInContext(cc.context);
+  if(!correct_type){
+    cond = LLVMBuildIntCast2(cc.builder, cond, LLVMInt64TypeInContext(cc.context), 1, "cond");
+  }
+
+  cond = LLVMBuildICmp(cc.builder, 33, cond, LLVMConstInt(LLVMInt64TypeInContext(cc.context), 0, 0), "ifcond");
+
+  LLVMBuildCondBr(cc.builder, cond, ifB, elseB);
+
+  cc.pushBlock();
+  LLVMPositionBuilder(cc.builder, ifB, 0);
+  self.st1.codegen(cc);
+  if(is_br_ok(cc)){
+    LLVMBuildBr(cc.builder, mergeB);
+  }
+  cc.popBlock();
+
+  if(self.st2){
+    cc.pushBlock();
+    LLVMAppendExistingBasicBlock(f, elseB);
+    LLVMPositionBuilder(cc.builder, elseB, 0);
+    self.st2.codegen(cc);
+    if(is_br_ok(cc)){
+      LLVMBuildBr(cc.builder, mergeB);
+    }
+    cc.popBlock();
+  }
+
+  LLVMAppendExistingBasicBlock(f, mergeB);
+  LLVMPositionBuilder(cc.builder, mergeB, 0);
+
+  return;
+}
+
+IfStmtParser: struct{}
+IfStmtParser.getName := (cc: *CC) -> string{
+  return "if";
+}
+IfStmtParser.parse := (cc: *CC) -> *Statement{
+  dbg := cc.getDBG();
+  if(!cc.expectToken(TokenType.TIF)) return 0; // if
+  if(!cc.expectToken(TokenType.TLPAR)) return 0; // (
+  exp := cc.expectExpression(); // exp
+  if(!exp) return 0;
+  if(!cc.expectToken(TokenType.TRPAR)) return 0; // )
+  st1 := cc.expectStatement();
+  if(!st1) return 0;
+  st2: *Statement = 0;
+  if(cc.expectToken(TokenType.TELSE)){  // else
+    st2 = cc.expectStatement();
+    if(!st2) return 0;
+  }
+  // ===
+  ifs : *IfStatement = malloc(sizeof IfStmtParser);
+  ifs.dbg = dbg;
+  ifs.exp = exp;
+  ifs.st1 = st1;
+  ifs.st2 = st2;
+
+  stmt: *Statement = malloc(sizeof Statement);
+  stmt = ifs;
+  return stmt;
+}
+
 get_def_cc := () -> *CC{
   cc: *CC = malloc(sizeof CC);
   cc.init();
@@ -1320,6 +1452,12 @@ get_def_cc := () -> *CC{
   cp: *CParser = malloc(sizeof CParser);
   cp = mdp;
   cc.registerCP(cp);
+
+  // Statements
+  isp: *IfStmtParser = malloc(sizeof IfStmtParser);
+  sp: *SParser = malloc(sizeof SParser);
+  sp = isp;
+  cc.registerSP(sp);
 
   return cc;
 }
