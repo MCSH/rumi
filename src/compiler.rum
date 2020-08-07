@@ -972,17 +972,17 @@ InterfaceInstance.memberGen := (cc: *CC, name: string) -> *Value{
   while(l){
     m : *Member = l.p;
     if(streq(m.id, name)){
-      // create GEP
-      mem := LLVMBuildStructGEP2(cc.builder, self.alloc, self.sc.s, ind);
-      // cast to value
-      // TODO
-      raise error
-      return v;
+      // TODO resolve method to function pointer
+      return 0;
     }
     ind = ind + 1;
     l = l.next;
   }
   // TODO raise error?
+  return 0;
+}
+InterfaceInstance.castGen := (cc: *CC, t: *Type) -> *Value{
+  // TODO cast to structs
   return 0;
 }
 
