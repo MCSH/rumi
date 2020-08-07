@@ -1,0 +1,1445 @@
+// == Helper & LLVM functions
+
+malloc := (size: u64) -> *any;
+printf := (T: string, s: ...any)->void;
+exit := (s: int) -> void;
+atoi := (s: string) -> int;
+
+fopen := (s: string, mod: string) -> *int;
+fseek := (f: *int, offset: u64, whence: u32) -> int; // SEEK_END == 2, SEEK_SET == 0
+ftell := (f: *int) -> int;
+fread := (buf: string, size: int, nmemb: int, f: *int) -> int;
+
+LLVMAddFunction := (m: *any, name: string, ftype: *any) -> *any;
+LLVMFunctionType := (returnType: *any, paramTypes: **any, paramCount: u64, isVarArg: bool) -> *any;
+LLVMInt1TypeInContext := (c: *any) -> *any;
+LLVMInt8TypeInContext := (c: *any) -> *any;
+LLVMInt16TypeInContext := (c: *any) -> *any;
+LLVMInt32TypeInContext := (c: *any) -> *any;
+LLVMInt64TypeInContext := (c: *any) -> *any;
+LLVMVoidTypeInContext := (c: *any) -> *any;
+LLVMPointerType := (elemntType: *any, addresspace: u64) -> *any;
+LLVMGetNamedFunction := (m: *any, name: string) -> *any;
+LLVMAppendBasicBlockInContext := (c: *any, f: *any, name: string)-> *any;
+LLVMGetParam := (f: *any, ind: u64) -> *any;
+LLVMSetValueName2 := (v: *any, name: string, size: u64) -> void;
+LLVMBuildCall := (b: *any, f: *any, args: *any, count: int, name: string) -> *any;
+LLVMBuildAlloca := (b: *any, type: *any, name: string) -> *any;
+LLVMBuildStore := (b: *any, val: *any, ptr: *any) -> void;
+LLVMBuildStructGEP2 :=(b : *any, t: *any, ptr: *any, ind: int, name: string) -> *any;
+
+LLVMStructCreateNamed := (c: *any, name: *string) -> *any;
+LLVMStructSetBody := (t: *any, types: *any, count: int, packed: bool) -> void;
+
+LLVMPrintModuleToString := (m: *any) -> string;
+LLVMContextCreate := () -> *any;
+LLVMModuleCreateWithNameInContext := (name: string, c: *any) -> *any;
+LLVMCreateBuilderInContext := (c: *any) -> *any;
+LLVMSetTarget := (m: *any, triple: string) -> void;
+LLVMSetDataLayout := (m: *any, dl: string) -> void;
+
+CompileLLVM := (m :* any, path: string) -> void;
+
+streq := (s1: *u8, s2: *u8) -> bool{
+  counter := 0;
+  while(1){
+    if(*(s1+ counter) != *(s2+counter)){
+      return 0;
+    }
+    if(*(s1+counter) == 0)
+      return 1;
+
+    counter = counter + 1;
+  }
+
+  return 0; // unreachable
+}
+
+strlen := (s1: *u8) -> u64{
+  size := 0;
+  while(1){
+    if((*(s1+size)) == 0)
+      return size;
+    size = size + 1;
+  }
+  return 0; // unreachable
+}
+
+strcat := (s1: *u8, s2: *u8) -> *u8{
+  size := strlen(s1) + strlen(s2) + 1;
+  ans : *u8 = malloc(size * sizeof u8);
+  ptr := 0;
+  ptr2 := 0;
+  while(*(s1+ptr) != 0){
+    *(ans+ptr) = *(s1+ptr);
+    ptr = ptr + 1;
+  }
+  while(*(s2+ptr2) != 0){
+    *(ans+ptr) = *(s2+ptr2);
+    ptr = ptr + 1;
+    ptr2 = ptr2 + 1;
+  }
+  *(ans+ptr) = 0;
+  return ans;
+}
+
+is_alpha := (c: u8) -> bool{
+  if(c >= 'a')
+    if(c <= 'z')
+      return 1;
+  if(c >= 'A')
+    if(c <= 'Z')
+      return 1;
+  return 0;
+}
+
+is_numeric := (c: u8) -> bool{
+  if(c >= '0')
+    if(c <= '9')
+      return 1;
+  return 0;
+}
+
+is_alphanumeric := (c: u8) -> bool{
+  if(c == '_') // underline
+    return 1;
+
+  if(is_alpha(c))
+    return 1;
+
+  return is_numeric(c);
+}
+
+strcp := (buf: *u8, start: int, end: int) -> string{
+  out : *u8 = malloc(sizeof u64 * (end - start));
+  counter := start;
+  while(counter != end){
+    *(out + (counter - start)) = *(buf + counter);
+    counter = counter + 1;
+  }
+  *(out + (end - start)) = 0; // '\0'
+  return out;
+}
+
+// === enums
+
+TokenType: enum{
+  TEOF = 0, // EOF
+  TID = 1, // id
+  TCOL = 2, // :
+  TDEF = 3, // :=
+  TLPAR = 4, // (
+  TRPAR = 5, // )
+  TCOMMA = 6, // ,
+  TDOT = 7, // .
+  T3DOT = 8, // ...
+  TDASH = 9, // -
+  TARROW = 10, // ->
+  TSEM = 11, // ;
+  TSTAR = 12, // *
+  TFSLASH = 13, // /
+  TLCB = 14, // {
+  TRCB = 15, // }
+  TNUM = 16, // num
+  TEQ = 17, // =
+  TEQEQ = 18, // ==
+  TPLUS = 19, // +
+  TSTRV = 20, // string value
+  TINT = 21, // int
+  TRET = 22, // return
+  TIF = 23, // if
+  TWHILE = 24, // while
+  TELSE = 25, // else
+  TSTR = 26, // string
+  TANY = 27, // any
+  TSTRUCT = 28, // struct
+  TVOID = 29, // void
+  TU8 = 30, // u8
+  TU16 = 31, // u16
+  TU32 = 32, // u32
+  TU64 = 33, // u64
+  TS8 = 34, // s8
+  TS16 = 35, // s16
+  TS32 = 36, // s32
+  TS64 = 37, // s64
+  TF32 = 38, // f32
+  TF64 = 39, // f64
+  TBOOL = 40, // bool
+  TPERC = 41, // %
+  TSIZE = 42, // sizeof
+  TNEQ = 43, // !=
+  TNOT = 44, // !
+  TLT = 45, // <
+  TLTE = 46, // <=
+  TGT = 47, // >
+  TGTE = 48, // >=
+  TINTERFACE = 49, // interface
+  TENUM = 50, // enum
+  TCHAR = 51, // character
+  TINSTANCEOF,
+  TAND, // &
+}
+
+// === structs & interfaces
+
+DBG: struct{
+}
+
+LinkedNode: struct{
+  next: *LinkedNode;
+  p: *any;
+}
+
+BB: struct{
+  nv: *LinkedNode;
+}
+
+BB.init := () -> void{
+  self.nv = 0;
+  return;
+}
+
+CC: struct{
+  cp: *LinkedNode;
+  bb: *LinkedNode;
+  module: *any;
+  context: *any;
+  builder: *any;
+  namedNum: int;
+
+  lastErr: string;
+
+  // lexer stuff, TODO take them out
+  buf: *u8;
+  offset :int;
+  line: int;
+}
+
+CC.init := () -> void{
+  self.cp = 0;
+  self.bb = malloc(sizeof LinkedNode);
+  self.bb.p = malloc(sizeof BB);
+  bb : *BB = self.bb.p;
+  bb.init();
+  self.namedNum = 0;
+  self.offset = 0;
+  self.line = 0;
+  return;
+}
+
+CC.pushBlock := () -> void{
+  bb: *BB = malloc(sizeof BB);
+  bb.init();
+
+  ln : *LinkedNode = malloc(sizeof LinkedNode);
+  ln.next = self.bb;
+  ln.p = bb;
+
+  self.bb = ln;
+
+  return;
+}
+
+CC.popBlock := () -> void{
+  // TODO, free bb
+  self.bb = self.bb.next;
+  return;
+}
+
+CC.getDBG := () -> *DBG{
+  dbg : *DBG = malloc(sizeof DBG);
+  
+  // TODO copy from self.dbg
+
+  return dbg;
+}
+
+CC.storeLexer := () -> *any{
+  return self.offset;
+}
+
+CC.restoreLexer := (cp: *any) -> void{
+  self.offset = cp;
+  return;
+}
+
+CC.setError := (e: string) -> void{
+  self.lastErr = e;
+  return ;
+}
+
+CC.skipWS := () -> void{
+  while(1){
+    is_ws := 0;
+    c : u8 = *(self.buf + self.offset);
+    if(c == 10){// \n
+      is_ws = 1;
+      self.line = self.line + 1;
+    }
+    if(c == 32){ // space
+      is_ws = 1;
+    }
+
+    if(c == 9){ // tab
+      is_ws = 1;
+    }
+
+    if(is_ws==0) return;
+    self.offset = self.offset + 1;
+  }
+  return;
+}
+
+CC.nextWord := () -> string{
+  self.skipWS();
+  buf := self.buf;
+  offset := self.offset;
+  if(is_alpha(*(buf+offset))){
+    // we have a word
+    end := self.offset + 1; // TODO is this okay?
+    while(is_alphanumeric(*(buf+end))){
+      end = end  +1;
+    }
+    id := strcp(buf, offset, end);
+    self.offset = end;
+    return id;
+  }
+  return 0; // it wasn't a word
+}
+
+CC.isKeyword := (s: string) -> int{
+  // TODO
+  return 0;
+}
+
+CC.isEOF := () -> bool{
+  if(*(self.buf+self.offset) == 0) return 1;
+  return 0;
+}
+
+CC.expectId := () -> string{
+  word := self.nextWord();
+  if(!word) return 0;
+  if(self.isKeyword(word)) return 0;
+  return word;
+}
+
+CC.expectNum := () -> *int{
+  self.skipWS();
+  buf := self.buf;
+  offset := self.offset;
+  if(is_numeric(*(buf+offset))){
+    // we have a number, I think
+    end := self.offset + 1;
+    while(is_numeric(*(buf+end))){
+      end = end + 1;
+    }
+    str := strcp(buf, offset, end);
+    num := atoi(str);
+    ans :*int = malloc(sizeof int);
+    *ans = num;
+    return ans;
+  }
+  return 0;
+}
+
+CC.expectToken := (token: TokenType) -> bool{
+  return 0; // TODO
+}
+
+Value: interface{
+  getType := (cc: *CC) -> *Type; // typeof val
+  getValue := (cc: *CC) -> *any; // = val
+  assignGen := (cc: *CC, val: *any) -> void; // val = 
+  preOpGen := (cc: *CC, op: string) -> *Value; // - val || *val
+  postOpGen := (cc: *CC, op: string) -> *Value; // val++
+  binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value; // val * rhs
+  callGen := (cc: *CC, args: *LinkedNode) -> *Value; // val ()
+  memberGen := (cc: *CC, name: string) -> *Value; // val.
+  castGen := (cc: *CC, target: *Type) -> *Value; // val -> target
+}
+
+Named: struct{
+  name: string;
+  v: *Value;
+}
+
+CC.registerNamed := (name: string, v: *Value) -> void{
+  named: *Named = malloc(sizeof Named);
+  named.name = name;
+  named.v = v;
+  bb : *BB = self.bb.p;
+  ln : *LinkedNode = malloc(sizeof LinkedNode);
+  ln.p = named;
+  ln.next = bb.nv;
+  bb.nv = ln;
+  return;
+}
+
+CC.resolveNamed := (name: string) -> *Value{
+  bln: *LinkedNode = self.bb;
+  while(bln){
+    b: *BB = bln.p;
+    ln : *LinkedNode = b.nv;
+    while(ln){
+      n: *Named = ln.p;
+      if(streq(n.name, name)){
+        return n.v;
+      }
+      ln = ln.next;
+    }
+    bln = bln.next;
+  }
+  return 0;
+}
+
+// Types aren't always instansiable, they could be general concepts as well.
+Type: interface{
+  getName := (cc: *CC) -> string;
+  typegen := (cc: *CC) -> *any;
+
+  getInstance := (cc: *CC, val: *any, name: string) -> *Value;
+
+  cast := (cc: *CC, target: *Type) -> *Type;
+
+  assignCheck := (cc: *CC, t: *Type) -> bool;
+  preOpType := (cc: *CC, op: string) -> *Type;
+  postOpType := (cc: *CC, op: string) -> *Type;
+  binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type;
+  callType := (cc: *CC, args: *LinkedNode) -> *Type;
+  memberType := (cc: *CC, name: string) -> *Type;
+}
+
+Arg: interface{
+  getName := (cc: *CC) -> string;
+  // register and assign val to itself
+  codegen := (cc: *CC, val: *any) -> *void; // val is the param provided
+  typeresolve := (cc: *CC) -> *Type;
+}
+
+BasicArg: struct{
+  id: string;
+  type: *Type;
+}
+BasicArg.getName := (cc: *CC) -> string { return self.id; }
+BasicArg.typeresolve := (cc: *CC) -> *Type{ return self.type; }
+BasicArg.codegen := (cc: *CC, val:*any) -> void{
+  // instantiate a variable and assign it
+  v := self.type.getInstance(cc, val, self.id);
+  // set named
+  cc.registerNamed(self.id, v);
+  return;
+}
+
+Member: struct{
+  id: string;
+  type: *Type;
+}
+
+FunctionType: struct{
+  returnType: *Type;
+  args: *LinkedNode; // of Type Arg
+}
+
+CC.expectFType := () -> *FunctionType{
+  return 0; // TODO
+}
+
+CC.expectType := () -> *Type{
+  return 0; // TODO
+}
+
+FunctionType.getName := (cc: *CC) -> void{
+  return "function"; // TODO add args?
+}
+FunctionType.typegen := (cc: *CC) -> *any{
+  args_count := 0;
+  {
+    argL: *LinkedNode = self.args;
+    while(argL){
+      args_count = args_count + 1;
+      argL = argL.next;
+    }
+  }
+  args := malloc(args_count * sizeof *any);
+  argL: *LinkedNode = self.args;
+  count := 0;
+  while(argL){
+    arg: *Arg = argL.p;
+    t := arg.typeresolve(cc);
+    *(args+count) = t.typegen(cc);
+    count = count + 1;
+    argL = argL.next;
+  }
+
+  // TODO handle varargs
+  // TODO memoize?
+  return LLVMFunctionType(self.returnType.typegen(cc), args, args_count, 0);
+}
+FunctionType.getInstance := (cc: *CC, val: *any, name: string) -> *Value {return 0;} // TODO?
+FunctionType.cast := (cc: *CC, target: *Type) -> *Type{
+  return 0; // not castable for now
+}
+FunctionType.preOpType := (cc: *CC, op: string) -> *Type{
+  return 0;
+}
+FunctionType.postOpType := (cc: *CC, op: string) -> *Type{
+  return 0;
+}
+FunctionType.binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type{
+  return 0;
+}
+FunctionType.memberType := (cc: *CC, name: string) -> *Type{
+  return 0;
+}
+FunctionType.callType := (cc: *CC) -> *Type{
+  return self.returnType;
+}
+FunctionType.assignCheck := (cc: *CC, t: *Type) -> bool{
+  return 0;
+}
+
+Concept: interface{
+  getName := (cc: *CC) -> string;
+  register := (cc: *CC) -> void; // Just add the name to CC and module
+  compile := (cc: *CC) -> void; // Perform codegen
+}
+
+CParser: interface{
+  parse := (cc: *CC) -> *Concept;
+  getName := (cc: *CC) -> string;
+}
+
+CC.registerCP := (cp: *CParser) -> void{
+  tmp : *LinkedNode = malloc(sizeof LinkedNode);
+  tmp.p = cp;
+  tmp.next = self.cp;
+  self.cp = tmp;
+  return;
+}
+
+Statement: interface{
+  getName := (cc: *CC) -> string;
+  codegen := (cc: *CC) -> void;
+}
+
+CC.expectStatement := () -> *Statement{
+  return 0; // TODO
+}
+
+SParser: interface{
+  parse := (cc: *CC) -> *Statement;
+  getName := (cc: *CC) -> string;
+}
+
+TParser: interface{
+  parse := (cc: *CC) -> *Type;
+  getName := (cc: *CC) -> string;
+}
+
+Expression: interface{
+  getName := (cc: *CC) -> string;
+  getAlloca := (cc: *CC) -> *any;
+  exprgen := (cc: *CC) -> *any;
+  typeresolve := (cc: *CC) -> *Type;
+}
+
+// ==== TOP LEVELs
+FunctionConcept: struct{
+  dbg: *DBG;
+  id: string;
+  type: *FunctionType;
+  firstS: *LinkedNode; // could be null on signatures
+  hasBody: bool;
+}
+FunctionConcept.getName := (cc: *CC) -> string{
+  return strcat("function ", self.id);
+}
+FunctionConcept.getType := (cc: *CC) -> *Type{
+  t: *Type = malloc(sizeof Type);
+  t = self.type;
+  return t;
+}
+FunctionConcept.compile := (cc: *CC) -> void{
+  if(!self.hasBody) return;
+
+  f := LLVMGetNamedFunction(cc.module, self.id);
+  bblock := LLVMAppendBasicBlockInContext(cc.context, f, "entry");
+
+  cc.pushBlock();
+
+  argL : *LinkedNode = self.type.args;
+  count := 0;
+  while(argL){
+    arg : *Arg = argL.p;
+    param := LLVMGetParam(f, count);
+    LLVMSetValueName2(param, arg.getName(), strlen(arg.getName()));
+
+    arg.codegen(cc, param); // ?
+
+    argL = argL.next;
+    count = count + 1;
+  }
+
+  stmt := self.firstS;
+  while(stmt){
+    s : *Statement = stmt.p;
+    s.codegen(cc);
+
+    stmt = stmt.next;
+  }
+
+  cc.popBlock();
+  return;
+}
+FunctionConcept.assignGen := (cc: *CC, val: *Type) -> *any{
+  return 0;
+}
+FunctionConcept.preOpGen := (cc: *CC, op: string)-> *Value{
+  return 0;
+}
+FunctionConcept.postOpGen := (cc: *CC, op: string)-> *Value{
+  return 0;
+}
+FunctionConcept.binOpGen := (cc: *CC, op: string, rhs: *Value)-> *Value{
+  return 0;
+}
+FunctionConcept.castGen := (cc: *CC, target: *Type) -> *Value{
+  return 0;
+}
+FunctionConcept.memberGen := (cc: *CC, name: string) -> * Value{
+  return 0;
+}
+FunctionConcept.callGen := (cc: *CC, args: *LinkedNode) -> *Value{
+  count := 0;
+  argL := args;
+  while(argL){
+    argL = argL.next;
+    count = count + 1;
+  }
+
+  args := malloc(count * sizeof *any);
+  argL = args;
+  count = 0;
+  while(argL){
+    arg : *Value = argL.p;
+    *(args+count) = arg.getValue(cc);
+    argL = argL.next;
+    count = count + 1;
+  }
+  name := "retval";
+  f := LLVMGetNamedFunction(cc.module, self.id);
+  val := LLVMBuildCall(cc.builder, f, args, count, name);
+  // Now create a value...
+  return self.type.returnType.getInstance(cc, val, "retval"); // TODO check for void
+}
+FunctionConcept.getValue := (cc: *CC) -> *any{
+  return LLVMGetNamedFunction(cc.module, self.id);
+}
+FunctionConcept.register := (cc: *CC) -> void{
+  // LLVM Register
+  ftype := self.type.typegen(cc);
+  LLVMAddFunction(cc.module, self.id, ftype);
+
+  // CC Register
+  v: *Value = malloc(sizeof Value);
+  v = self;
+  cc.registerNamed(self.id, v);
+  return;
+}
+FunctionSigParser: struct{}
+FunctionSigParser.getName := (cc: *CC) -> string{
+  return "function signature";
+}
+FunctionSigParser.parse := (cc: *CC) -> *Concept{
+  dbg := cc.getDBG();
+
+  id := cc.expectId();
+  if(!id) return 0;
+  if(!cc.expectToken(TokenType.TDEF)) return 0;
+  ftype := cc.expectFType();
+  if(!ftype) return 0;
+  if(!cc.expectToken(TokenType.TSEM)) return 0;
+
+  fs : *FunctionConcept = malloc(sizeof FunctionConcept);
+  fs.dbg = dbg;
+  fs.id = id;
+  fs.type = ftype;
+  fs.firstS = 0;
+  fs.hasBody = 0;
+
+  ctx : *Concept = malloc(sizeof Concept);
+  ctx = fs;
+
+  return ctx;
+}
+
+FunctionDefineParser : struct{}
+FunctionDefineParser.getName := (cc: *CC) -> string{
+  return "function define";
+}
+FunctionDefineParser.parse := (cc: *CC) -> *Concept{
+  dbg := cc.getDBG();
+
+  id := cc.expectId();
+  if(!id) return 0;
+  if(!cc.expectToken(TokenType.TDEF)) return 0;
+  ftype := cc.expectFType();
+  if(!ftype) return 0;
+  if(!cc.expectToken(TokenType.TLCB)) return 0;
+
+  first : *LinkedNode = 0;
+  c : *LinkedNode = 0;
+  while(!cc.expectToken(TokenType.TRCB)){
+    tmp := cc.expectStatement();
+
+    if(!tmp)
+      return 0;
+
+    ltmp : *LinkedNode = malloc(sizeof LinkedNode);
+    ltmp.p = tmp;
+    ltmp.next = 0;
+
+    if(!first)
+      first = ltmp;
+    if(c)
+      c.next = ltmp;
+    c = ltmp;
+  }
+  cc.expectToken(TokenType.TRCB);
+
+  fd : *FunctionConcept = malloc(sizeof FunctionConcept);
+  fd.dbg = dbg;
+  fd.id = id;
+  fd.type = ftype;
+  fd.firstS = first;
+  fd.hasBody = 1;
+   
+  ctx : *Concept = malloc(sizeof Concept);
+  ctx = fd;
+
+  return ctx;
+}
+
+StructConcept: struct{
+  dbg: *DBG;
+  id: string;
+  first: *LinkedNode;
+  // Methods are only stored, they should be compiled elsewhere
+  firstMethod: *LinkedNode; // Link to concepts
+  s: *any;
+  namedNum: int;
+}
+
+StructInstance: struct{
+  alloc: *any;
+  sc: *StructConcept;
+}
+
+/*
+StructInstance.getName := (cc: *CC) -> string{
+  return strcat("instance of ", self.sc.id);
+}
+*/
+StructInstance.getType := (cc: *CC) -> *Type{return ;} // This is a dummy definition, redifined later on
+
+StructInstance.getValue := (cc: *CC) -> *any{
+  return self.alloc;
+}
+
+StructInstance.preOpGen := (cc: *CC, op: string) -> *Value{
+  return 0;
+}
+StructInstance.postOpGen := (cc: *CC, op: string) -> *Value{
+  return 0;
+}
+StructInstance.binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value{
+  return 0;
+}
+StructInstance.callGen := (cc: *CC, arg: *LinkedNode) -> *Value{
+  return 0;
+}
+StructInstance.memberGen := (cc: *CC, name: string) -> *Value{
+  // resolve index
+  ind := 0;
+  l: *LinkedNode = self.sc.first;
+  while(l){
+    m : *Member = l.p;
+    if(streq(m.id, name)){
+      // create GEP
+      mem := LLVMBuildStructGEP2(cc.builder, self.alloc, self.sc.s, ind);
+      // cast to value
+      v := m.type.getInstance(cc, mem, "memaccess");
+      return v;
+    }
+    ind = ind + 1;
+    l = l.next;
+  }
+  // TODO raise error?
+  return 0;
+}
+StructInstance.castGen := (cc: *CC, t: *Type) -> *Value{
+  // TODO cast to interfaces here
+  return 0;
+}
+
+StructInstance.assignGen := (cc: *CC, val: *any) -> void{
+  LLVMBuildStore(cc.builder, val, self.alloc);
+  return;
+}
+
+StructConcept.getName := (cc: *CC) -> string{
+  return strcat("struct ", self.id);
+}
+StructConcept.typegen := (cc: *CC) -> *any{
+  return self.s;
+}
+StructConcept.cast := (cc: *CC, target: *Type) -> *Type{
+  // Do not cast to interface, this is struct type not struct instance
+  return 0;
+}
+StructConcept.preOpType := (cc: *CC, op: string) -> *Type {return 0;}
+StructConcept.preOpGen := (cc: *CC, op:string) -> *Value {return 0;}
+StructConcept.postOpType := (cc: *CC, op: string) -> *Type {return 0;}
+StructConcept.postOpGen := (cc: *CC, op:string) -> *Value {return 0;}
+StructConcept.binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type {return 0;}
+StructConcept.binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value {return 0;}
+StructConcept.assignGen := (cc: *CC, v: *Value) -> *Value {return 0;}
+StructConcept.getInstance := (cc: *CC, val: *any, name: string) -> *Value {
+  // TODO, instantiate a struct
+  si : *StructInstance = malloc(sizeof StructInstance);
+  si.sc = self;
+  si.alloc = LLVMBuildAlloca(cc.builder, self.s, name);
+  v: *Value = malloc(sizeof Value);
+  v = si;
+  return v;
+}
+StructConcept.callType := (cc: *CC, args: *LinkedNode) -> *Type {return 0;}
+StructConcept.callGen := (cc: *CC, args: *LinkedNode) -> *Value{return 0;}
+StructConcept.castGen := (cc: *CC, target: *Type) -> *Value{return 0;}
+StructConcept.memberType := (cc: *CC, name: string) -> *Type{
+  // We don't check members, because this is the struct concept, not struct instance
+  // TODO check methods
+  return 0;
+}
+StructConcept.memberGen := (cc: *CC, name: string) -> *Value{
+  // TODO check methods only
+  return 0;
+}
+StructConcept.getValue := (cc: *CC) -> *any{
+  return self.s;
+}
+StructConcept.assignCheck := (cc: *CC, t: *Type) -> bool{
+  return 0;
+}
+StructConcept.getType := (cc: *CC) -> *Type{
+  t: *Type = malloc(sizeof Type);
+  t = self;
+  return t; // TODO this is not right
+}
+StructInstance.getType := (cc: *CC) -> *Type{
+  t : *Type = malloc(sizeof Type);
+  t = self.sc;
+  return t;
+}
+StructConcept.register := (cc: *CC) -> void{
+  self.s = LLVMStructCreateNamed(cc.context, self.id);
+
+  self.namedNum = cc.namedNum + 1;
+  self.namedNum = cc.namedNum;
+
+  v: *Value = malloc(sizeof Value);
+  v = self;
+  cc.registerNamed(self.id, v);
+  return;
+}
+StructConcept.compile := (cc: *CC) -> void{
+  count := 0;
+  l := self.first;
+  while(l){
+    l = l.next;
+    count = count + 1;
+  }
+  members : *any = malloc(sizeof *any * count);
+  l = self.first;
+  i := 0;
+  while(l){
+    tmpp := l.p;
+    mem: *Member = tmpp;
+    *(members+i) = mem.type.typegen(cc);
+    l = l.next;
+    i = i+1;
+  }
+
+  // TODO change packed?
+  LLVMStructSetBody(self.s, members, count, 0);
+
+  return;
+}
+
+StructDefineParser: struct{}
+StructDefineParser.getName := (cc: *CC) -> string{
+  return "struct";
+}
+StructDefineParser.parse := (cc: *CC) -> *Concept{
+  dbg := cc.getDBG();
+
+  id := cc.expectId();
+  if(!id) return 0;
+  if(!cc.expectToken(TokenType.TCOL)) return 0;
+  if(!cc.expectToken(TokenType.TSTRUCT)) return 0;
+  if(!cc.expectToken(TokenType.TLCB)) return 0;
+
+  first : *LinkedNode = 0;
+  prev: *LinkedNode = 0;
+  while(!cc.expectToken(TokenType.TRCB)){
+    mid := cc.expectId();
+    if(!mid) return 0;
+    if(!cc.expectToken(TokenType.TCOL)) return 0;
+    t := cc.expectType();
+    if(!t) return 0;
+
+    m : *Member = malloc(sizeof Member);
+    m.id = mid;
+    m.type = t;
+
+    tmp : *LinkedNode = malloc(sizeof LinkedNode);
+    tmp.p = m;
+    tmp.next = 0;
+
+    if(!first)
+      first = tmp;
+    if(prev)
+      prev.next = tmp;
+    prev = tmp;
+  }
+  if(!cc.expectToken(TokenType.TRCB)) return 0;
+
+  sd : *StructConcept = malloc(sizeof StructConcept);
+  sd.dbg = dbg;
+  sd.id = id;
+  sd.first = first;
+  sd.s = 0;
+  sd.firstMethod = 0;
+
+  ctx: *Concept = malloc(sizeof Concept);
+  ctx = sd;
+
+  return ctx;
+}
+
+InterfaceConcept : struct{
+  dbg: *DBG;
+  id: string;
+  first: *LinkedNode;
+  vptr: *any;
+  holder: *any;
+  // TODO named num?
+  // TODO firstMethod?
+}
+
+InterfaceInstance : struct{
+  alloc: *any;
+  ic: *InterfaceConcept;
+}
+
+InterfaceInstance.getType := (cc: *CC) -> *Type{return ;} // This is a dummy definition, redifined later on
+
+InterfaceInstance.getValue := (cc: *CC) -> *any{
+  return self.alloc;
+}
+
+InterfaceInstance.preOpGen := (cc: *CC, op: string) -> *Value{
+  return 0;
+}
+InterfaceInstance.postOpGen := (cc: *CC, op: string) -> *Value{
+  return 0;
+}
+InterfaceInstance.binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value{
+  return 0;
+}
+InterfaceInstance.callGen := (cc: *CC, arg: *LinkedNode) -> *Value{
+  return 0;
+}
+InterfaceInstance.assignGen := (cc: *CC, val: *any) -> void{
+  LLVMBuildStore(cc.builder, val, self.alloc);
+  return;
+}
+InterfaceInstance.memberGen := (cc: *CC, name: string) -> *Value{
+  // TODO
+  ind := 0;
+  l: *LinkedNode = self.ic.first;
+  while(l){
+    m : *Member = l.p;
+    if(streq(m.id, name)){
+      // create GEP
+      mem := LLVMBuildStructGEP2(cc.builder, self.alloc, self.sc.s, ind);
+      // cast to value
+      // TODO
+      raise error
+      return v;
+    }
+    ind = ind + 1;
+    l = l.next;
+  }
+  // TODO raise error?
+  return 0;
+}
+
+InterfaceConcept.getName := (cc: *CC) -> string{
+  return strcat("interface ", self.id);
+}
+InterfaceConcept.getInstance := (cc: *CC, val: *any, name: string) -> *Value {
+  // TODO, instantiate an interface
+  i: *InterfaceInstance = malloc(sizeof InterfaceInstance);
+  i.ic = self;
+  i.alloc = LLVMBuildAlloca(cc.builder, self.holder, name);
+  v: *Value = malloc(sizeof Value);
+  v = i;
+  return v;
+}
+InterfaceConcept.cast := (cc: *CC, target: *Type) -> *Type{
+  // Do not cast to structs, this is interface type not interface instance
+  return 0;
+}
+InterfaceConcept.preOpType := (cc: *CC, op: string) -> *Type {return 0;}
+InterfaceConcept.preOpGen := (cc: *CC, op:string) -> *Value {return 0;}
+InterfaceConcept.postOpType := (cc: *CC, op: string) -> *Type {return 0;}
+InterfaceConcept.postOpGen := (cc: *CC, op:string) -> *Value {return 0;}
+InterfaceConcept.binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type {return 0;}
+InterfaceConcept.assignGen := (cc: *CC, v: *Value) -> *Value {return 0;}
+InterfaceConcept.binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value {return 0;}
+InterfaceConcept.callType := (cc: *CC, args: *LinkedNode) -> *Type {return 0;}
+InterfaceConcept.callGen := (cc: *CC, args: *LinkedNode) -> *Value{return 0;}
+InterfaceConcept.castGen := (cc: *CC, target: *Type) -> *Value{return 0;}
+InterfaceConcept.typegen := (cc: *CC) -> *any{
+  return self.holder;
+}
+InterfaceConcept.memberType := (cc: *CC, name: string) -> *Type{
+  // TODO check methods
+  return 0;
+}
+InterfaceConcept.memberGen := (cc: *CC, name: string) -> *Value{
+  // TODO check methods only
+  return 0;
+}
+InterfaceConcept.getValue := (cc: *CC) -> *any{
+  return self.holder;
+}
+InterfaceConcept.assignCheck := (cc: *CC, t: *Type) -> bool{
+  return 0;
+}
+InterfaceConcept.getType := (cc: *CC) -> *Type{
+  t: *Type = malloc(sizeof Type);
+  t = self;
+  return t; // TODO this is not right
+}
+InterfaceInstance.getType := (cc: *CC) -> *Type{
+  t: *Type = malloc(sizeof Type);
+  t = self.ic;
+  return t; // TODO this is not right
+}
+InterfaceConcept.register := (cc: *CC) -> void{
+  self.vptr = LLVMStructCreateNamed(cc.context, strcat(self.id, "$$"));
+  self.holder = LLVMStructCreateNamed(cc.context, self.id);
+
+  v: *Value = malloc(sizeof Value);
+  v = self;
+  cc.registerNamed(self.id, v);
+  return;
+}
+InterfaceConcept.compile := (cc: *CC) -> void{
+  // TODO
+  count := 1; // classptr
+  f: *LinkedNode = self.first;
+  while(f){
+    count = count + 1;
+    f = f.next;
+  }
+  members: *any = malloc(sizeof *any * count);
+  f = self.first;
+  i := 1;
+  *members = LLVMInt64TypeInContext(cc.context);
+  pointer_type := LLVMPointerType(LLVMInt64TypeInContext(cc.context), 0);
+  while(f){
+    *(members+i) = pointer_type;
+    f = f.next;
+    i = i + 1;
+  }
+  LLVMStructSetBody(self.vptr, members, count, 0); // TODO change packed?
+
+  members_2 : *any = malloc(sizeof *any * 2);
+  *members_2 = pointer_type;
+  *(members_2+1) = LLVMPointerType(self.vptr, 0);
+
+  LLVMStructSetBody(self.holder, members_2, 2, 0); // TODO change packed?
+
+  return;
+}
+
+InterfaceDefineParser : struct{}
+InterfaceDefineParser.getName := (cc: *CC) -> string{
+  return "struct";
+}
+InterfaceDefineParser.parse := (cc: *CC) -> *Concept{
+  dbg := cc.getDBG();
+
+  id := cc.expectId();
+  if(!id) return 0;
+  if(!cc.expectToken(TokenType.TCOL)) return 0;
+  if(!cc.expectToken(TokenType.TINTERFACE)) return 0;
+  if(!cc.expectToken(TokenType.TLCB)) return 0;
+
+  fsignParser : FunctionSigParser;
+
+  first :*LinkedNode = 0;
+  prev: *LinkedNode = 0;
+  while(!cc.expectToken(TokenType.TRCB)){
+    c : *Concept = fsignParser.parse(cc);
+    if(!c) return 0;
+    tmp :*LinkedNode = malloc(sizeof LinkedNode);
+    tmp.p = c;
+    tmp.next = 0;
+
+    if(!first) first = tmp;
+    if(prev) prev.next = tmp;
+    prev = tmp;
+  }
+  cc.expectToken(TokenType.TRCB);
+
+  sd: *InterfaceConcept = malloc(sizeof InterfaceConcept);
+  sd.dbg = dbg;
+  sd.id = id;
+  sd.first = first;
+
+  sd.vptr = 0;
+  sd.holder = 0;
+
+  ctx: *Concept = malloc(sizeof Concept);
+  ctx = sd;
+
+  return ctx;
+}
+
+EnumConcept: struct{
+  id: string;
+  dbg: *DBG;
+  first: *LinkedNode;
+}
+EnumConcept.getName := (cc: *CC) -> string{
+  return strcat("enum ", self.id);
+}
+EnumConcept.typegen := (cc: *CC) -> *any{
+  return LLVMInt16TypeInContext(cc.context);
+}
+EnumConcept.getInstance := (cc: *CC, val: *any, name: string) -> *Value {return 0;} // TODO?
+EnumConcept.preOpType := (cc: *CC, op: string) -> *Type {return 0;}
+EnumConcept.preOpGen := (cc: *CC, op:string) -> *Value {return 0;}
+EnumConcept.postOpType := (cc: *CC, op: string) -> *Type {return 0;}
+EnumConcept.postOpGen := (cc: *CC, op:string) -> *Value {return 0;}
+EnumConcept.binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type {return 0;}
+EnumConcept.binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value {return 0;}
+EnumConcept.callType := (cc: *CC, args: *LinkedNode) -> *Type {return 0;}
+EnumConcept.callGen := (cc: *CC, args: *LinkedNode) -> *Value{return 0;}
+EnumConcept.castGen := (cc: *CC, target: *Type) -> *Value{return 0;}
+EnumConcept.cast := (cc: *CC, target: *Type) -> *Type{ return 0; }
+EnumConcept.assignGen := (cc: *CC, v: *Value) -> *Value {return 0;}
+EnumConcept.memberType := (cc: *CC, name: string) -> *Type{
+  // TODO check members
+  return 0;
+}
+EnumConcept.memberGen := (cc: *CC, name: string) -> *Value{
+  // TODO check memebrs
+  return 0;
+}
+EnumConcept.getValue := (cc: *CC) -> *any{ return 0; }
+EnumConcept.assignCheck := (cc: *CC, t: *Type) -> bool{
+  return 0;
+}
+EnumConcept.getType := (cc: *CC)->*Type{
+  t: *Type = malloc(sizeof Type);
+  t = self;
+  return t; // TODO this is not right
+}
+EnumConcept.register := (cc: *CC) -> void{
+  v: *Value = malloc(sizeof Value);
+  v = self;
+  cc.registerNamed(self.id, v);
+
+  return;
+}
+EnumConcept.compile := (cc: *CC) -> void{
+  // Nothing to do!
+  return;
+}
+
+EnumItem : struct{
+  id: string;
+  hasval: bool;
+  val: int;
+}
+
+EnumDefineParser: struct{}
+EnumDefineParser.getName := (cc: *CC) -> string{
+  return "enum";
+}
+EnumDefineParser.parse := (cc: *CC) -> *Concept{
+  dbg:= cc.getDBG();
+
+  id := cc.expectId();
+  if(!id) return 0;
+  if(!cc.expectToken(TokenType.TCOL)) return 0;
+  if(!cc.expectToken(TokenType.TENUM)) return 0;
+  if(!cc.expectToken(TokenType.TLCB)) return 0;
+
+  first: *LinkedNode = 0;
+  prev: *LinkedNode = 0;
+  while(!cc.expectToken(TokenType.TRCB)){
+    mid := cc.expectId();
+    val :int;
+    hasval := 0;
+    if(!mid) return 0;
+    if(cc.expectToken(TokenType.TEQ)){
+      // it has a default
+      hasval = 1;
+      cc.expectToken(TokenType.TEQ);
+      tmp := cc.expectNum(); // This should return pointer to int
+      if(!tmp) return 0;
+      val = *tmp;
+      // free(tmp);
+    }
+    i: *EnumItem = malloc(sizeof EnumItem);
+    i.id = mid;
+    i.hasval = hasval;
+    i.val = val;
+
+    tmp : *LinkedNode = malloc(sizeof LinkedNode);
+    tmp.p = i;
+    tmp.next = 0;
+
+    if(!first) first = tmp;
+    if(prev) prev.next = tmp;
+    prev = tmp;
+  }
+  cc.expectToken(TokenType.TRCB);
+
+  ed : *EnumConcept = malloc(sizeof EnumConcept);
+  ed.dbg = dbg;
+  ed.id = id;
+  ed.first = first;
+
+  ctx: *Concept = malloc(sizeof Concept);
+  ctx = ed;
+
+  return ctx;
+}
+
+MethodDefineParser: struct{}
+MethodDefineParser.getName := (cc: *CC) -> string{
+  return "method";
+}
+MethodDefineParser.parse := (cc: *CC) -> *Concept{
+  className := cc.expectId();
+  if(!className) return 0;
+  if(!cc.expectToken(TokenType.TDOT)) return 0;
+  fparse: FunctionDefineParser;
+  c :*Concept= fparse.parse(cc);
+  if(!c) return 0;
+  fd: *FunctionConcept;
+  fd = c; // extract it
+
+  // change the name and add a first argument
+  fd.id = strcat(className, strcat("$", fd.id));
+
+  selfarg : *BasicArg = malloc(sizeof BasicArg);
+  base := cc.resolveNamed(className);
+
+  if(!(base instanceof StructConcept)){
+    cc.setError("Methods can be defined on structs only.");
+    return 0;
+  }
+  selfarg.type = base;
+  selfarg.id = "self";
+
+  selfargholder: *Arg = malloc(sizeof Arg);
+  selfargholder = selfarg;
+
+  // register it with the original struct
+  sc: *StructConcept = base;
+  mln : *LinkedNode = malloc(sizeof LinkedNode);
+  mln.next = sc.firstMethod;
+  mln.p = c;
+  sc.firstMethod = mln;
+
+  lc: *LinkedNode = malloc(sizeof LinkedNode);
+  lc.p = selfargholder;
+  lc.next = fd.type.args;
+
+  fd.type.args = lc;
+
+  return c;
+}
+
+get_def_cc := () -> *CC{
+  cc: *CC = malloc(sizeof CC);
+  cc.init();
+
+  // TODO CODES TO CAPTURE INTERFACE ERRORS, REMVOE LATER!
+  t: *EnumConcept = malloc(sizeof EnumConcept);
+  c: *Concept = malloc(sizeof Concept);
+  c = t;
+  // TODO E OF INTERFACE ERROR CATCHER
+
+  // TODO register consept parsers, etc
+  fsp: *FunctionSigParser = malloc(sizeof FunctionSigParser);
+  cp: *CParser = malloc(sizeof CParser);
+  cp = fsp;
+  cc.registerCP(cp);
+
+  fdp: *FunctionDefineParser = malloc(sizeof FunctionDefineParser);
+  cp: *CParser = malloc(sizeof CParser);
+  cp = fdp;
+  cc.registerCP(cp);
+
+  sdp: *StructDefineParser = malloc(sizeof StructDefineParser);
+  cp: *CParser = malloc(sizeof CParser);
+  cp = sdp;
+  cc.registerCP(cp);
+
+  idp : *InterfaceDefineParser = malloc(sizeof InterfaceDefineParser);
+  cp: *CParser = malloc(sizeof CParser);
+  cp = idp;
+  cc.registerCP(cp);
+
+  edp : *EnumDefineParser = malloc(sizeof EnumDefineParser);
+  cp: *CParser = malloc(sizeof CParser);
+  cp = edp;
+  cc.registerCP(cp);
+
+  mdp : *MethodDefineParser = malloc(sizeof MethodDefineParser);
+  cp: *CParser = malloc(sizeof CParser);
+  cp = mdp;
+  cc.registerCP(cp);
+
+  return cc;
+}
+
+CC.expectConcept := () -> *Concept{
+  cp := self.cp;
+  checkPoint := self.storeLexer();
+  err : string = strcat("", ""); // just so it's dynamic
+  while(cp){
+    p: *CParser = cp.p;
+    out := p.parse(self);
+    if(out){
+      // TODO free(err);
+      return out;
+    }
+    e := self.lastErr;
+    err = strcat(err, strcat("\n", e));
+    self.restoreLexer(checkPoint);
+    cp = cp.next;
+  }
+  self.setError(err);
+  return 0;
+}
+
+CC.parse := () -> *LinkedNode{
+  first: *LinkedNode = 0;
+  prev: *LinkedNode = 0;
+
+  self.skipWS();
+  while(!self.isEOF()){
+    c := self.expectConcept();
+    if(!c){
+      // TODO show error
+      exit(1);
+    }
+    l: *LinkedNode = malloc(sizeof LinkedNode);
+    l.p = c;
+    l.next = 0;
+    if(!first) first = l;
+    if(prev) prev.next = l;
+    prev = l;
+
+    self.skipWS();
+  }
+
+  return first;
+}
+
+CC.compile := () -> void{
+
+  self.context = LLVMContextCreate();
+  self.module = LLVMModuleCreateWithNameInContext("module", self.context);
+  self.builder = LLVMCreateBuilderInContext(self.context);
+
+  LLVMSetTarget(self.module, "x86_64-pc-linux-gnu");
+  LLVMSetDataLayout(self.module, "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128");
+
+  first : *LinkedNode = self.parse();
+
+  l := first;
+  while(l){
+    c: *Concept = l.p;
+    c.compile();
+    l = l.next;
+  }
+
+  return;
+}
+
+main := (argc: s32, argv: *string) -> int{
+  if(argc != 2){
+    printf("Need exactly one argument, file name\n");
+    return 1;
+  }
+
+  filename := *(argv+1);
+
+  buf: string = 0;
+  f := fopen(filename, "r");
+
+  if(!f){
+    printf("Couldn't open file\n");
+  }
+
+  if(fseek(f, 0, 2)){
+    printf("Unable to seek file\n");
+    return 1;
+  }
+
+  bufsize := ftell(f);
+  negOne := 0 - 1; // TOOD negative numbers?
+
+  if(bufsize == negOne){
+    printf("Unable to read file\n");
+    return 1;
+  }
+  buf = malloc(sizeof u8 * (bufsize+1));
+
+  if(fseek(f, 0, 0)){
+    printf("Unable to seek file\n");
+    return 1;
+  }
+
+  newLen := fread(buf, 1, bufsize, f);
+
+  // just to be safe
+  {
+    tmpB: *u8 = *buf;
+    tmpB = tmpB + newLen +1;
+    *tmpB = 0; // TODO do I need the *?
+  }
+
+  cc :=  get_def_cc();
+  cc.buf = buf;
+
+  // cc.parse(); // TODO seperate this state?
+  cc.compile();
+
+  printf("%s\n", LLVMPrintModuleToString(cc.module));
+  CompileLLVM(cc.module, "out.o");
+
+  return 0;
+}
