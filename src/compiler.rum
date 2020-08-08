@@ -425,6 +425,38 @@ Type: interface{
   memberType := (cc: *CC, name: string) -> *Type;
 }
 
+TypeTypeConcept: interface{
+  staticMemberType := (cc: *CC, name: string) -> *Type;
+  staticMemberGen := (cc: *CC, name: string) -> *Value;
+}
+
+TypeType: struct{
+  baseContext: *TypeTypeConcept;
+}
+
+TypeType.getName := (cc: *CC) -> string{
+  return "type";
+}
+TypeType.typegen := (cc: *CC) -> *any{
+  return 0;
+}
+TypeType.getInstance := (cc: *CC, val: *any, name: string) -> *Value{ // Should I return myself?
+  return 0;
+}
+TypeType.cast := (cc: *CC, target: *Type) -> *Type{
+  return 0;
+}
+TypeType.assignCheck := (cc: *CC, op: string) -> bool{
+  return 0;
+}
+TypeType.preOpType := (cc: *CC, op: string) -> *Type{ return 0; }
+TypeType.postOpType := (cc: *CC, op: string) -> *Type{ return 0; }
+TypeType.binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type{ return 0; }
+TypeType.callType := (cc: *CC, args: *LinkedNode) -> *Type { return 0; }
+TypeType.memberType := (cc: *CC, name: string) -> *Type{
+  return self.baseContext.staticMemberType(cc, name);
+}
+
 Arg: interface{
   getName := (cc: *CC) -> string;
   // register and assign val to itself
@@ -765,11 +797,6 @@ StructInstance: struct{
   sc: *StructConcept;
 }
 
-/*
-StructInstance.getName := (cc: *CC) -> string{
-  return strcat("instance of ", self.sc.id);
-}
-*/
 StructInstance.getType := (cc: *CC) -> *Type{return ;} // This is a dummy definition, redifined later on
 
 StructInstance.getValue := (cc: *CC) -> *any{
@@ -855,6 +882,14 @@ StructConcept.memberGen := (cc: *CC, name: string) -> *Value{
   // TODO check methods only
   return 0;
 }
+StructConcept.staticMemberType := (cc: *CC, name: string) -> *Type{
+  // TODO handle methods
+  return 0;
+}
+StructConcept.staticMemberGen := (cc: *CC, name: string) -> *Value{
+  // TODO handle methods
+  return 0;
+}
 StructConcept.getValue := (cc: *CC) -> *any{
   return self.s;
 }
@@ -862,9 +897,13 @@ StructConcept.assignCheck := (cc: *CC, t: *Type) -> bool{
   return 0;
 }
 StructConcept.getType := (cc: *CC) -> *Type{
+  ttc: *TypeTypeConcept = malloc(sizeof TypeTypeConcept);
+  ttc = self;
+  tt: *TypeType = malloc(sizeof TypeType);
+  tt.baseContext = ttc;
   t: *Type = malloc(sizeof Type);
-  t = self;
-  return t; // TODO this is not right
+  t = tt;
+  return t;
 }
 StructInstance.getType := (cc: *CC) -> *Type{
   t : *Type = malloc(sizeof Type);
@@ -1010,6 +1049,12 @@ InterfaceInstance.memberGen := (cc: *CC, name: string) -> *Value{
   // TODO raise error?
   return 0;
 }
+InterfaceConcept.staticMemberType := (cc: *CC, name: string) -> *Type{
+  return 0;
+}
+InterfaceConcept.staticMemberGen := (cc: *CC, name: string) -> *Value{
+  return 0;
+}
 InterfaceInstance.castGen := (cc: *CC, t: *Type) -> *Value{
   // TODO cast to structs
   return 0;
@@ -1059,14 +1104,18 @@ InterfaceConcept.assignCheck := (cc: *CC, t: *Type) -> bool{
   return 0;
 }
 InterfaceConcept.getType := (cc: *CC) -> *Type{
+  ttc: *TypeTypeConcept = malloc(sizeof TypeTypeConcept);
+  ttc = self;
+  tt: *TypeType = malloc(sizeof TypeType);
+  tt.baseContext = ttc;
   t: *Type = malloc(sizeof Type);
-  t = self;
-  return t; // TODO this is not right
+  t = tt;
+  return t;
 }
 InterfaceInstance.getType := (cc: *CC) -> *Type{
   t: *Type = malloc(sizeof Type);
   t = self.ic;
-  return t; // TODO this is not right
+  return t;
 }
 InterfaceConcept.register := (cc: *CC) -> void{
   self.vptr = LLVMStructCreateNamed(cc.context, strcat(self.id, "$$"));
@@ -1181,14 +1230,24 @@ EnumConcept.memberGen := (cc: *CC, name: string) -> *Value{
   // TODO check memebrs
   return 0;
 }
+EnumConcept.staticMemberType := (cc: *CC, name: string) -> *Type{
+  return 0;
+}
+EnumConcept.staticMemberGen := (cc: *CC, name: string) -> *Value{
+  return 0;
+}
 EnumConcept.getValue := (cc: *CC) -> *any{ return 0; }
 EnumConcept.assignCheck := (cc: *CC, t: *Type) -> bool{
   return 0;
 }
 EnumConcept.getType := (cc: *CC)->*Type{
+  ttc: *TypeTypeConcept = malloc(sizeof TypeTypeConcept);
+  ttc = self;
+  tt: *TypeType = malloc(sizeof TypeType);
+  tt.baseContext = ttc;
   t: *Type = malloc(sizeof Type);
-  t = self;
-  return t; // TODO this is not right
+  t = tt;
+  return t;
 }
 EnumConcept.register := (cc: *CC) -> void{
   v: *Value = malloc(sizeof Value);
@@ -1412,6 +1471,74 @@ IfStmtParser.parse := (cc: *CC) -> *Statement{
   return stmt;
 }
 
+WhileStatement: struct{
+  dbg: *DBG;
+  exp: *Expression;
+  st: *Statement;
+}
+WhileStatement.getName := (cc: *CC) -> string{
+  return "while";
+}
+WhileStatement.codegen := (cc: *CC) -> void{
+  f := LLVMGetBasicBlockParent(LLVMGetInsertBlock(cc.builder));
+
+  condB := LLVMAppendBasicBlockInContext(cc.context, f, "whilecond");
+  whileB := LLVMAppendBasicBlockInContext(cc.context, f, "while");
+  mergeB := LLVMCreateBasicBlockInContext(cc.context, "whilecont");
+
+  LLVMBuildBr(cc.builder, condB);
+  LLVMPositionBuilder(cc.builder, condB, 0);
+
+  cond := self.exp.exprgen(cc);
+
+  correct_type : bool = LLVMTypeOf(cond) == LLVMInt64TypeInContext(cc.context);
+  if(correct_type == 0){
+    cond = LLVMBuildIntCast2(cc.builder, cond, LLVMInt64TypeInContext(cc.context), 1, "cond");
+  }
+
+  cond = LLVMBuildICmp(cc.builder, 33, cond, LLVMConstInt(LLVMInt64TypeInContext(cc.context), 0, 0), "whilecond");
+
+  LLVMBuildCondBr(cc.builder, cond, whileB, mergeB);
+
+  cc.pushBlock();
+  LLVMPositionBuilder(cc.builder, whileB, 0);
+  self.st.codegen(cc);
+  if(is_br_ok(cc)){
+    LLVMBuildBr(cc.builder, condB);
+  }
+  cc.popBlock();
+
+  LLVMAppendExistingBasicBlock(f, mergeB);
+  LLVMPositionBuilder(cc.builder, mergeB, 0);
+
+  return 0;
+  return ;
+}
+
+WhileStmtParser: struct{}
+WhileStmtParser.getName := (cc: *CC) -> string{
+  return "while";
+}
+WhileStmtParser.parse := (cc: *CC) -> *Statement{
+  dbg := cc.getDBG();
+  if(!cc.expectToken(TokenType.TWHILE)) return 0;
+  if(!cc.expectToken(TokenType.TLPAR)) return 0;
+  exp := cc.expectExpression();
+  if(!exp) return 0;
+  if(!cc.expectToken(TokenType.TRPAR)) return 0;
+  st := cc.expectStatement();
+  if(!st) return 0;
+  // ====
+  ws : *WhileStatement = malloc(sizeof WhileStatement);
+  ws.dbg = dbg;
+  ws.exp = exp;
+  ws.st = st;
+
+  stmt: *Statement = malloc(sizeof Statement);
+  stmt = ws;
+  return ws;
+}
+
 get_def_cc := () -> *CC{
   cc: *CC = malloc(sizeof CC);
   cc.init();
@@ -1457,6 +1584,11 @@ get_def_cc := () -> *CC{
   isp: *IfStmtParser = malloc(sizeof IfStmtParser);
   sp: *SParser = malloc(sizeof SParser);
   sp = isp;
+  cc.registerSP(sp);
+
+  wsp: *WhileStmtParser = malloc(sizeof WhileStmtParser);
+  sp: *SParser = malloc(sizeof SParser);
+  sp = wsp;
   cc.registerSP(sp);
 
   return cc;
