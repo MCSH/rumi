@@ -365,7 +365,7 @@ CC.expectToken := (token: TokenType) -> bool{
 Value: interface{
   getType := (cc: *CC) -> *Type; // typeof val
   getValue := (cc: *CC) -> *any; // = val
-  assignGen := (cc: *CC, val: *any) -> void; // val = 
+  assignGen := (cc: *CC, val: *Value) -> void; // val = 
   preOpGen := (cc: *CC, op: string) -> *Value; // - val || *val
   postOpGen := (cc: *CC, op: string) -> *Value; // val++
   binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value; // val * rhs
@@ -653,7 +653,7 @@ FunctionConcept.compile := (cc: *CC) -> void{
   cc.popBlock();
   return;
 }
-FunctionConcept.assignGen := (cc: *CC, val: *Type) -> *any{
+FunctionConcept.assignGen := (cc: *CC, val: *Value) -> *any{
   return 0;
 }
 FunctionConcept.preOpGen := (cc: *CC, op: string)-> *Value{
@@ -839,8 +839,8 @@ StructInstance.castGen := (cc: *CC, t: *Type) -> *Value{
   return 0;
 }
 
-StructInstance.assignGen := (cc: *CC, val: *any) -> void{
-  LLVMBuildStore(cc.builder, val, self.alloc);
+StructInstance.assignGen := (cc: *CC, val: *Value) -> void{
+  LLVMBuildStore(cc.builder, val.getValue(), self.alloc);
   return;
 }
 
@@ -1029,8 +1029,8 @@ InterfaceInstance.binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value{
 InterfaceInstance.callGen := (cc: *CC, arg: *LinkedNode) -> *Value{
   return 0;
 }
-InterfaceInstance.assignGen := (cc: *CC, val: *any) -> void{
-  LLVMBuildStore(cc.builder, val, self.alloc);
+InterfaceInstance.assignGen := (cc: *CC, val: *Value) -> void{
+  LLVMBuildStore(cc.builder, val.getValue(), self.alloc);
   return;
 }
 InterfaceInstance.memberGen := (cc: *CC, name: string) -> *Value{
@@ -1511,7 +1511,6 @@ WhileStatement.codegen := (cc: *CC) -> void{
   LLVMAppendExistingBasicBlock(f, mergeB);
   LLVMPositionBuilder(cc.builder, mergeB, 0);
 
-  return 0;
   return ;
 }
 
@@ -1536,7 +1535,50 @@ WhileStmtParser.parse := (cc: *CC) -> *Statement{
 
   stmt: *Statement = malloc(sizeof Statement);
   stmt = ws;
-  return ws;
+  return stmt;
+}
+
+assignBase := (base: *Value, val: *Expression)->void{
+  // TODO to cast, or not to cast, that is the question!
+  // TODO assignCheck???
+  base.assignGen(val);
+  return;
+}
+
+AssignStatement: struct{
+  dbg: *DBG;
+  base: string;
+  val: *Expression;
+}
+AssignStatement.getName := (cc: *CC) -> string{
+  return "assignment";
+}
+AssignStatement.codegen := (cc: *CC) -> void{
+  base := cc.resolveNamed(base);
+  assignBase(base, self.val);
+  return ;
+}
+
+AssignStmtParser: struct{}
+AssignStmtParser.getName := (cc: *CC) -> string{
+  return "assignment";
+}
+AssignStmtParser.parse := (cc: *CC) -> *Statement{
+  dbg := cc.getDBG();
+  id := cc.expectId();
+  if(!id) return 0;
+  if(!cc.expectToken(TokenType.TEQ)) return 0;
+  exp := cc.expectExpression();
+  if(!exp) return 0;
+  // ====
+  ast: *AssignStatement = malloc(sizeof AssignStatement);
+  ast.base = id;
+  ast.dbg = dbg;
+  ast.val = exp;
+
+  stmt: *Statement = malloc(sizeof Statement);
+  stmt = ast;
+  return stmt;
 }
 
 get_def_cc := () -> *CC{
@@ -1590,6 +1632,33 @@ get_def_cc := () -> *CC{
   sp: *SParser = malloc(sizeof SParser);
   sp = wsp;
   cc.registerSP(sp);
+
+  asp: *AssignStmtParser = malloc(sizeof AssignStmtParser);
+  sp: *SParser = malloc(sizeof SParser);
+  sp = asp;
+  cc.registerSP(sp);
+
+  // TODO member assign
+  // TODO ptr assign
+  // TODO fcall
+  // TODO return
+  // TODO memcall
+  // TODO define
+
+  // Expressions
+  // TODO fcall
+  // TODO variable
+  // TODO memcall
+  // TODO ptr access // implement with preop?
+  // TODO ref access // implement with preop? No, it's a general thing?
+  // TODO mem access
+  // TODO const int
+  // TODO const str
+  // TODO preop (We don't really have them at this point!)
+  // TODO postop (We don't really have them at this point!)
+  // TODO binop
+  // TODO parentheses
+  // TODO cast
 
   return cc;
 }
