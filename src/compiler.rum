@@ -40,6 +40,8 @@ LLVMBuildCall := (b: *any, f: *any, args: *any, count: int, name: string) -> *an
 LLVMBuildAlloca := (b: *any, type: *any, name: string) -> *any;
 LLVMBuildStore := (b: *any, val: *any, ptr: *any) -> void;
 LLVMBuildStructGEP2 :=(b : *any, t: *any, ptr: *any, ind: int, name: string) -> *any;
+LLVMBuildRet := (b: *any, v: *any) -> void;
+LLVMBuildRetVoid := (b: *any) -> void;
 
 LLVMStructCreateNamed := (c: *any, name: *string) -> *any;
 LLVMStructSetBody := (t: *any, types: *any, count: int, packed: bool) -> void;
@@ -592,14 +594,7 @@ TParser: interface{
   getName := (cc: *CC) -> string;
 }
 
-Expression: interface{
-  getName := (cc: *CC) -> string;
-  getAlloca := (cc: *CC) -> *any;
-  exprgen := (cc: *CC) -> *any;
-  typeresolve := (cc: *CC) -> *Type;
-}
-
-CC.expectExpression := () -> *Expression{
+CC.expectExpression := () -> *Value{
   // TODO
   return 0;
 }
@@ -1370,7 +1365,7 @@ MethodDefineParser.parse := (cc: *CC) -> *Concept{
 
 IfStatement: struct{
   dbg: *DBG;
-  exp: *Expression;
+  exp: *Value;
   st1: *Statement;
   st2: *Statement;
 }
@@ -1405,7 +1400,7 @@ IfStatement.codegen := (cc: *CC) -> void{
     elseB = mergeB;
   }
 
-  cond := self.exp.exprgen(cc);
+  cond := self.exp.getValue(cc);
 
   correct_type : bool = LLVMTypeOf(cond) == LLVMInt64TypeInContext(cc.context);
   if(!correct_type){
@@ -1473,7 +1468,7 @@ IfStmtParser.parse := (cc: *CC) -> *Statement{
 
 WhileStatement: struct{
   dbg: *DBG;
-  exp: *Expression;
+  exp: *Value;
   st: *Statement;
 }
 WhileStatement.getName := (cc: *CC) -> string{
@@ -1489,7 +1484,7 @@ WhileStatement.codegen := (cc: *CC) -> void{
   LLVMBuildBr(cc.builder, condB);
   LLVMPositionBuilder(cc.builder, condB, 0);
 
-  cond := self.exp.exprgen(cc);
+  cond := self.exp.getValue(cc);
 
   correct_type : bool = LLVMTypeOf(cond) == LLVMInt64TypeInContext(cc.context);
   if(correct_type == 0){
@@ -1538,7 +1533,7 @@ WhileStmtParser.parse := (cc: *CC) -> *Statement{
   return stmt;
 }
 
-assignBase := (base: *Value, val: *Expression)->void{
+assignBase := (base: *Value, val: *Value)->void{
   // TODO to cast, or not to cast, that is the question!
   // TODO assignCheck???
   base.assignGen(val);
@@ -1547,15 +1542,14 @@ assignBase := (base: *Value, val: *Expression)->void{
 
 AssignStatement: struct{
   dbg: *DBG;
-  base: string;
-  val: *Expression;
+  base: *Value;
+  val: *Value;
 }
 AssignStatement.getName := (cc: *CC) -> string{
   return "assignment";
 }
 AssignStatement.codegen := (cc: *CC) -> void{
-  base := cc.resolveNamed(base);
-  assignBase(base, self.val);
+  assignBase(self.base, self.val);
   return ;
 }
 
@@ -1565,19 +1559,53 @@ AssignStmtParser.getName := (cc: *CC) -> string{
 }
 AssignStmtParser.parse := (cc: *CC) -> *Statement{
   dbg := cc.getDBG();
-  id := cc.expectId();
-  if(!id) return 0;
+  base := cc.expectExpression();
+  if(!base) return 0;
   if(!cc.expectToken(TokenType.TEQ)) return 0;
   exp := cc.expectExpression();
   if(!exp) return 0;
+  if(!cc.expectToken(TokenType.TSEM)) return 0;
   // ====
   ast: *AssignStatement = malloc(sizeof AssignStatement);
-  ast.base = id;
+  ast.base = base;
   ast.dbg = dbg;
   ast.val = exp;
 
   stmt: *Statement = malloc(sizeof Statement);
   stmt = ast;
+  return stmt;
+}
+
+ReturnStatement: struct{
+  exp: *Value;
+}
+ReturnStatement.getName := (cc: *CC) -> string{
+  return "return";
+}
+ReturnStatement.codegen := (cc: *CC) -> void{
+  if(self.exp){// has value
+    LLVMBuildRet(cc.builder, self.exp.getValue(cc));
+  } else {
+    LLVMBuildRetVoid(cc.builder);
+  }
+  return;
+}
+
+ReturnStmtParser: struct{}
+ReturnStmtParser.getName := (cc: *CC) -> string{
+  return "return";
+}
+ReturnStmtParser.parse := (cc: *CC) -> *Statement{
+  dbg := cc.getDBG();
+  if(!cc.expectToken(TokenType.TRET)) return 0;
+  exp := cc.expectExpression();
+  if(!cc.expectToken(TokenType.TSEM)) return 0;
+  // ====
+  rst: *ReturnStatement = malloc(sizeof ReturnStatement);
+  rst.exp = exp;
+
+  stmt: *Statement = malloc(sizeof Statement);
+  stmt = rst;
   return stmt;
 }
 
@@ -1638,11 +1666,12 @@ get_def_cc := () -> *CC{
   sp = asp;
   cc.registerSP(sp);
 
-  // TODO member assign
-  // TODO ptr assign
-  // TODO fcall
-  // TODO return
-  // TODO memcall
+  rsp: *ReturnStmtParser = malloc(sizeof ReturnStmtParser);
+  sp: *SParser = malloc(sizeof SParser);
+  sp = rsp;
+  cc.registerSP(sp);
+
+  // TODO expr (fcall, memcall, etc)
   // TODO define
 
   // Expressions
