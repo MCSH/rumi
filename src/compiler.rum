@@ -1609,6 +1609,35 @@ ReturnStmtParser.parse := (cc: *CC) -> *Statement{
   return stmt;
 }
 
+ExpressionStatement: struct{
+  exp: *Value;
+}
+ExpressionStatement.getName := (cc: *CC) -> string{
+  return "expression";
+}
+ExpressionStatement.codegen := (cc: *CC) -> void{
+  self.exp.getValue();
+  return;
+}
+
+ExpressionStmtParser: struct{}
+ExpressionStmtParser.getName := (cc: *CC) -> string{
+  return "expression";
+}
+ExpressionStmtParser.parse := (cc: *CC) -> *Statement{
+  dbg := cc.getDBG();
+  exp := cc.expectExpression();
+  if(!exp) return 0;
+  if(!cc.expectToken(TokenType.TSEM)) return 0;
+  // ====
+  est: *ExpressionStatement = malloc(sizeof ExpressionStatement);
+  est.exp = exp;
+
+  stmt: *Statement = malloc(sizeof Statement);
+  stmt = est;
+  return stmt;
+}
+
 get_def_cc := () -> *CC{
   cc: *CC = malloc(sizeof CC);
   cc.init();
@@ -1671,7 +1700,11 @@ get_def_cc := () -> *CC{
   sp = rsp;
   cc.registerSP(sp);
 
-  // TODO expr (fcall, memcall, etc)
+  esp: *ExpressionStmtParser = malloc(sizeof ExpressionStmtParser);
+  sp: *SParser = malloc(sizeof SParser);
+  sp = esp;
+  cc.registerSP(sp);
+
   // TODO define
 
   // Expressions
