@@ -1,6 +1,7 @@
 // == Helper & LLVM functions
 
 malloc := (size: u64) -> *any;
+free := (a: *any) -> void;
 printf := (T: string, s: ...any)->void;
 exit := (s: int) -> void;
 atoi := (s: string) -> int;
@@ -258,8 +259,9 @@ CC.pushBlock := () -> void{
 }
 
 CC.popBlock := () -> void{
-  // TODO, free bb
+  tmp := self.bb;
   self.bb = self.bb.next;
+  free(tmp);
   return;
 }
 
@@ -324,8 +326,11 @@ CC.nextWord := () -> string{
   return 0; // it wasn't a word
 }
 
-CC.isKeyword := (s: string) -> int{
-  // TODO
+CC.isKeyword := (s: string) -> TokenType{
+  // NOTE, 0 doesn't mean EOF here, it means it's not a keyword!
+  if(streq(s, "int")) return TokenType.TINT;
+  if(streq(s, "return")) return TokenType.TRET;
+  // TODO complete
   return 0;
 }
 
@@ -361,6 +366,7 @@ CC.expectNum := () -> *int{
 }
 
 CC.expectToken := (token: TokenType) -> bool{
+  // TODO check special ones first
   return 0; // TODO
 }
 
@@ -595,7 +601,22 @@ TParser: interface{
 }
 
 CC.expectExpression := () -> *Value{
+  // Expressions
   // TODO
+  // TODO fcall
+  // TODO variable
+  // TODO memcall
+  // TODO ptr access // implement with preop?
+  // TODO ref access // implement with preop? No, it's a general thing?
+  // TODO mem access
+  // TODO const int
+  // TODO const str
+  // TODO preop (We don't really have them at this point!)
+  // TODO postop (We don't really have them at this point!)
+  // TODO binop
+  // TODO parentheses
+  // TODO cast
+
   return 0;
 }
 
@@ -762,7 +783,6 @@ FunctionDefineParser.parse := (cc: *CC) -> *Concept{
       c.next = ltmp;
     c = ltmp;
   }
-  cc.expectToken(TokenType.TRCB);
 
   fd : *FunctionConcept = malloc(sizeof FunctionConcept);
   fd.dbg = dbg;
@@ -1638,6 +1658,99 @@ ExpressionStmtParser.parse := (cc: *CC) -> *Statement{
   return stmt;
 }
 
+DefineStatement: struct{
+  id: string;
+  type: *Type;
+  exp: *Value;
+}
+DefineStatement.getName := (cc: *CC) -> string{
+  return strcat("define ", self.id);
+}
+DefineStatement.codegen := (cc: *CC) -> void{
+  // TODO resolve type
+  // TODO create instance
+  // TODO assign using base
+  // TODO register cc
+  return ;
+}
+
+DefineStmtParser: struct{}
+DefineStmtParser.getName := (cc: *CC) -> string{
+  return "define";
+}
+DefineStmtParser.parse := (cc: *CC) -> *Statement{
+  dbg := cc.getDBG();
+  id := cc.expectId();
+  if(!id) return 0;
+  type :*Type = 0;
+  exp :*Value = 0;
+  if(cc.expectToken(TokenType.TDEF)){
+    // TODO
+    exp = cc.expectExpression();
+  } else if(cc.expectToken(TokenType.TCOL)){
+    // TODO
+  } else return 0;
+  if(!cc.expectToken(TokenType.TSEM)) return 0;
+  // ===
+  dst: *DefineStatement = malloc(sizeof DefineStatement);
+  dst.id = id;
+  dst.type = type;
+  dst.exp = exp;
+
+  stmt: *Statement = malloc(sizeof Statement);
+  stmt = dst;
+  return stmt;
+}
+
+CodeBlockStatement: struct{
+  first: *LinkedNode; // of Statement
+}
+CodeBlockStatement.getName := (cc: *CC) -> string{
+  return "code block";
+}
+CodeBlockStatement.codegen := (cc: *CC) -> void {
+  cc.pushBlock();
+  stmt := self.first;
+  while(stmt){
+    s: *Statement = stmt.p;
+    s.codegen(cc);
+
+    stmt = stmt.next;
+  }
+  cc.popBlock();
+  return;
+}
+
+CodeBlockParser: struct{}
+CodeBlockParser.getName := (cc: *CC) -> string{
+  return "code block";
+}
+CodeBlockParser.parse := (cc: *CC) -> *Statement{
+  dbg := cc.getDBG();
+  if(!cc.expectToken(TokenType.TLCB)) return 0;
+  first: *LinkedNode = 0;
+  c: *LinkedNode = 0;
+  while(!cc.expectToken(TokenType.TRCB)){
+    tmp := cc.expectStatement();
+    if(!tmp) return 0;
+
+    ltmp: *LinkedNode = malloc(sizeof LinkedNode);
+    ltmp.p = tmp;
+    ltmp.next = 0;
+
+    if(!first) first = ltmp;
+    if(c) c.next = ltmp;
+    c = ltmp;
+  }
+
+  cb: *CodeBlockStatement = malloc(sizeof CodeBlockStatement);
+  cb.first = first;
+
+  stmt: *Statement = malloc(sizeof Statement);
+  stmt = cb;
+  return stmt;
+}
+
 get_def_cc := () -> *CC{
   cc: *CC = malloc(sizeof CC);
   cc.init();
@@ -1705,22 +1818,16 @@ get_def_cc := () -> *CC{
   sp = esp;
   cc.registerSP(sp);
 
-  // TODO define
+  dsp: *DefineStmtParser = malloc(sizeof DefineStmtParser);
+  sp: *SParser = malloc(sizeof SParser);
+  sp = dsp;
+  cc.registerSP(sp);
 
-  // Expressions
-  // TODO fcall
-  // TODO variable
-  // TODO memcall
-  // TODO ptr access // implement with preop?
-  // TODO ref access // implement with preop? No, it's a general thing?
-  // TODO mem access
-  // TODO const int
-  // TODO const str
-  // TODO preop (We don't really have them at this point!)
-  // TODO postop (We don't really have them at this point!)
-  // TODO binop
-  // TODO parentheses
-  // TODO cast
+  // TODO codeblock
+  cbp: *CodeBlockParser = malloc(sizeof CodeBlockParser);
+  sp: *SParser = malloc(sizeof SParser);
+  sp = cbp;
+  cc.registerSP(sp);
 
   return cc;
 }
