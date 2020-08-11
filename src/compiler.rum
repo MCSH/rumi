@@ -2132,6 +2132,17 @@ AnyTypeParser.parse := (cc: *CC) -> *Type{
   return t;
 }
 
+VoidValue: struct{}
+VoidValue.getType := (cc: *CC) -> *Type{return 0;}
+VoidValue.getValue := (cc: *CC) -> *any{return 0;}
+VoidValue.assignGen := (cc: *CC, val: *Value) -> void{return;}
+VoidValue.preOpGen := (cc: *CC, op: string) -> *Value{return 0;}
+VoidValue.postOpGen := (cc: *CC, op: string) -> *Value{return 0;}
+VoidValue.binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value{return 0;}
+VoidValue.callGen := (cc: *CC, args: *LinkedNode) -> *Value{return 0;}
+VoidValue.memberGen := (cc: *CC, name: string) -> *Value{return 0;}
+VoidValue.castGen := (cc: *CC, target: *Type) -> *Value{return 0;}
+
 VoidType: struct{
   dbg: *DBG;
 }
@@ -2142,7 +2153,10 @@ VoidType.typegen := (cc: *CC) -> *any{
   return LLVMVoidTypeInContext(cc.context);
 }
 VoidType.getInstance := (cc: *CC, val: *any, name: string) -> *Value{
-  return 0; // TODO
+  vv: *VoidValue = malloc(sizeof VoidValue);
+  v: *Value = malloc(sizeof Value);
+  v = vv;
+  return v;
 }
 VoidType.cast := (cc: *CC, target: *Type) -> *Type { return 0; }
 VoidType.assignCheck := (cc: *CC, target: *Type) -> *Type { return 0; }
