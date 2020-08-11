@@ -671,13 +671,29 @@ Statement: interface{
   codegen := (cc: *CC) -> void;
 }
 
-CC.expectStatement := () -> *Statement{
-  return 0; // TODO
-}
-
 SParser: interface{
   parse := (cc: *CC) -> *Statement;
   getName := (cc: *CC) -> string;
+}
+
+CC.expectStatement := () -> *Statement{
+  sp := self.sp;
+  checkPoint := self.storeLexer();
+  err : string = strcat("", ""); // just so it's dynamic
+  while(sp){
+    p: *SParser = sp.p;
+    out := p.parse(self);
+    if(out){
+      // TODO free(err);
+      return out;
+    }
+    e := self.lastErr;
+    err = strcat(err, strcat("\n", e));
+    self.restoreLexer(checkPoint);
+    sp = sp.next;
+  }
+  self.setError(err);
+  return 0;
 }
 
 CC.registerSP := (sp: *SParser) -> void{
