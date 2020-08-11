@@ -23,6 +23,8 @@ LLVMInt8TypeInContext := (c: *any) -> *any;
 LLVMInt16TypeInContext := (c: *any) -> *any;
 LLVMInt32TypeInContext := (c: *any) -> *any;
 LLVMInt64TypeInContext := (c: *any) -> *any;
+LLVMFloatTypeInContext := (c: *any) -> *any;
+LLVMDoubleTypeInContext := (c: *any) -> *any;
 LLVMVoidTypeInContext := (c: *any) -> *any;
 LLVMFunctionType := (returnType: *any, paramTypes: **any, paramCount: u64, isVarArg: bool) -> *any;
 LLVMPointerType := (elemntType: *any, addresspace: u64) -> *any;
@@ -485,7 +487,7 @@ TypeType.memberType := (cc: *CC, name: string) -> *Type{
 Arg: interface{
   getName := (cc: *CC) -> string;
   // register and assign val to itself
-  codegen := (cc: *CC, val: *any) -> *void; // val is the param provided
+  codegen := (cc: *CC, val: *any) -> void; // val is the param provided
   typeresolve := (cc: *CC) -> *Type;
 }
 
@@ -509,6 +511,7 @@ Member: struct{
 }
 
 FunctionType: struct{
+  dbg: *DBG;
   returnType: *Type;
   args: *LinkedNode; // of Type Arg
 }
@@ -641,6 +644,8 @@ CC.expectExpression := () -> *Value{
   // TODO binop
   // TODO parentheses
   // TODO cast
+  // TODO sizeof
+  // TODO instanceof
 
   return 0;
 }
@@ -2026,17 +2031,254 @@ StrTypeParser.parse := (cc: *CC) -> *Type{
   return t;
 }
 
+AnyTypeParser: struct{}
+AnyTypeParser.getName := (cc: *CC) -> string{
+  return "any";
+}
+AnyTypeParser.parse := (cc: *CC) -> *Type{
+  // TODO
+  dbg := cc.getDBG();
+  if(!cc.expectToken(TokenType.TANY)) return 0;
+  // ===
+  bu: *IntType = malloc(sizeof IntType);
+  bu.size = 8;
+  bu.signed = 0;
+
+  base : *Type = malloc(sizeof Type);
+  base = bu;
+  
+  ftp: *PointerType = malloc(sizeof PointerType);
+  ftp.dbg = dbg;
+  ftp.base = base;
+
+  t: *Type = malloc(sizeof Type);
+  t = ftp;
+  return t;
+}
+
+VoidType: struct{
+  dbg: *DBG;
+}
+VoidType.getName := (cc: *CC) -> string{
+  return "void";
+}
+VoidType.typegen := (cc: *CC) -> *any{
+  return LLVMVoidTypeInContext(cc.context);
+}
+VoidType.getInstance := (cc: *CC, val: *any, name: string) -> *Value{
+  return 0; // TODO
+}
+VoidType.cast := (cc: *CC, target: *Type) -> *Type { return 0; }
+VoidType.assignCheck := (cc: *CC, target: *Type) -> *Type { return 0; }
+VoidType.preOpType := (cc: *CC, op: string) -> *Type { return 0; }
+VoidType.postOpType := (cc: *CC, op: string) -> *Type { return 0; }
+VoidType.binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type { return 0; }
+VoidType.callType := (cc: *CC, args: *LinkedNode) -> *Type { return 0; }
+VoidType.memberType := (cc: *CC, name: string) -> *Type { return 0; }
+
+VoidTypeParser: struct{}
+VoidTypeParser.getName := (cc: *CC) -> string{
+  return "void";
+}
+VoidTypeParser.parse := (cc: *CC) -> *Type{
+  dbg := cc.getDBG();
+  if(!cc.expectToken(TokenType.TVOID)) return 0;
+  // ===
+  vt: *VoidType = malloc(sizeof VoidType);
+  vt.dbg = dbg;
+
+  t: *Type = malloc(sizeof Type);
+  t = vt;
+  return t;
+}
+
+FloatType: struct{
+  dbg: *DBG;
+  size: int;
+}
+FloatInstance: struct{
+  alloc: *any;
+  type: *FloatType;
+}
+
+FloatInstance.getType := (cc: *CC) -> *Type {return 0;} // Forward Declaration
+FloatInstance.getValue := (cc: *CC) -> *any{
+  return LLVMBuildLoad(cc.builder, self.alloc, "fval");
+}
+FloatInstance.assignGen := (cc: *CC, val: *Value) -> *Value{
+  // TODO
+}
+FloatInstance.preOpGen := (cc: *CC, op: string) -> *Value{return 0;}
+FloatInstance.postOpGen := (cc: *CC, op: string) -> *Value{return 0;}
+FloatInstance.binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value{return 0;}
+FloatInstance.callGen := (cc: *CC, args: *LinkedNode) -> *Value{return 0;}
+FloatInstance.memberGen := (cc: *CC, name: string) -> *Value{return 0;}
+FloatInstance.castGen := (cc: *CC, target: *Type) -> *Value{
+  return 0; // TODO
+}
+
+FloatType.getName := (cc: *CC) -> string{
+  if(self.size == 32) return "f32";
+  return "f64";
+  /*
+  // TODO 
+  if(self.size == 64) return "f64";
+
+  self.dbg.printAndExit();
+  return 0;
+  */
+}
+FloatType.typegen := (cc: *CC) -> *any{
+  if(self.size == 32) return LLVMFloatTypeInContext(cc.context);
+
+  return LLVMDoubleTypeInContext(cc.context);
+}
+FloatType.getInstance := (cc: *CC, val: *any, name: string) -> *Value{
+  fi: *FloatInstance = malloc(sizeof FloatInstance);
+  fi.type = self;
+  fi.alloc = LLVMBuildAlloca(cc.builder, self.typegen(cc), name);
+  if(val) LLVMBuildStore(cc.builder, val, fi.alloc);
+  v: *Value = malloc(sizeof Value);
+  v = fi;
+  return v;
+}
+FloatType.cast := (cc: *CC, target: *Type) -> *Type{
+  // TODO
+}
+FloatType.assignCheck := (cc: *CC, t: *Type) -> bool{
+  // TODO
+  return 0;
+}
+FloatType.preOpType := (cc: *CC, op: string) -> *Type{return 0;}
+FloatType.postOpType := (cc: *CC, op: string) -> *Type{return 0;}
+FloatType.binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type{return 0;}
+FloatType.callType := (cc: *CC, args: *LinkedNode) -> *Type{return 0;}
+FloatType.memberType := (cc: *CC, name: string) -> *Type{return 0;}
+
+
+FloatInstance.getType := (cc: *CC) -> *Type {
+  t: *Type = malloc(sizeof Type);
+  t = self.type;
+  return t;
+}
+
+FloatTypeParser: struct{}
+FloatTypeParser.getName := (cc: *CC) -> string{
+  return "float";
+}
+FloatTypeParser.parse := (cc: *CC) -> *Type{
+  dbg := cc.getDBG();
+  size := 0;
+  if(cc.expectToken(TokenType.TF32)) size = 32;
+  else if(cc.expectToken(TokenType.TF64)) size = 64;
+  else return 0;
+  // ====
+  ft: *FloatType = malloc(sizeof FloatType);
+  ft.dbg = dbg;
+  ft.size = size;
+
+  t: *Type = malloc(sizeof Type);
+  t = ft;
+  return t;
+}
+
+/*
+FunctionPointerBaseType: struct{
+  first: *LinkedNode; // *Type
+  dbg: *DBG;
+  returnType: *Type;
+}
+FunctionPointerBaseType.getName := (cc: *CC) -> string{
+  ans := "(";
+  l := self.first;
+  while(l){
+    t:*Type = l.p;
+    ans = strcat(ans, t.getName(cc));
+    l = l.next;
+    if(l) ans = strcat(ans, ", ");
+  }
+  ans = strcat(ans, ") -> ");
+  ans = strcat(ans, self.returnType.getName(cc));
+  return ans;
+}
+FunctionPointerBaseType.typegen := (cc: *CC) -> *any{
+
+}
+*/
+
+AnonArg: struct{
+  type: *Type;
+}
+AnonArg.getName := (cc: *CC) -> string{
+  return "anonArg";
+}
+AnonArg.codegen := (cc: *CC, val: *any) -> void{
+  printf("WARNING, running codegen on anonarg");
+  return;
+}
+AnonArg.typeresolve := (cc: *CC) -> *Type{
+  return self.type;
+}
+
+FTypeParser: struct{}
+FTypeParser.getName := (cc: *CC) -> string{
+  return "function type";
+}
+FTypeParser.parse := (cc: *CC) -> *Type{
+  // TODO varargs
+  dbg := cc.getDBG();
+  if(!cc.expectToken(TokenType.TLPAR)) return 0;
+  whilecond := !cc.expectToken(TokenType.TRPAR);
+
+  first: *LinkedNode = 0;
+  last:  *LinkedNode = 0;
+
+  while(whilecond){
+    t := cc.expectType();
+    if(!t) return 0;
+    aa: *AnonArg = malloc(sizeof AnonArg);
+    aa.type = t;
+
+    a: *Arg = malloc(sizeof Arg);
+    a = aa;
+
+    tl: *LinkedNode = malloc(sizeof LinkedNode);
+    tl.next = 0;
+    tl.p = a;
+    if(!first) first = tl;
+    if(last) last.next = tl;
+    last = tl;
+    // TODO capture it
+    if(!cc.expectToken(TokenType.TCOMMA)){
+      if(!cc.expectToken(TokenType.TRPAR)) return 0;
+      whilecond = 0;
+    }
+  }
+  if(!cc.expectToken(TokenType.TARROW)) return 0;
+  rtype := cc.expectType();
+  // ===
+  fbptr: *FunctionType = malloc(sizeof FunctionType);
+  fbptr.args = first;
+  fbptr.returnType = rtype;
+  fbptr.dbg = dbg;
+
+  base: *Type = malloc(sizeof Type);
+  base = fbptr;
+
+  fptr: *PointerType = malloc(sizeof PointerType);
+  fptr.dbg = dbg;
+  fptr.base = base;
+
+  t: *Type = malloc(sizeof Type);
+  t = fptr;
+  return t;
+}
+
 get_def_cc := () -> *CC{
   cc: *CC = malloc(sizeof CC);
   cc.init();
 
-  // TODO CODES TO CAPTURE INTERFACE ERRORS, REMVOE LATER!
-  t: *EnumConcept = malloc(sizeof EnumConcept);
-  c: *Concept = malloc(sizeof Concept);
-  c = t;
-  // TODO E OF INTERFACE ERROR CATCHER
-
-  // TODO register consept parsers, etc
+  // register consept parsers, etc
   fsp: *FunctionSigParser = malloc(sizeof FunctionSigParser);
   cp: *CParser = malloc(sizeof CParser);
   cp = fsp;
@@ -2120,6 +2362,26 @@ get_def_cc := () -> *CC{
   tp = stp;
   cc.registerTP(tp);
 
+  atp: *AnyTypeParser = malloc(sizeof AnyTypeParser);
+  tp: *TParser = malloc(sizeof TParser);
+  tp = atp;
+  cc.registerTP(tp);
+
+  vtp: *VoidTypeParser = malloc(sizeof VoidTypeParser);
+  tp: *TParser = malloc(sizeof TParser);
+  tp = vtp;
+  cc.registerTP(tp);
+
+  ftp: *FloatTypeParser = malloc(sizeof FloatTypeParser);
+  tp: *TParser = malloc(sizeof TParser);
+  tp = ftp;
+  cc.registerTP(tp);
+
+  ftp: *FTypeParser = malloc(sizeof FTypeParser);
+  tp: *TParser = malloc(sizeof TParser);
+  tp = ftp;
+  cc.registerTP(tp);
+
   return cc;
 }
 
@@ -2154,6 +2416,7 @@ CC.parse := () -> *LinkedNode{
       // TODO show error
       exit(1);
     }
+    c.register();
     l: *LinkedNode = malloc(sizeof LinkedNode);
     l.p = c;
     l.next = 0;
