@@ -1908,6 +1908,95 @@ IntTypeParser.parse := (cc: *CC) -> *Type{
   return t;
 }
 
+PointerType: struct{
+  dbg: *DBG;
+  base: *Type;
+}
+
+PointerInstance: struct{
+  alloc: *any;
+  type: *PointerType;
+}
+
+PointerInstance.getType := (cc: *CC) -> *Type{return 0;} // forward declaration
+PointerInstance.getValue := (cc: *CC) -> *any{
+  return LLVMBuildLoad(cc.builder, self.alloc, "intval");
+}
+PointerInstance.assignGen := (cc: *CC, val: *Value) -> void{
+  LLVMBuildStore(cc.builder, val.getValue(cc), self.alloc);
+  return;
+}
+PointerInstance.preOpGen := (cc: *CC, op: string) -> *Value{return 0;} // TODO
+PointerInstance.postOpGen := (cc: *CC, op: string) -> *Value{return 0;}
+PointerInstance.binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value{return 0;} // TODO
+PointerInstance.callGen := (cc: *CC, args: *LinkedNode) -> *Value{return 0;} // TODO
+PointerInstance.memberGen := (cc: *CC, name: string) -> *Value{return 0;} // TODO
+PointerInstance.castGen := (cc: *CC, target: *Type) -> *Value{
+  // TODO!
+  return 0;
+}
+
+PointerType.getName := (cc: *CC) -> string{
+  return strcat("*", self.base.getName(cc));
+}
+PointerType.typegen := (cc: *CC) -> *any{
+  return LLVMPointerType(self.base.typegen(cc), 0);
+}
+PointerType.getInstance := (cc: *CC, val: *any, name: string) -> *Value{
+  pi: *PointerInstance = malloc(sizeof PointerInstance);
+  pi.alloc = LLVMBuildAlloca(cc.builder, self.typegen(cc), name);
+  pi.type = self;
+  if(val) LLVMBuildStore(cc.builder, val, pi.alloc);
+  v: *Value = malloc(sizeof Value);
+  v = pi;
+  return v;
+}
+PointerType.cast := (cc: *CC, target: *Type) -> *Type{
+  // TODO
+}
+PointerType.assignCheck := (cc: *CC, t: Type) -> bool{
+  // TODO
+}
+PointerType.preOpType := (cc: *CC, op: string) -> *Type{
+  // TODO
+}
+PointerType.postOpType := (cc: *CC, op: string) -> *Type{return 0;}
+PointerType.binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type{
+  // TODO
+}
+PointerType.callType := (cc: *CC, args: *LinkedNode) -> *Type{
+  // TODO
+}
+PointerType.memberType := (cc: *CC, name: string) -> *Type{
+  // TODO
+}
+
+PointerInstance.getType := (cc: *CC) -> *Type{
+  t: *Type = malloc(sizeof Type);
+  t = self.type;
+  return t;
+}
+
+PtrTypeParser: struct{}
+PtrTypeParser.getName := (cc: *CC) -> string{
+  return "pointer";
+}
+PtrTypeParser.parse := (cc: *CC) -> *Type{
+  // TODO
+  dbg := cc.getDBG();
+  if(!cc.expectToken(TokenType.TSTAR)) return 0;
+  base := cc.expectType();
+  if(!base) return 0;
+  // ====
+  ftp: *PointerType = malloc(sizeof PointerType);
+  ftp.dbg = dbg;
+  ftp.base = base;
+
+  t: *Type = malloc(sizeof Type);
+  t = ftp;
+  return t;
+}
+
 get_def_cc := () -> *CC{
   cc: *CC = malloc(sizeof CC);
   cc.init();
@@ -1990,6 +2079,11 @@ get_def_cc := () -> *CC{
   itp: *IntTypeParser = malloc(sizeof IntTypeParser);
   tp: *TParser = malloc(sizeof TParser);
   tp = itp;
+  cc.registerTP(tp);
+
+  ftp: *PtrTypeParser = malloc(sizeof PtrTypeParser);
+  tp: *TParser = malloc(sizeof TParser);
+  tp = ftp;
   cc.registerTP(tp);
 
   return cc;
