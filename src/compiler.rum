@@ -12,13 +12,19 @@ ftell := (f: *int) -> int;
 fread := (buf: string, size: int, nmemb: int, f: *int) -> int;
 
 LLVMAddFunction := (m: *any, name: string, ftype: *any) -> *any;
-LLVMFunctionType := (returnType: *any, paramTypes: **any, paramCount: u64, isVarArg: bool) -> *any;
 LLVMInt1TypeInContext := (c: *any) -> *any;
 LLVMInt8TypeInContext := (c: *any) -> *any;
 LLVMInt16TypeInContext := (c: *any) -> *any;
 LLVMInt32TypeInContext := (c: *any) -> *any;
 LLVMInt64TypeInContext := (c: *any) -> *any;
 LLVMVoidTypeInContext := (c: *any) -> *any;
+LLVMInt1TypeInContext := (c: *any) -> *any;
+LLVMInt8TypeInContext := (c: *any) -> *any;
+LLVMInt16TypeInContext := (c: *any) -> *any;
+LLVMInt32TypeInContext := (c: *any) -> *any;
+LLVMInt64TypeInContext := (c: *any) -> *any;
+LLVMVoidTypeInContext := (c: *any) -> *any;
+LLVMFunctionType := (returnType: *any, paramTypes: **any, paramCount: u64, isVarArg: bool) -> *any;
 LLVMPointerType := (elemntType: *any, addresspace: u64) -> *any;
 LLVMGetNamedFunction := (m: *any, name: string) -> *any;
 LLVMAppendBasicBlockInContext := (c: *any, f: *any, name: string)-> *any;
@@ -40,6 +46,7 @@ LLVMSetValueName2 := (v: *any, name: string, size: u64) -> void;
 LLVMBuildCall := (b: *any, f: *any, args: *any, count: int, name: string) -> *any;
 LLVMBuildAlloca := (b: *any, type: *any, name: string) -> *any;
 LLVMBuildStore := (b: *any, val: *any, ptr: *any) -> void;
+LLVMBuildLoad := (b: *any, ptr: *any, name: string) -> *any;
 LLVMBuildStructGEP2 :=(b : *any, t: *any, ptr: *any, ind: int, name: string) -> *any;
 LLVMBuildRet := (b: *any, v: *any) -> void;
 LLVMBuildRetVoid := (b: *any) -> void;
@@ -201,6 +208,12 @@ TokenType: enum{
 DBG: struct{
 }
 
+DBG.printAndExit := () -> void{
+  // TODO
+  exit(1);
+  return ;
+}
+
 LinkedNode: struct{
   next: *LinkedNode;
   p: *any;
@@ -219,6 +232,7 @@ CC: struct{
   cp: *LinkedNode;
   sp: *LinkedNode;
   bb: *LinkedNode;
+  tp: *LinkedNode;
   module: *any;
   context: *any;
   builder: *any;
@@ -367,12 +381,15 @@ CC.expectNum := () -> *int{
 
 CC.expectToken := (token: TokenType) -> bool{
   // TODO check special ones first
+  // TODO impl similiar to expectId
   return 0; // TODO
 }
 
 Value: interface{
   getType := (cc: *CC) -> *Type; // typeof val
+  // TODO do we need a load builder here?
   getValue := (cc: *CC) -> *any; // = val
+  // assignGen assumes cast has been called
   assignGen := (cc: *CC, val: *Value) -> void; // val = 
   preOpGen := (cc: *CC, op: string) -> *Value; // - val || *val
   postOpGen := (cc: *CC, op: string) -> *Value; // val++
@@ -419,13 +436,13 @@ CC.resolveNamed := (name: string) -> *Value{
 // Types aren't always instansiable, they could be general concepts as well.
 Type: interface{
   getName := (cc: *CC) -> string;
-  typegen := (cc: *CC) -> *any;
+  typegen := (cc: *CC) -> *any; // Needed for function pointers and structs
 
-  getInstance := (cc: *CC, val: *any, name: string) -> *Value;
+  getInstance := (cc: *CC, val: *any, name: string) -> *Value; // if val = 0 don't store
 
   cast := (cc: *CC, target: *Type) -> *Type;
 
-  assignCheck := (cc: *CC, t: *Type) -> bool;
+  assignCheck := (cc: *CC, t: *Type) -> bool; // TODO what is its purpose? isn't cast enough?
   preOpType := (cc: *CC, op: string) -> *Type;
   postOpType := (cc: *CC, op: string) -> *Type;
   binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type;
@@ -598,6 +615,14 @@ CC.registerSP := (sp: *SParser) -> void{
 TParser: interface{
   parse := (cc: *CC) -> *Type;
   getName := (cc: *CC) -> string;
+}
+
+CC.registerTP := (tp: *TParser) -> void{
+  tmp: *LinkedNode = malloc(sizeof LinkedNode);
+  tmp.p = tp;
+  tmp.next = self.tp;
+  self.tp = tmp;
+  return;
 }
 
 CC.expectExpression := () -> *Value{
@@ -815,7 +840,7 @@ StructInstance: struct{
 StructInstance.getType := (cc: *CC) -> *Type{return ;} // This is a dummy definition, redifined later on
 
 StructInstance.getValue := (cc: *CC) -> *any{
-  return self.alloc;
+  return self.alloc; // TODO We need a load
 }
 
 StructInstance.preOpGen := (cc: *CC, op: string) -> *Value{
@@ -881,6 +906,7 @@ StructConcept.getInstance := (cc: *CC, val: *any, name: string) -> *Value {
   si : *StructInstance = malloc(sizeof StructInstance);
   si.sc = self;
   si.alloc = LLVMBuildAlloca(cc.builder, self.s, name);
+  if(val) LLVMBuildStore(cc.builder, val, si.alloc);
   v: *Value = malloc(sizeof Value);
   v = si;
   return v;
@@ -1029,7 +1055,7 @@ InterfaceInstance : struct{
 InterfaceInstance.getType := (cc: *CC) -> *Type{return ;} // This is a dummy definition, redifined later on
 
 InterfaceInstance.getValue := (cc: *CC) -> *any{
-  return self.alloc;
+  return self.alloc; // TODO we need a  load
 }
 
 InterfaceInstance.preOpGen := (cc: *CC, op: string) -> *Value{
@@ -1083,6 +1109,7 @@ InterfaceConcept.getInstance := (cc: *CC, val: *any, name: string) -> *Value {
   i: *InterfaceInstance = malloc(sizeof InterfaceInstance);
   i.ic = self;
   i.alloc = LLVMBuildAlloca(cc.builder, self.holder, name);
+  if(val) LLVMBuildStore(cc.builder, val, i.alloc);
   v: *Value = malloc(sizeof Value);
   v = i;
   return v;
@@ -1597,6 +1624,7 @@ AssignStmtParser.parse := (cc: *CC) -> *Statement{
 }
 
 ReturnStatement: struct{
+  dbg: *DBG;
   exp: *Value;
 }
 ReturnStatement.getName := (cc: *CC) -> string{
@@ -1623,6 +1651,7 @@ ReturnStmtParser.parse := (cc: *CC) -> *Statement{
   // ====
   rst: *ReturnStatement = malloc(sizeof ReturnStatement);
   rst.exp = exp;
+  rst.dbg = dbg;
 
   stmt: *Statement = malloc(sizeof Statement);
   stmt = rst;
@@ -1630,6 +1659,7 @@ ReturnStmtParser.parse := (cc: *CC) -> *Statement{
 }
 
 ExpressionStatement: struct{
+  dbg: *DBG;
   exp: *Value;
 }
 ExpressionStatement.getName := (cc: *CC) -> string{
@@ -1652,6 +1682,7 @@ ExpressionStmtParser.parse := (cc: *CC) -> *Statement{
   // ====
   est: *ExpressionStatement = malloc(sizeof ExpressionStatement);
   est.exp = exp;
+  est.dbg = dbg;
 
   stmt: *Statement = malloc(sizeof Statement);
   stmt = est;
@@ -1659,6 +1690,7 @@ ExpressionStmtParser.parse := (cc: *CC) -> *Statement{
 }
 
 DefineStatement: struct{
+  dbg: *DBG;
   id: string;
   type: *Type;
   exp: *Value;
@@ -1696,6 +1728,7 @@ DefineStmtParser.parse := (cc: *CC) -> *Statement{
   dst.id = id;
   dst.type = type;
   dst.exp = exp;
+  dst.dbg = dbg;
 
   stmt: *Statement = malloc(sizeof Statement);
   stmt = dst;
@@ -1703,6 +1736,7 @@ DefineStmtParser.parse := (cc: *CC) -> *Statement{
 }
 
 CodeBlockStatement: struct{
+  dbg: *DBG;
   first: *LinkedNode; // of Statement
 }
 CodeBlockStatement.getName := (cc: *CC) -> string{
@@ -1745,10 +1779,133 @@ CodeBlockParser.parse := (cc: *CC) -> *Statement{
 
   cb: *CodeBlockStatement = malloc(sizeof CodeBlockStatement);
   cb.first = first;
+  cb.dbg = dbg;
 
   stmt: *Statement = malloc(sizeof Statement);
   stmt = cb;
   return stmt;
+}
+
+IntType: struct{
+  dbg: *DBG;
+  size: int;
+  signed: int;
+}
+
+IntInstance: struct{
+  type: *IntType;
+  alloc: *any;
+}
+
+IntInstance.getType := (cc: *CC) -> *Type{ return 0;} // Forward declaration!
+IntInstance.getValue := (cc: *CC) -> *any{
+  return LLVMBuildLoad(cc.builder, self.alloc, "intval");
+}
+IntInstance.assignGen := (cc: *CC, val: *Value) -> void{
+  LLVMBuildStore(cc.builder, val.getValue(cc), self.alloc);
+  return;
+}
+IntInstance.preOpGen := (cc: *CC, op: string) -> *Value{return 0;}
+IntInstance.postOpGen := (cc: *CC, op: string) -> *Value{return 0;}
+IntInstance.binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value{return 0;}
+IntInstance.callGen := (cc: *CC, args: *LinkedNode) -> *Value{return 0;}
+IntInstance.memberGen := (cc: *CC, name: string) -> *Value{return 0;}
+IntInstance.castGen := (cc: *CC, target: *Type) -> *Value{
+  // TODO!
+  return 0;
+}
+
+IntType.getName := (cc: *CC) -> string{
+  base: string;
+  if(self.signed) base = "signed";
+  else base = "unsigned";
+
+  rest: string;
+  s := self.size;
+  if(s == 0) rest = "";
+  if(s == 8) rest = " 8";
+  if(s == 16) rest = " 16";
+  if(s == 32) rest = " 32";
+  if(s == 64) rest = " 64";
+
+  return strcat(base, strcat(" int", rest));
+}
+IntType.typegen := (cc: *CC) -> *any{
+  if(self.size == 0)
+    return LLVMInt64TypeInContext(cc.context);
+  else if(self.size == 8)
+    return LLVMInt8TypeInContext(cc.context);
+  else if(self.size == 16)
+    return LLVMInt16TypeInContext(cc.context);
+  else if(self.size == 32)
+    return LLVMInt32TypeInContext(cc.context);
+  else if(self.size == 64)
+    return LLVMInt64TypeInContext(cc.context);
+  printf("Unknown int size %d\n", self.size);
+  self.dbg.printAndExit();
+  return 0;
+}
+IntType.getInstance := (cc: *CC, val: *any, name: string) -> *Value{
+  ii: *IntInstance = malloc(sizeof IntInstance);
+  ii.type = self;
+  ii.alloc = LLVMBuildAlloca(cc.builder, self.typegen(cc), name);
+  if(val) LLVMBuildStore(cc.builder, val, ii.alloc);
+  v: *Value = malloc(sizeof Value);
+  v = ii;
+  return v;
+}
+IntType.cast := (cc: *CC, target: *Type) -> *Type{
+  // TODO
+  return 0;
+}
+IntType.assignCheck := (cc: *CC, t: *Type) -> bool{
+  // TODO
+  return 1;
+}
+IntType.preOpType := (cc: *CC, op: string) -> *Type{return 0;}
+IntType.postOpType := (cc: *CC, op: string) -> *Type{return 0;}
+IntType.binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type{return 0;}
+IntType.callType := (cc: *CC, args: *LinkedNode) -> *Type{return 0;}
+IntType.memberType := (cc: *CC, name: string) -> *Type{return 0;}
+
+IntInstance.getType := (cc: *CC) -> *Type{
+  t: *Type = malloc(sizeof Type);
+  t = self.type;
+  return t;
+}
+
+IntTypeParser: struct{}
+IntTypeParser.getName := (cc: *CC) -> string{
+  return "int";
+}
+IntTypeParser.parse := (cc: *CC) -> *Type{
+  dbg := cc.getDBG();
+  size := 0;
+  if(cc.expectToken(TokenType.TU8)) size = 8;
+  else if(cc.expectToken(TokenType.TU16)) size = 16;
+  else if(cc.expectToken(TokenType.TU32)) size = 32;
+  else if(cc.expectToken(TokenType.TU64)) size = 64;
+  else if(cc.expectToken(TokenType.TS8)) size = 0-8;
+  else if(cc.expectToken(TokenType.TS16)) size = 0-16;
+  else if(cc.expectToken(TokenType.TS32)) size = 0-32;
+  else if(cc.expectToken(TokenType.TS64)) size = 0-64;
+  else if(cc.expectToken(TokenType.TINT)) size = 0;
+  else return 0;
+
+  signed := 0;
+  if(size < 1){ // to include 0 for int
+    signed = 1;
+    size = size * (0-1);
+  }
+
+  itp: *IntType = malloc(sizeof IntType);
+  itp.size = size;
+  itp.signed = signed;
+  itp.dbg = dbg;
+
+  t: *Type = malloc(sizeof Type);
+  t = itp;
+  return t;
 }
 
 get_def_cc := () -> *CC{
@@ -1823,11 +1980,17 @@ get_def_cc := () -> *CC{
   sp = dsp;
   cc.registerSP(sp);
 
-  // TODO codeblock
   cbp: *CodeBlockParser = malloc(sizeof CodeBlockParser);
   sp: *SParser = malloc(sizeof SParser);
   sp = cbp;
   cc.registerSP(sp);
+
+  // Types
+
+  itp: *IntTypeParser = malloc(sizeof IntTypeParser);
+  tp: *TParser = malloc(sizeof TParser);
+  tp = itp;
+  cc.registerTP(tp);
 
   return cc;
 }
