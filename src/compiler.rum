@@ -1816,6 +1816,7 @@ IntInstance.castGen := (cc: *CC, target: *Type) -> *Value{
 }
 
 IntType.getName := (cc: *CC) -> string{
+  if(self.size == 1) return "bool";
   base: string;
   if(self.signed) base = "signed";
   else base = "unsigned";
@@ -1833,6 +1834,8 @@ IntType.getName := (cc: *CC) -> string{
 IntType.typegen := (cc: *CC) -> *any{
   if(self.size == 0)
     return LLVMInt64TypeInContext(cc.context);
+  else if(self.size == 1)
+    return LLVMInt1TypeInContext(cc.context);
   else if(self.size == 8)
     return LLVMInt8TypeInContext(cc.context);
   else if(self.size == 16)
@@ -1881,7 +1884,8 @@ IntTypeParser.getName := (cc: *CC) -> string{
 IntTypeParser.parse := (cc: *CC) -> *Type{
   dbg := cc.getDBG();
   size := 0;
-  if(cc.expectToken(TokenType.TU8)) size = 8;
+  if(cc.expectToken(TokenType.TBOOL)) size = 1;
+  else if(cc.expectToken(TokenType.TU8)) size = 8;
   else if(cc.expectToken(TokenType.TU16)) size = 16;
   else if(cc.expectToken(TokenType.TU32)) size = 32;
   else if(cc.expectToken(TokenType.TU64)) size = 64;
