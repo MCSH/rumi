@@ -2132,8 +2132,10 @@ AnyTypeParser.parse := (cc: *CC) -> *Type{
   return t;
 }
 
-VoidValue: struct{}
-VoidValue.getType := (cc: *CC) -> *Type{return 0;}
+VoidValue: struct{
+  t: *Type;
+}
+VoidValue.getType := (cc: *CC) -> *Type{return self.t;}
 VoidValue.getValue := (cc: *CC) -> *any{return 0;}
 VoidValue.assignGen := (cc: *CC, val: *Value) -> void{return;}
 VoidValue.preOpGen := (cc: *CC, op: string) -> *Value{return 0;}
@@ -2152,12 +2154,6 @@ VoidType.getName := (cc: *CC) -> string{
 VoidType.typegen := (cc: *CC) -> *any{
   return LLVMVoidTypeInContext(cc.context);
 }
-VoidType.getInstance := (cc: *CC, val: *any, name: string) -> *Value{
-  vv: *VoidValue = malloc(sizeof VoidValue);
-  v: *Value = malloc(sizeof Value);
-  v = vv;
-  return v;
-}
 VoidType.cast := (cc: *CC, target: *Type) -> *Type { return 0; }
 VoidType.assignCheck := (cc: *CC, target: *Type) -> *Type { return 0; }
 VoidType.preOpType := (cc: *CC, op: string) -> *Type { return 0; }
@@ -2165,6 +2161,15 @@ VoidType.postOpType := (cc: *CC, op: string) -> *Type { return 0; }
 VoidType.binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type { return 0; }
 VoidType.callType := (cc: *CC, args: *LinkedNode) -> *Type { return 0; }
 VoidType.memberType := (cc: *CC, name: string) -> *Type { return 0; }
+VoidType.getInstance := (cc: *CC, val: *any, name: string) -> *Value{
+  t: *Type = malloc(sizeof Type);
+  t = self;
+  vv: *VoidValue = malloc(sizeof VoidValue);
+  vv.t = t;
+  v: *Value = malloc(sizeof Value);
+  v = vv;
+  return v;
+}
 
 VoidTypeParser: struct{}
 VoidTypeParser.getName := (cc: *CC) -> string{
