@@ -516,12 +516,37 @@ FunctionType: struct{
   args: *LinkedNode; // of Type Arg
 }
 
-CC.expectFType := () -> *FunctionType{
-  return 0; // TODO
+TParser: interface{
+  parse := (cc: *CC) -> *Type;
+  getName := (cc: *CC) -> string;
 }
 
 CC.expectType := () -> *Type{
-  return 0; // TODO
+  tp := self.tp;
+  checkPoint := self.storeLexer();
+  err: string = strcat("",""); // make it dynamic
+  while(tp){
+    p: *TParser = tp.p;
+    out := p.parse(self);
+    if(out){
+      // TODO free(err)
+      return out;
+    }
+    e := self.lastErr;
+    err = strcat(err, strcat("\n", e));
+    self.restoreLexer(checkPoint);
+    tp = tp.next;
+  }
+  self.setError(err);
+  return 0;
+}
+
+CC.registerTP := (tp: *TParser) -> void{
+  tmp: *LinkedNode = malloc(sizeof LinkedNode);
+  tmp.p = tp;
+  tmp.next = self.tp;
+  self.tp = tmp;
+  return;
 }
 
 FunctionType.getName := (cc: *CC) -> void{
@@ -574,6 +599,54 @@ FunctionType.assignCheck := (cc: *CC, t: *Type) -> bool{
   return 0;
 }
 
+CC.expectFType := () -> *FunctionType{
+  // TODO handle varargs
+  dbg := self.getDBG();
+  if(!self.expectToken(TokenType.TLPAR)) return 0;
+  whilecond := !self.expectToken(TokenType.TRPAR);
+
+  first: *LinkedNode = 0;
+  last: *LinkedNode = 0;
+
+  while(whilecond){
+    id := self.expectId();
+    if(!id) return 0;
+    if(!self.expectToken(TokenType.TCOL)) return 0;
+    t := self.expectType();
+    if(!t) return 0;
+
+    ba: *BasicArg = malloc(sizeof BasicArg);
+    ba.id = id;
+    ba.type = t;
+
+    a: *Arg = malloc(sizeof Arg);
+    a = ba;
+
+    tl: *LinkedNode = malloc(sizeof LinkedNode);
+    tl.next = 0;
+    tl.p = a;
+    if(!first) first = tl;
+    if(last) last.next = tl;
+    last = tl;
+
+    if(!self.expectToken(TokenType.TCOMMA)){
+      if(!self.expectToken(TokenType.TRPAR)) return 0;
+      whilecond = 0;
+    }
+  }
+  if(!self.expectToken(TokenType.TARROW)) return 0;
+  rtype := self.expectType();
+  // ====
+  tr: *FunctionType = malloc(sizeof FunctionType);
+  tr.args = first;
+  tr.returnType = rtype;
+  tr.dbg = dbg;
+
+  t : *Type = malloc(sizeof Type);
+  t = tr;
+  return t;
+}
+
 Concept: interface{
   getName := (cc: *CC) -> string;
   register := (cc: *CC) -> void; // Just add the name to CC and module
@@ -612,19 +685,6 @@ CC.registerSP := (sp: *SParser) -> void{
   tmp.p = sp;
   tmp.next = self.sp;
   self.sp = tmp;
-  return;
-}
-
-TParser: interface{
-  parse := (cc: *CC) -> *Type;
-  getName := (cc: *CC) -> string;
-}
-
-CC.registerTP := (tp: *TParser) -> void{
-  tmp: *LinkedNode = malloc(sizeof LinkedNode);
-  tmp.p = tp;
-  tmp.next = self.tp;
-  self.tp = tmp;
   return;
 }
 
@@ -2182,30 +2242,6 @@ FloatTypeParser.parse := (cc: *CC) -> *Type{
   return t;
 }
 
-/*
-FunctionPointerBaseType: struct{
-  first: *LinkedNode; // *Type
-  dbg: *DBG;
-  returnType: *Type;
-}
-FunctionPointerBaseType.getName := (cc: *CC) -> string{
-  ans := "(";
-  l := self.first;
-  while(l){
-    t:*Type = l.p;
-    ans = strcat(ans, t.getName(cc));
-    l = l.next;
-    if(l) ans = strcat(ans, ", ");
-  }
-  ans = strcat(ans, ") -> ");
-  ans = strcat(ans, self.returnType.getName(cc));
-  return ans;
-}
-FunctionPointerBaseType.typegen := (cc: *CC) -> *any{
-
-}
-*/
-
 AnonArg: struct{
   type: *Type;
 }
@@ -2248,7 +2284,7 @@ FTypeParser.parse := (cc: *CC) -> *Type{
     if(!first) first = tl;
     if(last) last.next = tl;
     last = tl;
-    // TODO capture it
+
     if(!cc.expectToken(TokenType.TCOMMA)){
       if(!cc.expectToken(TokenType.TRPAR)) return 0;
       whilecond = 0;
