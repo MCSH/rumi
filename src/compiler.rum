@@ -1997,6 +1997,31 @@ PtrTypeParser.parse := (cc: *CC) -> *Type{
   return t;
 }
 
+StrTypeParser: struct{}
+StrTypeParser.getName := (cc: *CC) -> string{
+  return "string";
+}
+StrTypeParser.parse := (cc: *CC) -> *Type{
+  // TODO
+  dbg := cc.getDBG();
+  if(!cc.expectToken(TokenType.TSTR)) return 0;
+  // ===
+  bu: *IntType = malloc(sizeof IntType);
+  bu.size = 8;
+  bu.signed = 0;
+
+  base : *Type = malloc(sizeof Type);
+  base = bu;
+  
+  ftp: *PointerType = malloc(sizeof PointerType);
+  ftp.dbg = dbg;
+  ftp.base = base;
+
+  t: *Type = malloc(sizeof Type);
+  t = ftp;
+  return t;
+}
+
 get_def_cc := () -> *CC{
   cc: *CC = malloc(sizeof CC);
   cc.init();
@@ -2084,6 +2109,11 @@ get_def_cc := () -> *CC{
   ftp: *PtrTypeParser = malloc(sizeof PtrTypeParser);
   tp: *TParser = malloc(sizeof TParser);
   tp = ftp;
+  cc.registerTP(tp);
+
+  stp: *StrTypeParser = malloc(sizeof StrTypeParser);
+  tp: *TParser = malloc(sizeof TParser);
+  tp = stp;
   cc.registerTP(tp);
 
   return cc;
