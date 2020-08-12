@@ -1,6 +1,6 @@
 // TODO Add & to every pre for all types
 // TODO strcat optimize free
-// TODO getValue is flawed for unnamed values (ex a+b)
+// TODO getValue is flawed for unnamed values (ex a+b) I can move the operations to types and have a general value
 // == Helper & LLVM functions
 
 malloc := (size: u64) -> *any;
@@ -722,6 +722,7 @@ FunctionType.getName := (cc: *CC) -> void{
   return ans;
 }
 FunctionType.typegen := (cc: *CC) -> *any{
+  has_varargs := 0;
   args_count := 0;
   {
     argL: *LinkedNode = self.args;
@@ -739,11 +740,11 @@ FunctionType.typegen := (cc: *CC) -> *any{
     *(args+count) = t.typegen(cc);
     count = count + 1;
     argL = argL.next;
+    if(!argL) has_varargs = arg.isVarArg(cc);
   }
 
-  // TODO handle varargs
   // TODO memoize?
-  return LLVMFunctionType(self.returnType.typegen(cc), args, args_count, 0);
+  return LLVMFunctionType(self.returnType.typegen(cc), args, args_count, has_varargs);
 }
 FunctionType.getInstance := (cc: *CC, val: *any, name: string) -> *Value {return 0;} // TODO?
 FunctionType.cast := (cc: *CC, target: *Type) -> bool{
