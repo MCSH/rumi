@@ -1,3 +1,6 @@
+// TODO Add & to every pre for all types
+// TODO strcat optimize free
+// TODO getValue is flawed for unnamed values (ex a+b)
 // == Helper & LLVM functions
 
 malloc := (size: u64) -> *any;
@@ -74,6 +77,7 @@ streq := (s1: *u8, s2: *u8) -> bool{
     if(*(s1+counter) == 0)
       return 1;
 
+
     counter = counter + 1;
   }
 
@@ -149,69 +153,54 @@ strcp := (buf: *u8, start: int, end: int) -> string{
 // === enums
 
 TokenType: enum{
-  TEOF = 0, // EOF
-  TID = 1, // id
-  TCOL = 2, // :
-  TDEF = 3, // :=
-  TLPAR = 4, // (
-  TRPAR = 5, // )
-  TCOMMA = 6, // ,
-  TDOT = 7, // .
-  T3DOT = 8, // ...
-  TDASH = 9, // -
-  TARROW = 10, // ->
-  TSEM = 11, // ;
-  TSTAR = 12, // *
-  TFSLASH = 13, // /
-  TLCB = 14, // {
-  TRCB = 15, // }
-  TNUM = 16, // num
-  TEQ = 17, // =
-  TEQEQ = 18, // ==
-  TPLUS = 19, // +
-  TSTRV = 20, // string value
-  TINT = 21, // int
-  TRET = 22, // return
-  TIF = 23, // if
-  TWHILE = 24, // while
-  TELSE = 25, // else
-  TSTR = 26, // string
-  TANY = 27, // any
-  TSTRUCT = 28, // struct
-  TVOID = 29, // void
-  TU8 = 30, // u8
-  TU16 = 31, // u16
-  TU32 = 32, // u32
-  TU64 = 33, // u64
-  TS8 = 34, // s8
-  TS16 = 35, // s16
-  TS32 = 36, // s32
-  TS64 = 37, // s64
-  TF32 = 38, // f32
-  TF64 = 39, // f64
-  TBOOL = 40, // bool
-  TPERC = 41, // %
-  TSIZE = 42, // sizeof
-  TNEQ = 43, // !=
-  TNOT = 44, // !
-  TLT = 45, // <
-  TLTE = 46, // <=
-  TGT = 47, // >
-  TGTE = 48, // >=
-  TINTERFACE = 49, // interface
-  TENUM = 50, // enum
-  TCHAR = 51, // character
+  // it has a value so it doesn't start from 0
+  TCOL=1, // :
+  TDEF, // :=
+  TLPAR, // (
+  TRPAR, // )
+  TCOMMA, // ,
+  TDOT, // .
+  T3DOT, // ...
+  TARROW, // ->
+  TSEM, // ;
+  TSTAR, // *
+  TLCB, // {
+  TRCB, // }
+  TEQ, // =
+  TINT, // int
+  TRET, // return
+  TIF, // if
+  TWHILE, // while
+  TELSE, // else
+  TSTR, // string
+  TANY, // any
+  TSTRUCT, // struct
+  TVOID, // void
+  TU8, // u8
+  TU16, // u16
+  TU32, // u32
+  TU64, // u64
+  TS8, // s8
+  TS16, // s16
+  TS32, // s32
+  TS64, // s64
+  TF32, // f32
+  TF64, // f64
+  TBOOL, // bool
+  TSIZE, // sizeof
+  TINTERFACE, // interface
+  TENUM, // enum
   TINSTANCEOF,
-  TAND, // &
 }
 
 // === structs & interfaces
 
 DBG: struct{
+  line: int;
 }
 
 DBG.printAndExit := () -> void{
-  // TODO
+  printf("line %d\n", self.line);
   exit(1);
   return ;
 }
@@ -242,7 +231,6 @@ CC: struct{
 
   lastErr: string;
 
-  // lexer stuff, TODO take them out
   buf: *u8;
   offset :int;
   line: int;
@@ -284,7 +272,7 @@ CC.popBlock := () -> void{
 CC.getDBG := () -> *DBG{
   dbg : *DBG = malloc(sizeof DBG);
   
-  // TODO copy from self.dbg
+  dbg.line = self.line;
 
   return dbg;
 }
@@ -331,7 +319,7 @@ CC.nextWord := () -> string{
   offset := self.offset;
   if(is_alpha(*(buf+offset))){
     // we have a word
-    end := self.offset + 1; // TODO is this okay?
+    end := self.offset + 1;
     while(is_alphanumeric(*(buf+end))){
       end = end  +1;
     }
@@ -343,10 +331,30 @@ CC.nextWord := () -> string{
 }
 
 CC.isKeyword := (s: string) -> TokenType{
-  // NOTE, 0 doesn't mean EOF here, it means it's not a keyword!
   if(streq(s, "int")) return TokenType.TINT;
   if(streq(s, "return")) return TokenType.TRET;
-  // TODO complete
+  if(streq(s, "if")) return TokenType.TIF;
+  if(streq(s, "while")) return TokenType.TWHILE;
+  if(streq(s, "else")) return TokenType.TELSE;
+  if(streq(s, "string")) return TokenType.TSTR;
+  if(streq(s, "any")) return TokenType.TANY;
+  if(streq(s, "struct")) return TokenType.TSTRUCT;
+  if(streq(s, "void")) return TokenType.TVOID;
+  if(streq(s, "u8")) return TokenType.TU8;
+  if(streq(s, "u16")) return TokenType.TU16;
+  if(streq(s, "u32")) return TokenType.TU32;
+  if(streq(s, "u64")) return TokenType.TU64;
+  if(streq(s, "s8")) return TokenType.TS8;
+  if(streq(s, "s16")) return TokenType.TS16;
+  if(streq(s, "s32")) return TokenType.TS32;
+  if(streq(s, "s64")) return TokenType.TS64;
+  if(streq(s, "f32")) return TokenType.TF32;
+  if(streq(s, "f64")) return TokenType.TF64;
+  if(streq(s, "bool")) return TokenType.TBOOL;
+  if(streq(s, "sizeof")) return TokenType.TSIZE;
+  if(streq(s, "interface")) return TokenType.TINTERFACE;
+  if(streq(s, "enum")) return TokenType.TENUM;
+  if(streq(s, "instanceof")) return TokenType.TINSTANCEOF;
   return 0;
 }
 
@@ -381,15 +389,160 @@ CC.expectNum := () -> *int{
   return 0;
 }
 
-CC.expectToken := (token: TokenType) -> bool{
-  // TODO check special ones first
-  // TODO impl similiar to expectId
-  return 0; // TODO
+tokenkeywordtostring := (t: *TokenType) -> string{
+  if(t == TokenType.TINT) return "int";
+  if(t == TokenType.TRET) return "return";
+  if(t == TokenType.TIF) return "if";
+  if(t == TokenType.TWHILE) return "while";
+  if(t == TokenType.TELSE) return "else";
+  if(t == TokenType.TSTR) return "string";
+  if(t == TokenType.TANY) return "any";
+  if(t == TokenType.TSTRUCT) return "struct";
+  if(t == TokenType.TVOID) return "void";
+  if(t == TokenType.TU8) return "u8";
+  if(t == TokenType.TU16) return "u16";
+  if(t == TokenType.TU32) return "u32";
+  if(t == TokenType.TU64) return "u64";
+  if(t == TokenType.TS8) return "s8";
+  if(t == TokenType.TS16) return "s16";
+  if(t == TokenType.TS32) return "s32";
+  if(t == TokenType.TS64) return "s64";
+  if(t == TokenType.TF32) return "f32";
+  if(t == TokenType.TF64) return "f64";
+  if(t == TokenType.TBOOL) return "bool";
+  if(t == TokenType.TSIZE) return "sizeof";
+  if(t == TokenType.TINTERFACE) return "interface";
+  if(t == TokenType.TENUM) return "enum";
+  if(t == TokenType.TINSTANCEOF) return "instanceof";
+  return 0;
+}
+
+CC.expectToken := (t: TokenType) -> bool{
+  self.skipWS();
+  buf := self.buf;
+  offset := self.offset;
+  ch := *(buf+offset);
+  if(t == TokenType.TCOL){
+    if(ch == ':'){
+      if(*(buf+offset+1) != '='){
+        self.offset = offset + 1;
+        return 1;
+      }
+    }
+    self.lastErr = "Expected :";
+    return 0;
+  }
+  if(t == TokenType.TDEF){
+    if(ch == ':')
+      if(*(buf+offset+1) == '='){
+        self.offset = offset + 2;
+        return 1;
+      }
+    self.lastErr = "Expected :=";
+    return 0;
+  }
+  if(t == TokenType.TLPAR){
+    if(ch == '('){
+      self.offset = offset + 1;
+      return 1;
+    }
+    self.lastErr = "Expected (";
+    return 0;
+  }
+  if(t == TokenType.TRPAR){
+    if(ch == '('){
+      self.offset = offset + 1;
+      return 1;
+    }
+    self.lastErr = "Expected )";
+    return 0;
+  }
+  if(t == TokenType.TCOMMA){
+    if(ch == ','){
+      self.offset = offset + 1;
+      return 1;
+    }
+    self.lastErr = "Expected ,";
+    return 0;
+  }
+  if(t == TokenType.TDOT){
+    if(ch == '.')
+      if(*(buf+offset+1!='.')){
+        self.offset = offset + 1;
+        return 1;
+      }
+    self.lastErr = "Expected .";
+    return 0;
+  }
+  if(t == TokenType.T3DOT){
+    if(ch == '.')
+      if(*(buf+offset+1=='.'))
+        if(*(buf+offset+2=='.')){
+          self.offset = offset + 3;
+          return 1;
+        }
+    self.lastErr = "Expected ...";
+    return 0;
+  }
+  if(t == TokenType.TARROW){
+    if(ch == '-')
+      if(*(buf+offset+1=='>')){
+        self.offset = offset + 2;
+        return 1;
+      }
+    self.lastErr = "Expected ->";
+    return 0;
+  }
+  if(t == TokenType.TSEM){
+    if(ch == ';'){
+      self.offset = offset + 1;
+      return 1;
+    }
+    self.lastErr = "Expected ;";
+    return 0;
+  }
+  if(t == TokenType.TSTAR){
+    if(ch == '*'){
+      self.offset = offset + 1;
+      return 1;
+    }
+    self.lastErr = "Expected *";
+    return 0;
+  }
+  if(t == TokenType.TLCB){
+    if(ch == '{'){
+      self.offset = offset + 1;
+      return 1;
+    }
+    self.lastErr = "Expected {";
+    return 0;
+  }
+  if(t == TokenType.TRCB){
+    if(ch == '}'){
+      self.offset = offset + 1;
+      return 1;
+    }
+    self.lastErr = "Expected }";
+    return 0;
+  }
+  if(t == TokenType.TEQ){
+    if(ch == '=')
+      if(*(buf+offset+1) != '='){
+        self.offset = offset + 1;
+        return 1;
+      }
+    self.lastErr = "Expected =";
+    return 0;
+  }
+  word := self.nextWord();
+  if(!word) return 0;
+  if(self.isKeyword(word) == t) return 1;
+  self.lastErr = strcat("Expected keyword %s\n", tokenkeywordtostring(t));
+  return 0;
 }
 
 Value: interface{
   getType := (cc: *CC) -> *Type; // typeof val
-  // TODO do we need a load builder here?
   getValue := (cc: *CC) -> *any; // = val
   // assignGen assumes cast has been called
   assignGen := (cc: *CC, val: *Value) -> void; // val = 
@@ -399,6 +552,23 @@ Value: interface{
   callGen := (cc: *CC, args: *LinkedNode) -> *Value; // val ()
   memberGen := (cc: *CC, name: string) -> *Value; // val.
   castGen := (cc: *CC, target: *Type) -> *Value; // val -> target
+}
+
+// Types aren't always instansiable, they could be general concepts as well.
+Type: interface{
+  getName := (cc: *CC) -> string;
+  typegen := (cc: *CC) -> *any; // Needed for function pointers and structs
+
+  getInstance := (cc: *CC, val: *any, name: string) -> *Value; // if val = 0 don't store
+
+  cast := (cc: *CC, target: *Type) -> bool;
+
+  assignCheck := (cc: *CC, t: *Type) -> bool;
+  preOpType := (cc: *CC, op: string) -> *Type;
+  postOpType := (cc: *CC, op: string) -> *Type;
+  binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type;
+  callType := (cc: *CC, args: *LinkedNode) -> *Type;
+  memberType := (cc: *CC, name: string) -> *Type;
 }
 
 Named: struct{
@@ -435,23 +605,6 @@ CC.resolveNamed := (name: string) -> *Value{
   return 0;
 }
 
-// Types aren't always instansiable, they could be general concepts as well.
-Type: interface{
-  getName := (cc: *CC) -> string;
-  typegen := (cc: *CC) -> *any; // Needed for function pointers and structs
-
-  getInstance := (cc: *CC, val: *any, name: string) -> *Value; // if val = 0 don't store
-
-  cast := (cc: *CC, target: *Type) -> *Type;
-
-  assignCheck := (cc: *CC, t: *Type) -> bool; // TODO what is its purpose? isn't cast enough?
-  preOpType := (cc: *CC, op: string) -> *Type;
-  postOpType := (cc: *CC, op: string) -> *Type;
-  binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type;
-  callType := (cc: *CC, args: *LinkedNode) -> *Type;
-  memberType := (cc: *CC, name: string) -> *Type;
-}
-
 TypeTypeConcept: interface{
   staticMemberType := (cc: *CC, name: string) -> *Type;
   staticMemberGen := (cc: *CC, name: string) -> *Value;
@@ -470,7 +623,7 @@ TypeType.typegen := (cc: *CC) -> *any{
 TypeType.getInstance := (cc: *CC, val: *any, name: string) -> *Value{ // Should I return myself?
   return 0;
 }
-TypeType.cast := (cc: *CC, target: *Type) -> *Type{
+TypeType.cast := (cc: *CC, target: *Type) -> bool{
   return 0;
 }
 TypeType.assignCheck := (cc: *CC, op: string) -> bool{
@@ -489,11 +642,13 @@ Arg: interface{
   // register and assign val to itself
   codegen := (cc: *CC, val: *any) -> void; // val is the param provided
   typeresolve := (cc: *CC) -> *Type;
+  isVarArg := (cc: *CC) -> bool;
 }
 
 BasicArg: struct{
   id: string;
   type: *Type;
+  isvararg: bool;
 }
 BasicArg.getName := (cc: *CC) -> string { return self.id; }
 BasicArg.typeresolve := (cc: *CC) -> *Type{ return self.type; }
@@ -503,6 +658,9 @@ BasicArg.codegen := (cc: *CC, val:*any) -> void{
   // set named
   cc.registerNamed(self.id, v);
   return;
+}
+BasicArg.isVarArg := (cc: *CC) -> bool{
+  return self.isvararg;
 }
 
 Member: struct{
@@ -529,7 +687,7 @@ CC.expectType := () -> *Type{
     p: *TParser = tp.p;
     out := p.parse(self);
     if(out){
-      // TODO free(err)
+      free(err);
       return out;
     }
     e := self.lastErr;
@@ -550,7 +708,18 @@ CC.registerTP := (tp: *TParser) -> void{
 }
 
 FunctionType.getName := (cc: *CC) -> void{
-  return "function"; // TODO add args?
+  ans := "(";
+  a := self.args;
+  while(a){
+    arg :*Arg= a.p;
+    t := arg.typeresolve(cc);
+    ans = strcat(ans, t.getName(cc));
+    if(a.next) ans = strcat(ans, ", ");
+    a = a.next;
+  }
+  ans = strcat(ans, ") -> ");
+  ans = strcat(ans, self.returnType.getName(cc));
+  return ans;
 }
 FunctionType.typegen := (cc: *CC) -> *any{
   args_count := 0;
@@ -577,7 +746,7 @@ FunctionType.typegen := (cc: *CC) -> *any{
   return LLVMFunctionType(self.returnType.typegen(cc), args, args_count, 0);
 }
 FunctionType.getInstance := (cc: *CC, val: *any, name: string) -> *Value {return 0;} // TODO?
-FunctionType.cast := (cc: *CC, target: *Type) -> *Type{
+FunctionType.cast := (cc: *CC, target: *Type) -> bool{
   return 0; // not castable for now
 }
 FunctionType.preOpType := (cc: *CC, op: string) -> *Type{
@@ -600,7 +769,6 @@ FunctionType.assignCheck := (cc: *CC, t: *Type) -> bool{
 }
 
 CC.expectFType := () -> *FunctionType{
-  // TODO handle varargs
   dbg := self.getDBG();
   if(!self.expectToken(TokenType.TLPAR)) return 0;
   whilecond := !self.expectToken(TokenType.TRPAR);
@@ -612,12 +780,14 @@ CC.expectFType := () -> *FunctionType{
     id := self.expectId();
     if(!id) return 0;
     if(!self.expectToken(TokenType.TCOL)) return 0;
+    isvararg := self.expectToken(TokenType.T3DOT);
     t := self.expectType();
     if(!t) return 0;
 
     ba: *BasicArg = malloc(sizeof BasicArg);
     ba.id = id;
     ba.type = t;
+    ba.isvararg = isvararg;
 
     a: *Arg = malloc(sizeof Arg);
     a = ba;
@@ -684,7 +854,7 @@ CC.expectStatement := () -> *Statement{
     p: *SParser = sp.p;
     out := p.parse(self);
     if(out){
-      // TODO free(err);
+      free(err);
       return out;
     }
     e := self.lastErr;
@@ -704,28 +874,102 @@ CC.registerSP := (sp: *SParser) -> void{
   return;
 }
 
-CC.expectExpression := () -> *Value{
-  // Expressions
-  // TODO
-  // TODO fcall
-  // TODO variable
-  // TODO memcall
-  // TODO ptr access // implement with preop?
-  // TODO ref access // implement with preop? No, it's a general thing?
-  // TODO mem access
-  // TODO const int
-  // TODO const str
-  // TODO preop (We don't really have them at this point!)
-  // TODO postop (We don't really have them at this point!)
-  // TODO binop
-  // TODO parentheses
-  // TODO cast
-  // TODO sizeof
-  // TODO instanceof
+Expr: struct{
+  v: *Value;
+  prev: int;
+}
 
+/*
+   A value of 0 means that this is not an op.
+   A higher value should be resolved later.
+*/
+op_prec := (c: u8) -> int{
+  if(c == '!') return 1;
+  if(c == '/') return 2;
+  if(c == '*') return 2;
+  if(c == '%') return 2;
+  if(c == '+') return 3;
+  if(c == '-') return 3;
+  if(c == '|') return 4;
+  if(c == '&') return 4;
+  if(c == '=') return 5;
+  if(c == '<') return 5;
+  if(c == '>') return 5;
   return 0;
 }
 
+CC.expectOp := () -> string{
+  self.skipWS();
+  offset := self.offset;
+  end := self.offset;
+  while(op_prec(*(self.buf+end))){
+    end = end + 1;
+  }
+
+  if(offset == end)
+    return 0;
+
+  ans:=strcp(self.buf, offset, end);
+
+  if(streq(ans, "=")){
+    free(ans);
+    return 0;
+  }
+  return ans;
+}
+
+CC.parseVal := () -> *Value{
+  // parse const values or variables or members ONLY
+
+  val: *Value;
+
+  if(*(self.buf+self.offset) == '"'){ // "
+    // TODO const str
+  }
+
+  if(*(self.buf+self.offset) == '\''){
+    // TODO const char
+  }
+
+  if(is_numeric(*(self.buf+self.offset))){
+    // TODO number
+  }
+  if(is_alpha(*(self.buf+self.offset))){
+    // TODO variable
+  }
+
+  if(!val) return 0;
+
+  // TODO members
+}
+
+CC.parseExpr := () -> *Expr{
+  pre := self.expectOp(); // TODO use this
+
+  val : *Value;
+  // TODO parenthesis ?
+  // or value
+  val = self.parseVal();
+
+  // TODO member
+  // TODO post op
+  // TODO bin
+  // TODO call
+
+  // TODO sizeof
+
+  // TODO instanceof
+}
+
+CC.expectExpression := () -> *Value{
+  checkPoint := self.storeLexer();
+  // Expressions
+
+  err := ""; // TODO
+  self.setError(err);
+  self.restoreLexer(checkPoint);
+  return 0;
+}
 
 // ==== TOP LEVELs
 FunctionConcept: struct{
@@ -814,7 +1058,7 @@ FunctionConcept.callGen := (cc: *CC, args: *LinkedNode) -> *Value{
   f := LLVMGetNamedFunction(cc.module, self.id);
   val := LLVMBuildCall(cc.builder, f, args, count, name);
   // Now create a value...
-  return self.type.returnType.getInstance(cc, val, "retval"); // TODO check for void
+  return self.type.returnType.getInstance(cc, val, "retval");
 }
 FunctionConcept.getValue := (cc: *CC) -> *any{
   return LLVMGetNamedFunction(cc.module, self.id);
@@ -921,7 +1165,7 @@ StructInstance: struct{
 StructInstance.getType := (cc: *CC) -> *Type{return ;} // This is a dummy definition, redifined later on
 
 StructInstance.getValue := (cc: *CC) -> *any{
-  return self.alloc; // TODO We need a load
+  return LLVMBuildLoad(cc.builder, self.alloc, "sval");
 }
 
 StructInstance.preOpGen := (cc: *CC, op: string) -> *Value{
@@ -971,7 +1215,7 @@ StructConcept.getName := (cc: *CC) -> string{
 StructConcept.typegen := (cc: *CC) -> *any{
   return self.s;
 }
-StructConcept.cast := (cc: *CC, target: *Type) -> *Type{
+StructConcept.cast := (cc: *CC, target: *Type) -> bool{
   // Do not cast to interface, this is struct type not struct instance
   return 0;
 }
@@ -983,7 +1227,7 @@ StructConcept.binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type {return 0;
 StructConcept.binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value {return 0;}
 StructConcept.assignGen := (cc: *CC, v: *Value) -> *Value {return 0;}
 StructConcept.getInstance := (cc: *CC, val: *any, name: string) -> *Value {
-  // TODO, instantiate a struct
+  // instantiate a struct
   si : *StructInstance = malloc(sizeof StructInstance);
   si.sc = self;
   si.alloc = LLVMBuildAlloca(cc.builder, self.s, name);
@@ -1124,8 +1368,6 @@ InterfaceConcept : struct{
   first: *LinkedNode;
   vptr: *any;
   holder: *any;
-  // TODO named num?
-  // TODO firstMethod?
 }
 
 InterfaceInstance : struct{
@@ -1136,7 +1378,7 @@ InterfaceInstance : struct{
 InterfaceInstance.getType := (cc: *CC) -> *Type{return ;} // This is a dummy definition, redifined later on
 
 InterfaceInstance.getValue := (cc: *CC) -> *any{
-  return self.alloc; // TODO we need a  load
+  return LLVMBuildLoad(cc.builder, self.alloc, "ival");
 }
 
 InterfaceInstance.preOpGen := (cc: *CC, op: string) -> *Value{
@@ -1156,7 +1398,6 @@ InterfaceInstance.assignGen := (cc: *CC, val: *Value) -> void{
   return;
 }
 InterfaceInstance.memberGen := (cc: *CC, name: string) -> *Value{
-  // TODO
   ind := 0;
   l: *LinkedNode = self.ic.first;
   while(l){
@@ -1186,7 +1427,7 @@ InterfaceConcept.getName := (cc: *CC) -> string{
   return strcat("interface ", self.id);
 }
 InterfaceConcept.getInstance := (cc: *CC, val: *any, name: string) -> *Value {
-  // TODO, instantiate an interface
+  // instantiate an interface
   i: *InterfaceInstance = malloc(sizeof InterfaceInstance);
   i.ic = self;
   i.alloc = LLVMBuildAlloca(cc.builder, self.holder, name);
@@ -1195,7 +1436,7 @@ InterfaceConcept.getInstance := (cc: *CC, val: *any, name: string) -> *Value {
   v = i;
   return v;
 }
-InterfaceConcept.cast := (cc: *CC, target: *Type) -> *Type{
+InterfaceConcept.cast := (cc: *CC, target: *Type) -> bool{
   // Do not cast to structs, this is interface type not interface instance
   return 0;
 }
@@ -1250,7 +1491,6 @@ InterfaceConcept.register := (cc: *CC) -> void{
   return;
 }
 InterfaceConcept.compile := (cc: *CC) -> void{
-  // TODO
   count := 1; // classptr
   f: *LinkedNode = self.first;
   while(f){
@@ -1343,7 +1583,7 @@ EnumConcept.binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value {return 0;}
 EnumConcept.callType := (cc: *CC, args: *LinkedNode) -> *Type {return 0;}
 EnumConcept.callGen := (cc: *CC, args: *LinkedNode) -> *Value{return 0;}
 EnumConcept.castGen := (cc: *CC, target: *Type) -> *Value{return 0;}
-EnumConcept.cast := (cc: *CC, target: *Type) -> *Type{ return 0; }
+EnumConcept.cast := (cc: *CC, target: *Type) -> bool{ return 0; }
 EnumConcept.assignGen := (cc: *CC, v: *Value) -> *Value {return 0;}
 EnumConcept.memberType := (cc: *CC, name: string) -> *Type{
   // TODO check members
@@ -1359,7 +1599,7 @@ EnumConcept.staticMemberType := (cc: *CC, name: string) -> *Type{
 EnumConcept.staticMemberGen := (cc: *CC, name: string) -> *Value{
   return 0;
 }
-EnumConcept.getValue := (cc: *CC) -> *any{ return 0; }
+EnumConcept.getValue := (cc: *CC) -> *any{ return 0; } // TODO this should return inttype64
 EnumConcept.assignCheck := (cc: *CC, t: *Type) -> bool{
   return 0;
 }
@@ -1471,6 +1711,7 @@ MethodDefineParser.parse := (cc: *CC) -> *Concept{
   }
   selfarg.type = base;
   selfarg.id = "self";
+  selfarg.isvararg = 0;
 
   selfargholder: *Arg = malloc(sizeof Arg);
   selfargholder = selfarg;
@@ -1516,7 +1757,6 @@ IfStatement.getName := (cc: *CC) -> string{
   return "if";
 }
 IfStatement.codegen := (cc: *CC) -> void{
-  // TODO
   f := LLVMGetBasicBlockParent(LLVMGetInsertBlock(cc.builder));
 
   ifB := LLVMAppendBasicBlockInContext(cc.context, f, "if");
@@ -1661,10 +1901,20 @@ WhileStmtParser.parse := (cc: *CC) -> *Statement{
   return stmt;
 }
 
-assignBase := (base: *Value, val: *Value)->void{
-  // TODO to cast, or not to cast, that is the question!
-  // TODO assignCheck???
-  base.assignGen(val);
+assignBase := (cc: *CC, base: *Value, val: *Value)->void{
+  tb := base.getType(cc);
+  tv := val.getType(cc);
+  if(tb.assignCheck(cc, tv)){
+    base.assignGen(val);
+    return;
+  }
+  if(tv.cast(cc, tb)){
+    v := val.castGen(cc, tb());
+    base.assignGen(v);
+  }
+  // TODO improve error reporting
+  printf("Error in assignBase\n");
+  exit(1);
   return;
 }
 
@@ -1677,7 +1927,7 @@ AssignStatement.getName := (cc: *CC) -> string{
   return "assignment";
 }
 AssignStatement.codegen := (cc: *CC) -> void{
-  assignBase(self.base, self.val);
+  assignBase(cc, self.base, self.val);
   return ;
 }
 
@@ -1780,10 +2030,16 @@ DefineStatement.getName := (cc: *CC) -> string{
   return strcat("define ", self.id);
 }
 DefineStatement.codegen := (cc: *CC) -> void{
-  // TODO resolve type
-  // TODO create instance
-  // TODO assign using base
-  // TODO register cc
+  // resolve type
+  if(!self.type) self.type = self.exp.getType(cc);
+
+  // create instance
+  val: *any = 0;
+  if(self.exp) val = self.exp.getValue(cc);
+  inst := self.type.getInstance(cc, val, self.id);
+
+  // register cc
+  cc.registerNamed(self.id, inst);
   return ;
 }
 
@@ -1798,10 +2054,14 @@ DefineStmtParser.parse := (cc: *CC) -> *Statement{
   type :*Type = 0;
   exp :*Value = 0;
   if(cc.expectToken(TokenType.TDEF)){
-    // TODO
     exp = cc.expectExpression();
   } else if(cc.expectToken(TokenType.TCOL)){
-    // TODO
+    type = cc.expectType();
+    if(!type) return 0;
+    if(cc.expectToken(TokenType.TEQ)){
+      exp = cc.expectExpression();
+      if(!exp) return 0;
+    }
   } else return 0;
   if(!cc.expectToken(TokenType.TSEM)) return 0;
   // ===
@@ -1888,7 +2148,10 @@ IntInstance.assignGen := (cc: *CC, val: *Value) -> void{
 }
 IntInstance.preOpGen := (cc: *CC, op: string) -> *Value{return 0;}
 IntInstance.postOpGen := (cc: *CC, op: string) -> *Value{return 0;}
-IntInstance.binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value{return 0;}
+IntInstance.binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value{
+  // TODO
+  return 0;
+}
 IntInstance.callGen := (cc: *CC, args: *LinkedNode) -> *Value{return 0;}
 IntInstance.memberGen := (cc: *CC, name: string) -> *Value{return 0;}
 IntInstance.castGen := (cc: *CC, target: *Type) -> *Value{
@@ -1938,24 +2201,28 @@ IntType.getInstance := (cc: *CC, val: *any, name: string) -> *Value{
   v = ii;
   return v;
 }
-IntType.cast := (cc: *CC, target: *Type) -> *Type{
-  // TODO
-  return 0;
-}
-IntType.assignCheck := (cc: *CC, t: *Type) -> bool{
-  // TODO
-  return 1;
-}
 IntType.preOpType := (cc: *CC, op: string) -> *Type{return 0;}
 IntType.postOpType := (cc: *CC, op: string) -> *Type{return 0;}
 IntType.binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type{return 0;}
 IntType.callType := (cc: *CC, args: *LinkedNode) -> *Type{return 0;}
 IntType.memberType := (cc: *CC, name: string) -> *Type{return 0;}
 
+IntType.assignCheck := (cc: *CC, t: *Type) -> bool{return;} // Forward declaration
+IntType.cast := (cc: *CC, target: *Type) -> bool{ return;} // Forward declaration
+
 IntInstance.getType := (cc: *CC) -> *Type{
   t: *Type = malloc(sizeof Type);
   t = self.type;
   return t;
+}
+IntType.cast := (cc: *CC, target: *Type) -> bool{
+  if(target instanceof IntType) return 1;
+  if(target instanceof PointerType) return 1;
+  return 0;
+}
+IntType.assignCheck := (cc: *CC, t: *Type) -> bool{
+  if(target instanceof IntType) return 1;
+  return 0;
 }
 
 IntTypeParser: struct{}
@@ -2036,24 +2303,44 @@ PointerType.getInstance := (cc: *CC, val: *any, name: string) -> *Value{
   v = pi;
   return v;
 }
-PointerType.cast := (cc: *CC, target: *Type) -> *Type{
+PointerType.cast := (cc: *CC, target: *Type) -> bool{
   // TODO
 }
 PointerType.assignCheck := (cc: *CC, t: Type) -> bool{
   // TODO
 }
 PointerType.preOpType := (cc: *CC, op: string) -> *Type{
-  // TODO
+  if(streq(op, "*")){
+    t: *Type = malloc(sizeof Type);
+    t = self.base;
+    return t;
+  }
+  return 0;
 }
 PointerType.postOpType := (cc: *CC, op: string) -> *Type{return 0;}
 PointerType.binOpType := (cc: *CC, op: string, rhs: *Type) -> *Type{
-  // TODO
+  // handle pointer arithmetics
+  if(streq(op, "+")){
+    if(rhs instanceof IntType){
+      t: *Type = malloc(sizeof Type);
+      t = self;
+      return t;
+    }
+  }
+  if(streq(op, "-")){
+    if(rhs instanceof IntType){
+      t: *Type = malloc(sizeof Type);
+      t = self;
+      return t;
+    }
+  }
+  return 0;
 }
 PointerType.callType := (cc: *CC, args: *LinkedNode) -> *Type{
-  // TODO
+  return self.base.callType(cc, args);
 }
 PointerType.memberType := (cc: *CC, name: string) -> *Type{
-  // TODO
+  return self.base.memberType(cc, name);
 }
 
 PointerInstance.getType := (cc: *CC) -> *Type{
@@ -2067,7 +2354,6 @@ PtrTypeParser.getName := (cc: *CC) -> string{
   return "pointer";
 }
 PtrTypeParser.parse := (cc: *CC) -> *Type{
-  // TODO
   dbg := cc.getDBG();
   if(!cc.expectToken(TokenType.TSTAR)) return 0;
   base := cc.expectType();
@@ -2087,7 +2373,6 @@ StrTypeParser.getName := (cc: *CC) -> string{
   return "string";
 }
 StrTypeParser.parse := (cc: *CC) -> *Type{
-  // TODO
   dbg := cc.getDBG();
   if(!cc.expectToken(TokenType.TSTR)) return 0;
   // ===
@@ -2112,7 +2397,6 @@ AnyTypeParser.getName := (cc: *CC) -> string{
   return "any";
 }
 AnyTypeParser.parse := (cc: *CC) -> *Type{
-  // TODO
   dbg := cc.getDBG();
   if(!cc.expectToken(TokenType.TANY)) return 0;
   // ===
@@ -2154,7 +2438,7 @@ VoidType.getName := (cc: *CC) -> string{
 VoidType.typegen := (cc: *CC) -> *any{
   return LLVMVoidTypeInContext(cc.context);
 }
-VoidType.cast := (cc: *CC, target: *Type) -> *Type { return 0; }
+VoidType.cast := (cc: *CC, target: *Type) -> bool{ return 0; }
 VoidType.assignCheck := (cc: *CC, target: *Type) -> *Type { return 0; }
 VoidType.preOpType := (cc: *CC, op: string) -> *Type { return 0; }
 VoidType.postOpType := (cc: *CC, op: string) -> *Type { return 0; }
@@ -2201,7 +2485,8 @@ FloatInstance.getValue := (cc: *CC) -> *any{
   return LLVMBuildLoad(cc.builder, self.alloc, "fval");
 }
 FloatInstance.assignGen := (cc: *CC, val: *Value) -> *Value{
-  // TODO
+  LLVMBuildStore(cc.builder, val.getValue(cc), self.alloc);
+  return 0;
 }
 FloatInstance.preOpGen := (cc: *CC, op: string) -> *Value{return 0;}
 FloatInstance.postOpGen := (cc: *CC, op: string) -> *Value{return 0;}
@@ -2209,19 +2494,12 @@ FloatInstance.binOpGen := (cc: *CC, op: string, rhs: *Value) -> *Value{return 0;
 FloatInstance.callGen := (cc: *CC, args: *LinkedNode) -> *Value{return 0;}
 FloatInstance.memberGen := (cc: *CC, name: string) -> *Value{return 0;}
 FloatInstance.castGen := (cc: *CC, target: *Type) -> *Value{
-  return 0; // TODO
+  return 0;
 }
 
 FloatType.getName := (cc: *CC) -> string{
   if(self.size == 32) return "f32";
   return "f64";
-  /*
-  // TODO 
-  if(self.size == 64) return "f64";
-
-  self.dbg.printAndExit();
-  return 0;
-  */
 }
 FloatType.typegen := (cc: *CC) -> *any{
   if(self.size == 32) return LLVMFloatTypeInContext(cc.context);
@@ -2237,7 +2515,7 @@ FloatType.getInstance := (cc: *CC, val: *any, name: string) -> *Value{
   v = fi;
   return v;
 }
-FloatType.cast := (cc: *CC, target: *Type) -> *Type{
+FloatType.cast := (cc: *CC, target: *Type) -> bool{
   // TODO
 }
 FloatType.assignCheck := (cc: *CC, t: *Type) -> bool{
@@ -2279,6 +2557,7 @@ FloatTypeParser.parse := (cc: *CC) -> *Type{
 
 AnonArg: struct{
   type: *Type;
+  isvararg: bool;
 }
 AnonArg.getName := (cc: *CC) -> string{
   return "anonArg";
@@ -2290,13 +2569,15 @@ AnonArg.codegen := (cc: *CC, val: *any) -> void{
 AnonArg.typeresolve := (cc: *CC) -> *Type{
   return self.type;
 }
+AnonArg.isVarArg := (cc: *CC) -> bool{
+  return self.isvararg;
+}
 
 FTypeParser: struct{}
 FTypeParser.getName := (cc: *CC) -> string{
   return "function type";
 }
 FTypeParser.parse := (cc: *CC) -> *Type{
-  // TODO varargs
   dbg := cc.getDBG();
   if(!cc.expectToken(TokenType.TLPAR)) return 0;
   whilecond := !cc.expectToken(TokenType.TRPAR);
@@ -2305,10 +2586,12 @@ FTypeParser.parse := (cc: *CC) -> *Type{
   last:  *LinkedNode = 0;
 
   while(whilecond){
+    isvararg := cc.expectToken(TokenType.T3DOT);
     t := cc.expectType();
     if(!t) return 0;
     aa: *AnonArg = malloc(sizeof AnonArg);
     aa.type = t;
+    aa.isvararg = isvararg;
 
     a: *Arg = malloc(sizeof Arg);
     a = aa;
@@ -2464,7 +2747,7 @@ CC.expectConcept := () -> *Concept{
     p: *CParser = cp.p;
     out := p.parse(self);
     if(out){
-      // TODO free(err);
+      free(err);
       return out;
     }
     e := self.lastErr;
@@ -2484,7 +2767,7 @@ CC.parse := () -> *LinkedNode{
   while(!self.isEOF()){
     c := self.expectConcept();
     if(!c){
-      // TODO show error
+      printf("ERROR:\n\n%s\n", self.lastErr);
       exit(1);
     }
     c.register();
@@ -2562,13 +2845,12 @@ main := (argc: s32, argv: *string) -> int{
   {
     tmpB: *u8 = *buf;
     tmpB = tmpB + newLen +1;
-    *tmpB = 0; // TODO do I need the *?
+    *tmpB = 0;
   }
 
   cc :=  get_def_cc();
   cc.buf = buf;
 
-  // cc.parse(); // TODO seperate this state?
   cc.compile();
 
   printf("%s\n", LLVMPrintModuleToString(cc.module));
