@@ -1,6 +1,6 @@
 // TODO Add & to every pre for all types
 // TODO strcat optimize free
-// TODO getValue is flawed for unnamed values (ex a+b) I can move the operations to types and have a general value
+// TODO getValue is flawed for unnamed values (ex a+b)
 // == Helper & LLVM functions
 
 malloc := (size: u64) -> *any;
@@ -387,6 +387,76 @@ CC.expectNum := () -> *int{
     return ans;
   }
   return 0;
+}
+
+resolve_escape := (c: u8) -> u8{
+  if(c == 'n'){// \n
+    return '\n';
+  } else if(c == 't'){
+    return 9;
+  } else { // handle \' and \" and \\
+    return c;
+  }
+}
+
+CC.expectChar := () -> *u8{
+  if(*(buf+offset) == '\''){
+    // set error
+    self.setError("Empty character literal");
+    return 0;
+  }
+  ans : *u8 = malloc(sizeof u8);
+  *ans = *(self.buf+self.offset);
+  self.offset = self.offset + 1;
+  if(*ans == '\\'){
+    *ans = resolve_escape(*(self.buf+self.offset));
+    self.offset = self.offset + 1;
+  }
+  return ans;
+}
+
+CC.expectString := () -> string{
+  end := self.offset+1;
+  buf := self.buf;
+  while(1){
+    if(*(buf+end) == '"'){ // "
+      return end + 1;
+    }
+    if(*(buf+end) == '\n'){ // newline
+      self.setError("Unclosed string literal");
+      return 0;
+    }
+
+    if(*(buf+end) == '\\'){ // \ 
+      end = end + 1; // skip the next one, whatever it might be.
+    }
+    end = end + 1;
+  }
+
+  ind := 0;
+  offset := self.offset + 1; // ignore "
+  self.offset = end;
+  end = end - 1; // ignore "
+  size := end - offset;
+  // out : *u8 = malloc(2 * (size+4)); // not sure why we need +4 here.
+  out :*u8 = malloc(sizeof u8*(size+1));
+
+  while(end - offset){
+    *(out + ind) = *(buf + offset);
+
+    if(*(buf + offset) == '\\'){
+      // handle special cases
+      offset = offset + 1;
+      *(out + ind) = resolve_escape(*(buf+offset));
+    }
+
+    offset = offset + 1;
+    ind = ind + 1;
+  }
+
+  *(out + ind) = 0;
+
+  return out;
 }
 
 tokenkeywordtostring := (t: *TokenType) -> string{
@@ -919,52 +989,134 @@ CC.expectOp := () -> string{
   return ans;
 }
 
-CC.parseVal := () -> *Value{
-  // parse const values or variables or members ONLY
+Expr: struct{
+  // Only one is set
+  pre: string;
+  post: string;
+  bin: string;
+  member: *Expr;
+  isCall: bool;
+  firstArg: *LinkedNode; // of Expr
+  sizeOf: *Type;
 
-  val: *Value;
+  // Only one is set
+  id: string;
+  number: int;
+  char: u8;
+  str: string;
+  rhs: *Expr; // true only if bin has value
+
+  // prec
+}
+
+newExpr := () -> *Expr{
+  e: *Expr = malloc(sizeof Expr);
+  e.pre = 0;
+  e.post = 0;
+  e.bin = 0;
+  e.member = 0;
+  e.isCall = 0;
+  e.frstArg = 0;
+  e.id = 0;
+  e.number = 0;
+  e.char = 0;
+  e.str = 0;
+  e.rhs = 0;
+  e.sizeOf = 0;
+}
+
+CC.parseVal := () -> *Expr{
+
+  exp: *Expr = newExpr();
 
   if(*(self.buf+self.offset) == '"'){ // "
-    // TODO const str
+    // const str
+    self.str := self.expectString();
+    if(!self.str) return 0;
+  } else if(*(self.buf+self.offset) == '\''){
+    // const char
+    c := self.expectChar();
+    if(!c) return 0;
+    self.char = *c;
+  } else if(is_numeric(*(self.buf+self.offset))){
+    // number
+    tmp := self.expectNum();
+    if(!tmp) return 0;
+    self.number = *tmp;
+  } else if(is_alpha(*(self.buf+self.offset))){
+    // variable
+    // sizeof
+    exp.id = self.expectId();
+    if(exp.id == 0){
+      if(self.expectToken(TokenType.TSIZE)){
+        exp.sizeOf = self.expectType();
+        if(!exp.sizeOf) return 0;
+      }
+    }
+  } else return 0;
+
+  self.skipWS();
+  last := exp;
+  while(*(self.buf+self.offset) == '.'){
+    // members
+    self.skipWS();
+    m := newExpr();
+    last.member = m;
+    m.id = self.expectId();
+    last = m;
   }
 
-  if(*(self.buf+self.offset) == '\''){
-    // TODO const char
+  if(self.expectToken(TokenType.TINSTANCEOF)){
+    // TODO instanceof
+  } else if(self.expectToken(TokenType.TLPAR)){
+    // It's a call
+    // TODO call
   }
 
-  if(is_numeric(*(self.buf+self.offset))){
-    // TODO number
-  }
-  if(is_alpha(*(self.buf+self.offset))){
-    // TODO variable
-  }
-
-  if(!val) return 0;
-
-  // TODO members
+  return exp;
 }
 
 CC.parseExpr := () -> *Expr{
-  pre := self.expectOp(); // TODO use this
 
-  val : *Value;
-  // TODO parenthesis ?
-  // or value
-  val = self.parseVal();
+  exp : *Expr;
 
-  // TODO member
-  // TODO post op
-  // TODO bin
-  // TODO call
+  pre := self.expectOp();
 
-  // TODO sizeof
+  if(self.expectToken(TokenType.TLPAR)){
+    // parenthesis ?
+    exp = self.parseExpr();
+    if(!self.expectToken(TokenType.TRPAR)) return 0;
+  } else {
+    // or value
+    exp = self.parseVal();
+    if(!exp) return 0;
+  }
 
-  // TODO instanceof
+  exp.pre = pre;
+
+  post := self.expectOp(); // This could be binary as well
+
+  if(post){
+    rhs := self.parseExpr();
+    if(!rhs){
+      // postop
+      exp.post = post;
+    } else {
+      // binop
+      exp.bin = post;
+      exp.rhs = rhs;
+    }
+  }
+
+  // TODO do I want to check for member or call here?
+  return exp;
 }
 
 CC.expectExpression := () -> *Value{
   checkPoint := self.storeLexer();
   // Expressions
+  exp := self.parseExpr();
+  if(exp) return exp;
 
   err := ""; // TODO
   self.setError(err);
