@@ -400,7 +400,7 @@ resolve_escape := (c: u8) -> u8{
 }
 
 CC.expectChar := () -> *u8{
-  if(*(buf+offset) == '\''){
+  if(*(self.buf+self.offset) == '\''){
     // set error
     self.setError("Empty character literal");
     return 0;
@@ -945,6 +945,7 @@ CC.registerSP := (sp: *SParser) -> void{
   return;
 }
 
+// TODO there is a name collision, have I used this anywhere?
 Expr: struct{
   v: *Value;
   prev: int;
@@ -969,6 +970,17 @@ op_prec := (c: u8) -> int{
   return 0;
 }
 
+compound_op_prec := (s: *u8) -> int{
+  ans := op_prec(*s);
+  if(!ans) return 0;
+  t := s+1;
+  while(*t){
+    ans = ans * op_prec(*t);
+    t = t + 1;
+  }
+  return ans;
+}
+
 CC.expectOp := () -> string{
   self.skipWS();
   offset := self.offset;
@@ -990,39 +1002,59 @@ CC.expectOp := () -> string{
 }
 
 Expr: struct{
-  // Only one is set
-  pre: string;
-  post: string;
-  bin: string;
-  member: *Expr;
-  isCall: bool;
-  firstArg: *LinkedNode; // of Expr
+  pre: string; // nullable
+
+  // only one is set
+  inner: *Expr;
+  str: string;
+  char: u8;
+  number: int;
+  id: string;
   sizeOf: *Type;
 
-  // Only one is set
-  id: string;
-  number: int;
-  char: u8;
-  str: string;
-  rhs: *Expr; // true only if bin has value
+  // ==
+  member: *Expr;
 
-  // prec
+  // only one is set
+  instanceOf: *Type;
+  isCall: bool;
+
+  // if isCall is set...
+  firstArg: *LinkedNode; // of Value
+
+  // Only one is set
+  post: string;
+  bin: string;
+
+  // if bin is set...
+  rhs: *Expr;
+  prec : int;
 }
 
 newExpr := () -> *Expr{
   e: *Expr = malloc(sizeof Expr);
+
   e.pre = 0;
+
+  e.inner = 0;
+  e.str = 0;
+  e.char = 0;
+  e.number = 0;
+  e.id = 0;
+  e.sizeOf = 0;
+
+  e.member = 0;
+
+  e.instanceOf = 0;
+  e.isCall = 0;
+
+  e.firstArg = 0;
+
   e.post = 0;
   e.bin = 0;
-  e.member = 0;
-  e.isCall = 0;
-  e.frstArg = 0;
-  e.id = 0;
-  e.number = 0;
-  e.char = 0;
-  e.str = 0;
+
   e.rhs = 0;
-  e.sizeOf = 0;
+  e.prec = 0;
 }
 
 CC.parseVal := () -> *Expr{
@@ -1031,27 +1063,30 @@ CC.parseVal := () -> *Expr{
 
   if(*(self.buf+self.offset) == '"'){ // "
     // const str
-    self.str := self.expectString();
-    if(!self.str) return 0;
+    exp.str = self.expectString();
+    if(!exp.str) return 0;
   } else if(*(self.buf+self.offset) == '\''){
     // const char
     c := self.expectChar();
     if(!c) return 0;
-    self.char = *c;
+    exp.char = *c;
   } else if(is_numeric(*(self.buf+self.offset))){
     // number
     tmp := self.expectNum();
     if(!tmp) return 0;
-    self.number = *tmp;
+    exp.number = *tmp;
   } else if(is_alpha(*(self.buf+self.offset))){
     // variable
     // sizeof
     exp.id = self.expectId();
-    if(exp.id == 0){
+    if(!exp.id){
       if(self.expectToken(TokenType.TSIZE)){
         exp.sizeOf = self.expectType();
         if(!exp.sizeOf) return 0;
+        return exp;
       }
+      self.setError("no value was provided");
+      return 0;
     }
   } else return 0;
 
@@ -1067,10 +1102,33 @@ CC.parseVal := () -> *Expr{
   }
 
   if(self.expectToken(TokenType.TINSTANCEOF)){
-    // TODO instanceof
+    // instanceof
+    exp.instanceOf = self.expectToken();
+    if(!exp.instanceOf) return 0;
   } else if(self.expectToken(TokenType.TLPAR)){
     // It's a call
-    // TODO call
+    whilecond := !self.expectToken(TokenType.TRPAR);
+    first: *LinkedNode = 0;
+    pre: *LinkedNode = 0;
+    while(whilecond){
+
+      tmp := self.expectExpression();
+
+      l : *LinkedNode = malloc(sizeof LinkedNode);
+      l.p = tmp;
+      l.next = 0;
+
+      if(!first) first = l;
+      if(pre) pre.next = l;
+      pre = l;
+
+      if(!self.expectToken(TokenType.TCOMMA))
+        if(!self.expectToken(TokenType.TRPAR))
+          return 0;
+        else whilecond = 0;
+    }
+    exp.isCall = 1;
+    exp.firstArg = first;
   }
 
   return exp;
@@ -1084,7 +1142,10 @@ CC.parseExpr := () -> *Expr{
 
   if(self.expectToken(TokenType.TLPAR)){
     // parenthesis ?
-    exp = self.parseExpr();
+    exp = newExpr();
+    tmp := self.parseExpr();
+    if(!tmp) return 0;
+    exp.inner = tmp;
     if(!self.expectToken(TokenType.TRPAR)) return 0;
   } else {
     // or value
@@ -1103,23 +1164,69 @@ CC.parseExpr := () -> *Expr{
       exp.post = post;
     } else {
       // binop
+      prec := compound_op_prec(post);
+
+      exp.prec = prec;
       exp.bin = post;
       exp.rhs = rhs;
+
+      if(rhs.bin){
+        if(rhs.prec < prec){
+
+          ans := newExpr();
+
+          ans.inner = exp;
+          ans.bin = rhs.bin;
+          ans.rhs = rhs.rhs;
+
+          rhs.rhs = 0;
+          rhs.bin = 0;
+
+          ans.prec = rhs.prec;
+
+          return ans;
+        }
+        exp.prec = rhs.prec;
+      }
     }
   }
 
-  // TODO do I want to check for member or call here?
   return exp;
+}
+
+CC.expToVal := (e: *Expr) -> *Value{
+  v: *Value;
+  // Base
+  // inner
+  if(e.inner) v = self.expToVal(e.inner);
+  // TODO str
+  // TODO char
+  // TODO number
+  // TODO id
+  // TODO sizeof
+
+  // TODO member
+
+  // TODO isCall
+
+  // TODO instanceOf
+
+  // TODO pre
+
+  // TODO post
+  // TODO bin
+  return v;
 }
 
 CC.expectExpression := () -> *Value{
   checkPoint := self.storeLexer();
   // Expressions
   exp := self.parseExpr();
-  if(exp) return exp;
+  if(exp){
+    return self.expToVal(exp);
+  }
 
-  err := ""; // TODO
-  self.setError(err);
+  self.setError(strcat("Couldn't parse expression, ", self.lastErr));
   self.restoreLexer(checkPoint);
   return 0;
 }
