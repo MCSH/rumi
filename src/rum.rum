@@ -2675,6 +2675,7 @@ get_alloca := (e: *Expression, cc: *CC) -> *any{
     name := cc_resolve_named(cc, e.p1);
     if(name == 0){
       printf("Variable not found %s\n", e.p1);
+      printDBGandExit(e.dbg);
     }
     vp : *VariablePayload = name.payload;
     return vp.alloc;
@@ -2951,6 +2952,7 @@ exprgen := (e: *Expression, cc: *CC) -> *any{
     name := cc_resolve_named(cc, e.p1);
     if(name == 0){
       printf("Variable not found %s\n", e.p1);
+      printDBGandExit(e.dbg);
     }
     vp : *VariablePayload = name.payload;
     return LLVMBuildLoad(cc.builder, vp.alloc, e.p1);
