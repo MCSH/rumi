@@ -1,6 +1,7 @@
 // TODO Add & to every pre for all types
 // TODO strcat optimize free
 // TODO getValue is flawed for unnamed values (ex a+b)
+// TODO tidy up Type definitions, remove opType etc
 // == Helper & LLVM functions
 
 malloc := (size: u64) -> *any;
