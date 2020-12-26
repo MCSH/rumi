@@ -1,0 +1,2 @@
+#define Rumi_VERSION_MAJOR @Rumi_VERSION_MAJOR@
+#define Rumi_VERSION_MINOR @Rumi_VERSION_MINOR@
