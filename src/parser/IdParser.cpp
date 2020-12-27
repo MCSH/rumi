@@ -2,7 +2,7 @@
 #include "IdParser.h"
 
 Token *IdParser::scheme(CC *cc, Source *s, int pos){
-  if(kp.scheme(cc, s, pos)) return 0;
+  if(kp.parse(cc, s, pos)) return 0;
   pos = skipws(&s->str, pos);
   if(pos == -1) return 0;
   int end = pos;

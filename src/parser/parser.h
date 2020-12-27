@@ -20,6 +20,7 @@ public:
 class ParseRule {
 public:
   virtual Token *scheme(CC *cc, Source *s, int pos) = 0;
+  Token *parse(CC *cc, Source *s, int pos);
 };
 
 class Parser {

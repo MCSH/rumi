@@ -30,6 +30,6 @@ std::string KeywordToken::desc(){
 
 /*
 Token *TwoKeywordParser::scheme(CC *cc, Source *s, int pos){
-  return kps.scheme(cc, s, pos) >> kps;
+  return kps.parse(cc, s, pos) >> kps;
 }
 */

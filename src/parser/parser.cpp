@@ -72,7 +72,7 @@ Token* Parser::parseTop(Source *s, int pos){
   // TODO
   Token *ans = 0;
   for(auto r: topRules){
-    ans = r->scheme(cc, s, pos);
+    ans = r->parse(cc, s, pos);
     if(ans) return ans;
   }
   return 0;
@@ -86,7 +86,7 @@ std::ostream &operator<<(std::ostream &os, Token &s) {
 
 Token *operator>>(Token *t, ParseRule &p2){
   if(!t) return t;
-  Token * ans = p2.scheme(t->cc, t->s, t->epos + 1);
+  Token * ans = p2.parse(t->cc, t->s, t->epos + 1);
   if(!ans) return ans;
   return new TupleToken(t, ans);
 }
@@ -106,4 +106,9 @@ TupleToken::~TupleToken(){
 
 std::string TupleToken::desc(){
   return t1->desc() + " >> " + t2->desc();
+}
+
+Token *ParseRule::parse(CC *cc, Source *s, int pos){
+  // TODO memoization
+  return this->scheme(cc, s, pos);
 }

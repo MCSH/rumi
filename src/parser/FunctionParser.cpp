@@ -13,7 +13,7 @@ std::string FunctionToken::desc(){
 
 Token *FunctionParser::scheme(CC *cc, Source *s, int pos){
   // TODO
-  Token *id = ip.scheme(cc, s, pos);
+  Token *id = ip.parse(cc, s, pos);
   // TODO id >> sp >> sp;
   //return -1;
   return id >> csp >> esp >> lpsp >> rpsp;
