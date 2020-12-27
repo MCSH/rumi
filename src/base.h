@@ -5,6 +5,8 @@
 #include <vector>
 #include "parser/parser.h"
 
+#define endl std::endl;
+
 void printInfo();
 
 class Source {
