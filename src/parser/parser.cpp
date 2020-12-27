@@ -9,6 +9,7 @@ void Parser::init(CompileContext *cc){
   this->registerTopRule(new KeywordParser());
   this->registerTopRule(new NumberParser());
   this->registerTopRule(new IdParser());
+  this->registerTopRule(new SymbolParser());
 }
 
 Token* KeywordParser::scheme(CC *cc, Source *s, int pos){
@@ -189,4 +190,34 @@ IdToken::IdToken(CC *cc, Source *s, int spos, int epos, std::string val){
 
 std::string IdToken::desc(){
   return "Id<" + id + ">";
+}
+
+Token *SymbolParser::scheme(CC *cc, Source *s, int pos){
+  pos = skipws(&s->str, pos);
+  if(pos == -1) return 0;
+  char c = s->str.at(pos);
+  int epos = pos + 1;
+  Symbol sb;
+  switch(c){
+  case '+':
+    sb = s_plus;
+    break;
+  case ';':
+    sb = s_semicolon;
+    break;
+  default:
+    return 0;
+  }
+  return new SymbolToken(sb, pos, epos, cc, s);
+}
+
+std::string SymbolToken::desc(){
+  switch(sb){
+  case s_plus:
+    return "<Symbol +>";
+  case s_semicolon:
+    return "<Symbol ;>";
+  default:
+    return "<Unprogrammed Symbol>";
+  }
 }

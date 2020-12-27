@@ -25,6 +25,11 @@ enum Keyword {
   k_while,
 };
 
+enum Symbol{
+  s_plus,
+  s_semicolon,
+};
+
 class TupleToken: public Token{
 public:
   Token *t1, *t2;
@@ -45,6 +50,14 @@ public:
   Keyword kw;
   KeywordToken(Keyword kw, int spos, int epos, CC* cc, Source *s)
     : kw(kw) {this->spos = spos; this->epos = epos; this->cc = cc; this->s =s;}
+  virtual std::string desc() override;
+};
+
+class SymbolToken : public Token {
+public:
+  Symbol sb;
+  SymbolToken(Symbol sb, int spos, int epos, CC* cc, Source *s)
+    : sb(sb) {this->spos = spos; this->epos = epos; this->cc = cc; this->s =s;}
   virtual std::string desc() override;
 };
 
@@ -100,6 +113,11 @@ public:
   virtual Token *scheme(CC *cc, Source *s, int pos);
 private:
   KeywordParser kp;
+};
+
+class SymbolParser: public ParseRule{
+public:
+  virtual Token *scheme(CC *cc, Source *s, int pos);
 };
 
 int skipws(std::string *w, int pos);
