@@ -2,7 +2,6 @@
 #include "../CC.h"
 #include "parser.h"
 
-
 class KeywordToken : public Token {
 public:
   Keyword kw;

@@ -1,6 +1,6 @@
 #include "../base.h"
 #include "KeywordParser.h"
-
+#include "Keywords.h"
 
 Token* KeywordParser::scheme(CC *cc, Source *s, int pos){
   // TODO

@@ -14,7 +14,7 @@ Token *NumberParser::scheme(CC *cc, Source *s, int pos){
     n = s->str.at(p);
   }
 
-  auto ans = new NumberToken(cc, s, pos, p, val);
+  auto ans = new NumberToken(cc, s, pos, p-1, val);
   return ans;
 }
 

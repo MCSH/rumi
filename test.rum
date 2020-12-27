@@ -1,1 +1,3 @@
-return return 1 if while return return name 1 + ; 
+main := (){
+  return 0;
+}

@@ -5,10 +5,12 @@
 #include "IdParser.h"
 #include "NumberParser.h"
 #include "SymbolParser.h"
+#include "FunctionParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
   this->cc = cc;
+  this->registerTopRule(new FunctionParser());
   this->registerTopRule(new KeywordParser());
   this->registerTopRule(new NumberParser());
   this->registerTopRule(new IdParser());
@@ -84,7 +86,7 @@ std::ostream &operator<<(std::ostream &os, Token &s) {
 
 Token *operator>>(Token *t, ParseRule &p2){
   if(!t) return t;
-  Token * ans = p2.scheme(t->cc, t->s, t->epos);
+  Token * ans = p2.scheme(t->cc, t->s, t->epos + 1);
   if(!ans) return ans;
   return new TupleToken(t, ans);
 }

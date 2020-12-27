@@ -10,6 +10,11 @@ public:
 };
 
 class SymbolParser: public ParseRule{
+private:
+  bool sb_set;
+  Symbol sb;
 public:
+  SymbolParser():sb_set(false){}
+  SymbolParser(Symbol sb):sb(sb), sb_set(true){}
   virtual Token *scheme(CC *cc, Source *s, int pos);
 };

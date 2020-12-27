@@ -5,13 +5,5 @@ class CompileContext;
 using CC = CompileContext;
 class Source;
 
-enum Keyword: short{
-  k_ret,
-  k_if,
-  k_while,
-};
-
-enum Symbol: short{
-  s_plus,
-  s_semicolon,
-};
+enum Keyword: short;
+enum Symbol : short;
