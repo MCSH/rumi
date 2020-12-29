@@ -47,6 +47,7 @@ public:
 };
 
 int skipws(std::string *w, int pos);
+int skipwscomment(std::string *w, int pos);
 int nextws(std::string *w, int pos);
 
 Token *operator>>(Token *p1, ParseRule &p2);

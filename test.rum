@@ -1,6 +1,10 @@
 tval := 1;
 main := (){
   a := 1;
+  // line
+  // after liune
+  a := //
+  2;
   return;
   while(a) if(a) return 1;
   if(a){

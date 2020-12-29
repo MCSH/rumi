@@ -68,6 +68,26 @@ int skipws(std::string *w, int pos){
   return pos;
 }
 
+int skipwscomment(std::string *w, int pos){
+  pos = skipws(w, pos);
+  if(pos == -1) return -1;
+  char c = w->at(pos);
+  int len = w->size();
+  while(c == '/'){
+    c = w->at(pos+1);
+    if(c == '/'){
+      // line comments
+      while(w->at(pos) != '\n' && pos < len) pos++;
+      if(pos == len) return -1;
+      pos = skipws(w, pos);
+      c = w->at(pos);
+    }
+    // TODO block comments
+  }
+  return pos;
+}
+
+
 int nextws(std::string *w, int pos){
   pos --;
   int len = w->size();
@@ -185,6 +205,8 @@ std::string TupleToken::desc(){
 
 Token *ParseRule::parse(CC *cc, Source *s, int pos){
   // TODO memoization
+  pos = skipwscomment(&s->str, pos);
+  if(pos == -1) return 0;
   return this->scheme(cc, s, pos);
 }
 
