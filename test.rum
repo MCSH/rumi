@@ -3,6 +3,8 @@ main := (){
   a := 1;
   return;
   while(a) if(a) return 1;
+  if(a){
+  }
   if(a) return 0;
   else return b;
   return a;

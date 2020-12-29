@@ -3,6 +3,7 @@
 
 #include "DefineParser.h"
 #include "IfParser.h"
+#include "SBlockParser.h"
 #include "WhileParser.h"
 #include "KeywordParser.h"
 #include "IdParser.h"
@@ -25,6 +26,7 @@ void Parser::init(CompileContext *cc){
   this->registerStatementRule(new ReturnParser());
   this->registerStatementRule(new IfParser());
   this->registerStatementRule(new WhileParser());
+  this->registerStatementRule(new SBlockParser());
   /*
   this->registerTopRule(new FunctionParser());
   this->registerTopRule(new KeywordParser());
