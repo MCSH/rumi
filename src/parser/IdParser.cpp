@@ -17,7 +17,7 @@ Token *IdParser::scheme(CC *cc, Source *s, int pos){
     c = s->str.at(end);
   } while(isalphanumerical(c));
   std::string w = s->str.substr(pos, end - pos);
-  return new IdToken(cc, s, pos, end, w);
+  return new IdToken(cc, s, pos, end - 1, w);
 }
 
 IdToken::IdToken(CC *cc, Source *s, int spos, int epos, std::string val){

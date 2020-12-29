@@ -11,8 +11,6 @@ std::string FunctionToken::desc(){
   return "<Function>";
 }
 
-#include <iostream>
-
 Token *FunctionParser::scheme(CC *cc, Source *s, int pos){
   auto sig =  lpsp.parse(cc, s, pos) >> rpsp;
   auto a = sig >> lbsp;

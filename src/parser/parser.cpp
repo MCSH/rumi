@@ -5,6 +5,7 @@
 #include "KeywordParser.h"
 #include "IdParser.h"
 #include "NumberValueParser.h"
+#include "VariableValueParser.h"
 #include "SymbolParser.h"
 #include "FunctionParser.h"
 #include "ReturnParser.h"
@@ -15,6 +16,7 @@ void Parser::init(CompileContext *cc){
   this->registerTopRule(new DefineParser());
 
   this->registerValueRule(new NumberValueParser());
+  this->registerValueRule(new VariableValueParser());
   this->registerValueRule(new FunctionParser());
 
   this->registerStatementRule(new DefineParser());
