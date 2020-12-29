@@ -11,6 +11,11 @@ public:
 };
 
 class KeywordParser : public ParseRule {
+  bool has_match;
+  Keyword match;
+  KeywordToken *findkey(CC *cc, Source *s, int pos);
 public:
   virtual Token *scheme(CC *cc, Source *s, int pos);
+  KeywordParser(Keyword );
+  KeywordParser();
 };

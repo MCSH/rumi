@@ -5,6 +5,7 @@
 #include "SymbolParser.h"
 #include "parser.h"
 #include "Symbols.h"
+#include "StatementParser.h"
 
 class FunctionToken: public Token{
  public:
@@ -17,6 +18,7 @@ class FunctionParser: public ParseRule{
   virtual Token *scheme(CC *cc, Source *s, int pos);
   FunctionParser();
 private:
-  SymbolParser csp, esp, lpsp, rpsp;
-  IdParser ip;
+  SymbolParser lpsp, rpsp;
+  SymbolParser lbsp, rbsp;
+  StatementParser sp;
 };

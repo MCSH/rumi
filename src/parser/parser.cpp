@@ -1,20 +1,30 @@
 #include "parser.h"
 #include "../base.h"
 
+#include "DefineParser.h"
 #include "KeywordParser.h"
 #include "IdParser.h"
-#include "NumberParser.h"
+#include "NumberValueParser.h"
 #include "SymbolParser.h"
 #include "FunctionParser.h"
+#include "ReturnParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
   this->cc = cc;
+  this->registerTopRule(new DefineParser());
+
+  this->registerValueRule(new NumberValueParser());
+  this->registerValueRule(new FunctionParser());
+
+  this->registerStatementRule(new ReturnParser());
+  /*
   this->registerTopRule(new FunctionParser());
   this->registerTopRule(new KeywordParser());
   this->registerTopRule(new NumberParser());
   this->registerTopRule(new IdParser());
   this->registerTopRule(new SymbolParser());
+  */
 }
 
 bool isalpha(char c){
@@ -68,10 +78,52 @@ void Parser::registerTopRule(ParseRule *p){
   topRules.push_back(p);
 }
 
+void Parser::registerTypeRule(ParseRule *p){
+  typeRules.push_back(p);
+}
+
+void Parser::registerValueRule(ParseRule *p){
+  valueRules.push_back(p);
+}
+
+void Parser::registerStatementRule(ParseRule *p){
+  statementRules.push_back(p);
+}
+
 Token* Parser::parseTop(Source *s, int pos){
   // TODO
   Token *ans = 0;
   for(auto r: topRules){
+    ans = r->parse(cc, s, pos);
+    if(ans) return ans;
+  }
+  return 0;
+}
+
+Token* Parser::parseType(Source *s, int pos){
+  // TODO
+  Token *ans = 0;
+  for(auto r: typeRules){
+    ans = r->parse(cc, s, pos);
+    if(ans) return ans;
+  }
+  return 0;
+}
+
+Token* Parser::parseValue(Source *s, int pos){
+  // TODO
+  Token *ans = 0;
+  for(auto r: valueRules){
+    ans = r->parse(cc, s, pos);
+    if(ans) return ans;
+  }
+  return 0;
+}
+
+Token* Parser::parseStatement(Source *s, int pos){
+  // TODO
+  Token *ans = 0;
+  for(auto r: statementRules){
     ans = r->parse(cc, s, pos);
     if(ans) return ans;
   }
