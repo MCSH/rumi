@@ -17,7 +17,6 @@ Token *FunctionParser::scheme(CC *cc, Source *s, int pos){
   auto sig =  lpsp.parse(cc, s, pos) >> rpsp;
   auto a = sig >> lbsp;
   auto tmp = a >> sp;
-  std::cout << "once" << std::endl;
   while(tmp){
     a = tmp;
     tmp = a >> sp;

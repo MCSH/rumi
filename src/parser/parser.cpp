@@ -17,6 +17,7 @@ void Parser::init(CompileContext *cc){
   this->registerValueRule(new NumberValueParser());
   this->registerValueRule(new FunctionParser());
 
+  this->registerStatementRule(new DefineParser());
   this->registerStatementRule(new ReturnParser());
   /*
   this->registerTopRule(new FunctionParser());
