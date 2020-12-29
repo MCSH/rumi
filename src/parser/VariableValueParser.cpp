@@ -4,11 +4,5 @@
 #include <iostream>
 
 Token *VariableValueParser::scheme(CC *cc, Source *s, int pos){
-  auto a = vp.parse(cc, s, pos);
-  return a >> sp;
+  return vp.parse(cc, s, pos);
 }
-
-
-VariableValueParser::VariableValueParser()
-  : sp(s_semicolon)
-{}

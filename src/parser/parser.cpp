@@ -2,9 +2,10 @@
 #include "../base.h"
 
 #include "DefineParser.h"
+#include "IfParser.h"
 #include "KeywordParser.h"
 #include "IdParser.h"
-#include "NumberValueParser.h"
+#include "NumberParser.h"
 #include "VariableValueParser.h"
 #include "SymbolParser.h"
 #include "FunctionParser.h"
@@ -15,12 +16,13 @@ void Parser::init(CompileContext *cc){
   this->cc = cc;
   this->registerTopRule(new DefineParser());
 
-  this->registerValueRule(new NumberValueParser());
-  this->registerValueRule(new VariableValueParser());
+  this->registerExpressionRule(new NumberParser());
+  this->registerExpressionRule(new VariableValueParser());
   this->registerValueRule(new FunctionParser());
 
   this->registerStatementRule(new DefineParser());
   this->registerStatementRule(new ReturnParser());
+  this->registerStatementRule(new IfParser());
   /*
   this->registerTopRule(new FunctionParser());
   this->registerTopRule(new KeywordParser());
@@ -85,6 +87,10 @@ void Parser::registerTypeRule(ParseRule *p){
   typeRules.push_back(p);
 }
 
+void Parser::registerExpressionRule(ParseRule *p){
+  expressionRules.push_back(p);
+}
+
 void Parser::registerValueRule(ParseRule *p){
   valueRules.push_back(p);
 }
@@ -107,6 +113,16 @@ Token* Parser::parseType(Source *s, int pos){
   // TODO
   Token *ans = 0;
   for(auto r: typeRules){
+    ans = r->parse(cc, s, pos);
+    if(ans) return ans;
+  }
+  return 0;
+}
+
+Token* Parser::parseExpression(Source *s, int pos){
+  // TODO
+  Token *ans = 0;
+  for(auto r: expressionRules){
     ans = r->parse(cc, s, pos);
     if(ans) return ans;
   }
@@ -166,4 +182,19 @@ std::string TupleToken::desc(){
 Token *ParseRule::parse(CC *cc, Source *s, int pos){
   // TODO memoization
   return this->scheme(cc, s, pos);
+}
+
+int extractNextAlphaNumerical(std::string *str, int pos){
+  int end = pos;
+  int len = str->size();
+  char c = str->at(pos);
+  if(!isalpha(c)) return 0;
+  do{
+    end++;
+    if(end >= len){
+      break;
+    }
+    c = str->at(end);
+  } while(isalphanumerical(c));
+  return end;
 }

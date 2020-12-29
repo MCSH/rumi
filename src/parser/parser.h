@@ -27,6 +27,7 @@ class Parser {
 private:
   std::vector<ParseRule *> topRules;
   std::vector<ParseRule *> typeRules;
+  std::vector<ParseRule *> expressionRules;
   std::vector<ParseRule *> valueRules;
   std::vector<ParseRule *> statementRules;
   CC *cc;
@@ -35,10 +36,12 @@ public:
   void init(CompileContext *cc);
   void registerTopRule(ParseRule *p);
   void registerTypeRule(ParseRule *p);
+  void registerExpressionRule(ParseRule *p);
   void registerValueRule(ParseRule *p);
   void registerStatementRule(ParseRule *p);
   Token *parseTop(Source *s, int pos = 0);
   Token *parseType(Source *s, int pos = 0);
+  Token *parseExpression(Source *s, int pos = 0);
   Token *parseValue(Source *s, int pos = 0);
   Token *parseStatement(Source *s, int pos = 0);
 };
@@ -51,3 +54,4 @@ Token *operator>>(Token *p1, ParseRule &p2);
 bool isalpha(char c);
 bool isnumerical(char c);
 bool isalphanumerical(char c);
+int extractNextAlphaNumerical(std::string *str, int pos); // Returns the end of next alpha numerical that starts from pos

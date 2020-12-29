@@ -1,6 +1,9 @@
 tval := 1;
 main := (){
   a := 1;
+  return;
+  if (a) return 0;
+  else return b;
   return a;
 }
 empty := (){}
