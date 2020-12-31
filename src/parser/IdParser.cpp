@@ -6,6 +6,7 @@ Token *IdParser::scheme(CC *cc, Source *s, int pos){
   pos = skipws(&s->str, pos);
   if(pos == -1) return 0;
   int end = extractNextAlphaNumerical(&s->str, pos);
+  if(end == -1) return 0;
   std::string w = s->str.substr(pos, end - pos);
   return new IdToken(cc, s, pos, end - 1, w);
 }

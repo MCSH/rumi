@@ -219,7 +219,7 @@ int extractNextAlphaNumerical(std::string *str, int pos){
   int end = pos;
   int len = str->size();
   char c = str->at(pos);
-  if(!isalpha(c)) return 0;
+  if(!isalpha(c)) return -1;
   do{
     end++;
     if(end >= len){

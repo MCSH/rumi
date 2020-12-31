@@ -6,7 +6,7 @@ Token *FCallParser::scheme(CC *cc, Source *s, int pos){
   auto id = idp.parse(cc, s, pos) >> lpar;
   // arguments
   auto tmp = id >> ep;
-  if(!tmp) return id >> rpar; // no arguments
+  if (!tmp) return id >> rpar; // no arguments
 
   // id ( v1,
   auto t = tmp >> cp;

@@ -1,3 +1,4 @@
+t := f(f());
 tval := 1;
 main := (){
   a := 1;
@@ -8,7 +9,9 @@ main := (){
 
   a := 1 + 2;
 
-  fval := f(11, 12, 1 + 2 * 2);
+  //fval := f(11, 12, 1 + 2 * 2, f());
+  
+  fval := f(f());
 
   return;
   while(a) if(a) return 1;
