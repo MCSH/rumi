@@ -5,6 +5,11 @@ main := (){
   // after liune
   a := //
   2;
+
+  a := 1 + 2;
+
+  fval := f(11, 12, 1 + 2 * 2);
+
   return;
   while(a) if(a) return 1;
   if(a){
@@ -14,3 +19,7 @@ main := (){
   return a;
 }
 empty := (){}
+
+test_op := (){
+  a := 1 + 2 * 3 - 4 / 6 % 5;
+}

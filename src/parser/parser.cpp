@@ -12,13 +12,18 @@
 #include "SymbolParser.h"
 #include "FunctionParser.h"
 #include "ReturnParser.h"
+#include "BinOpParser.h"
+#include "FCallParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
   this->cc = cc;
   this->registerTopRule(new DefineParser());
 
+
+  this->registerExpressionRule(new BinOpParser());
   this->registerExpressionRule(new NumberParser());
+  this->registerExpressionRule(new FCallParser());
   this->registerExpressionRule(new VariableValueParser());
   this->registerValueRule(new FunctionParser());
 

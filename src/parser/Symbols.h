@@ -11,4 +11,8 @@ enum Symbol : short {
   s_to,
   s_lbra,
   s_rbra,
+  s_mult,
+  s_div,
+  s_rem,
+  s_comma,
 };

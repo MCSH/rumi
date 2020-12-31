@@ -65,3 +65,13 @@ void Source::loadBuff() {
 
   this->sstr << f.rdbuf();
 }
+
+ParseState *Source::resolveState(int pos){
+  auto it = mem.find(pos);
+  if(it != mem.end()){
+    return &(*it).second;
+  }
+  /// Create it
+  mem[pos] = ParseState();
+  return &mem[pos];
+}

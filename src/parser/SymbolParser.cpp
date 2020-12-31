@@ -42,6 +42,18 @@ Token *SymbolParser::scheme(CC *cc, Source *s, int pos){
     }
     sb = s_minus;
     break;
+  case '*':
+    sb = s_mult;
+    break;
+  case '/':
+    sb = s_div;
+    break;
+  case '%':
+    sb = s_rem;
+    break;
+  case ',':
+    sb = s_comma;
+    break;
   default:
     return 0;
   }
@@ -72,6 +84,14 @@ std::string SymbolToken::desc(){
     return "<Symbol ->>";
   case s_minus:
     return "<Symbol ->";
+  case s_mult:
+    return "<Symbol *>";
+  case s_div:
+    return "<Symbol />";
+  case s_rem:
+    return "<Symbol %>";
+  case s_comma:
+    return "<Symbol ,>";
   default:
     return "<Unprogrammed Symbol>";
   }
