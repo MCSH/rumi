@@ -3,6 +3,7 @@
 #include "IdParser.h"
 #include "KeywordParser.h"
 #include "SymbolParser.h"
+#include "TypeParser.h"
 #include "parser.h"
 #include "Symbols.h"
 #include "StatementParser.h"
@@ -20,5 +21,9 @@ class FunctionParser: public ParseRule{
 private:
   SymbolParser lpsp, rpsp;
   SymbolParser lbsp, rbsp;
+  SymbolParser asp, csp;
+  SymbolParser comsp;
+  TypeParser tp;
+  IdParser ip;
   StatementParser sp;
 };

@@ -4,7 +4,7 @@ f : f32 = 1;
 
 t := f(f());
 tval := 1;
-main := (){
+main := (i: int, j: f32) -> unit{
   a := 1;
   a = 1;
   // line

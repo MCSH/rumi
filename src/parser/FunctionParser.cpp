@@ -12,16 +12,25 @@ std::string FunctionToken::desc(){
 }
 
 Token *FunctionParser::scheme(CC *cc, Source *s, int pos){
-  auto sig =  lpsp.parse(cc, s, pos) >> rpsp;
-  auto a = sig >> lbsp;
+  auto args = lpsp.parse(cc, s, pos); // (
+  if(!(args >> rpsp)){
+    do {
+      args = args >> ip >> csp >> tp;
+      if(!(args >> comsp)) break;
+      args = args >> comsp;
+    } while(args);
+  }
+  if(!args) return 0;
+  auto sig =  args >> rpsp; // )
+  auto a = sig >> asp >> tp; // -> type
+  if(!a) a = sig;
+  a = a >> lbsp;
   auto tmp = a >> sp;
   while(tmp){
     a = tmp;
     tmp = a >> sp;
   }
   return a >> rbsp;
-  //return id >> csp >> esp;
-  //return id >> csp >> esp;
 }
 
 FunctionParser::FunctionParser()
@@ -29,5 +38,8 @@ FunctionParser::FunctionParser()
   , rpsp(s_rpar)
   , lbsp(s_lbra)
   , rbsp(s_rbra)
+  , asp(s_to)
+  , csp(s_col)
+  , comsp(s_comma)
 {
 }
