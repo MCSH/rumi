@@ -1,13 +1,12 @@
 #include "../base.h"
+#include "../CC.h"
 #include "KeywordParser.h"
 #include "Keywords.h"
 
 KeywordToken* KeywordParser::findkey(CC *cc, Source *s, int pos){
   // TODO
-  // s->wordAt(pos);
-  pos = skipws(&s->str, pos);
-  if(pos == -1) return 0;
   int end = extractNextAlphaNumerical(&s->str, pos);
+  if(end == -1) return 0;
   std::string w = s->str.substr(pos, end - pos);
   end--;
   if(w == "return") return new KeywordToken(Keyword::k_ret, pos, end, cc, s);

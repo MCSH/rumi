@@ -1,5 +1,4 @@
 #pragma once
-#include "../CC.h"
 #include "parser.h"
 
 class KeywordToken : public Token {

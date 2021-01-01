@@ -1,8 +1,10 @@
 #include "parser.h"
 #include "../base.h"
 
+#include "AssignParser.h"
 #include "DefineParser.h"
 #include "IfParser.h"
+#include "PrimitiveTypeParser.h"
 #include "SBlockParser.h"
 #include "WhileParser.h"
 #include "KeywordParser.h"
@@ -27,11 +29,14 @@ void Parser::init(CompileContext *cc){
   this->registerExpressionRule(new VariableValueParser());
   this->registerValueRule(new FunctionParser());
 
+  this->registerStatementRule(new AssignParser());
   this->registerStatementRule(new DefineParser());
   this->registerStatementRule(new ReturnParser());
   this->registerStatementRule(new IfParser());
   this->registerStatementRule(new WhileParser());
   this->registerStatementRule(new SBlockParser());
+
+  this->registerTypeRule(new PrimitiveTypeParser());
   /*
   this->registerTopRule(new FunctionParser());
   this->registerTopRule(new KeywordParser());

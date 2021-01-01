@@ -18,7 +18,7 @@ class DefineParser: public ParseRule{
   virtual Token *scheme(CC *cc, Source *s, int pos);
   DefineParser();
 private:
-  SymbolParser csp, esp;
+  SymbolParser csp, esp, scp;
   TypeParser tp;
   ValueParser vp;
   IdParser ip;
