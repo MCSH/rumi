@@ -1,4 +1,7 @@
-f: ***int;
+a :() -> int;
+f: (int, int)->*int;
+
+g: (*(int)->int, int) -> unit;
 
 t := f(f());
 tval := 1;

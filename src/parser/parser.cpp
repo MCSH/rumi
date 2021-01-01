@@ -3,6 +3,7 @@
 
 #include "AssignParser.h"
 #include "DefineParser.h"
+#include "FunctionTypeParser.h"
 #include "IfParser.h"
 #include "PointerTypeParser.h"
 #include "PrimitiveTypeParser.h"
@@ -39,6 +40,7 @@ void Parser::init(CompileContext *cc){
 
   this->registerTypeRule(new PrimitiveTypeParser());
   this->registerTypeRule(new PointerTypeParser());
+  this->registerTypeRule(new FunctionTypeParser());
   /*
   this->registerTopRule(new FunctionParser());
   this->registerTopRule(new KeywordParser());
