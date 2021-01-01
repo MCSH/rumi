@@ -4,6 +4,7 @@
 #include "AssignParser.h"
 #include "DefineParser.h"
 #include "IfParser.h"
+#include "PointerTypeParser.h"
 #include "PrimitiveTypeParser.h"
 #include "SBlockParser.h"
 #include "WhileParser.h"
@@ -37,6 +38,7 @@ void Parser::init(CompileContext *cc){
   this->registerStatementRule(new SBlockParser());
 
   this->registerTypeRule(new PrimitiveTypeParser());
+  this->registerTypeRule(new PointerTypeParser());
   /*
   this->registerTopRule(new FunctionParser());
   this->registerTopRule(new KeywordParser());

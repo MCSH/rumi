@@ -1,10 +1,8 @@
-t : int;
-f : f32 = 1;
-
+f: ***int;
 
 t := f(f());
 tval := 1;
-main := (i: int, j: f32) -> unit{
+main := (i: int, j: f32, a: *string) -> unit{
   a := 1;
   a = 1;
   // line
