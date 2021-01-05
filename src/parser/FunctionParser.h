@@ -8,9 +8,12 @@
 #include "Symbols.h"
 #include "StatementParser.h"
 
-class FunctionToken: public Token{
+class FunctionBodyToken: public Token{
  public:
-  FunctionToken(CC *cc, Source *s, int pos, int epos);
+  std::vector<Token*> statements;
+  std::vector<Token*> args;
+  Token *rt = 0;
+  FunctionBodyToken(CC *cc, Source *s, int pos, int epos);
   virtual std::string desc() override;
 };
 
