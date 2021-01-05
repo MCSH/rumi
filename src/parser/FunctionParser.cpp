@@ -1,4 +1,5 @@
 #include "FunctionParser.h"
+#include "DefineParser.h"
 
 FunctionBodyToken::FunctionBodyToken(CC *cc, Source *s, int pos, int epos){
   this->cc = cc;
@@ -40,9 +41,13 @@ ParseResult FunctionParser::scheme(CC *cc, Source *s, int pos){
   auto args = lpsp.parse(cc, s, pos); // (
   if(!(args >> rpsp)){
     do {
-      args = args >> ip >> csp >> tp;
+      auto tip = args >> ip;
+      args = tip >> csp >> tp;
       if(args){
-        fbt->args.push_back(args.token);
+        TupleToken *tt = (TupleToken*)args.token;
+        Token *t = tt->t2;
+        std::string *aid = &((IdToken*)((TupleToken*)tip.token)->t2)->id;
+        fbt->args.push_back(new DefineToken(*aid, t, 0, cc, s, args.token->spos, args.token->epos));
       }
       if(!(args >> comsp)) break;
       args = args >> comsp;
