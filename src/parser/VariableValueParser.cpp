@@ -3,6 +3,6 @@
 
 #include <iostream>
 
-Token *VariableValueParser::scheme(CC *cc, Source *s, int pos){
+ParseResult VariableValueParser::scheme(CC *cc, Source *s, int pos){
   return vp.parse(cc, s, pos);
 }

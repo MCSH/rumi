@@ -16,7 +16,7 @@ KeywordToken* KeywordParser::findkey(CC *cc, Source *s, int pos){
   return 0;
 }
 
-Token* KeywordParser::scheme(CC *cc, Source *s, int pos){
+ParseResult  KeywordParser::scheme(CC *cc, Source *s, int pos){
   auto t = findkey(cc, s, pos);
   if(!has_match) return t;
   if(!t) return 0;

@@ -9,13 +9,15 @@
 
 class DefineToken: public Token{
  public:
-  DefineToken(CC *cc, Source *s, int pos, int epos);
+  std::string id;
+  Token *type, *value;
+  DefineToken(std::string id, Token *type, Token* value, CC *cc, Source *s, int pos, int epos);
   virtual std::string desc() override;
 };
 
 class DefineParser: public ParseRule{
  public:
-  virtual Token *scheme(CC *cc, Source *s, int pos);
+  virtual ParseResult scheme(CC *cc, Source *s, int pos);
   DefineParser();
 private:
   SymbolParser csp, esp, scp;

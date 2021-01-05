@@ -6,7 +6,7 @@
 
 class IfParser: public ParseRule{
  public:
-  virtual Token *scheme(CC *cc, Source *s, int pos);
+  virtual ParseResult scheme(CC *cc, Source *s, int pos);
   IfParser();
  private:
   ExpressionParser vp;

@@ -2,6 +2,6 @@
 #include "parser.h"
 #include "../base.h"
 
-Token *ExpressionParser::scheme(CC *cc, Source *s, int pos){
+ParseResult ExpressionParser::scheme(CC *cc, Source *s, int pos){
   return cc->parser.parseExpression(s, pos);
 }

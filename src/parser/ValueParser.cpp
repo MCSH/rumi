@@ -3,10 +3,14 @@
 #include "../base.h"
 #include "Symbols.h"
 
-Token *ValueParser::scheme(CC *cc, Source *s, int pos){
+ParseResult ValueParser::scheme(CC *cc, Source *s, int pos){
   auto a = cc->parser.parseValue(s, pos);
   if(a) return a;
-  return cc->parser.parseExpression(s, pos) >> sp;
+  a = cc->parser.parseExpression(s, pos) >> sp;
+  if(!a) return a;
+  Token *f = ((TupleToken*)a.token)->t1;
+  f->epos = a.token->epos;
+  return ParseResult(f);
 }
 
 ValueParser::ValueParser()

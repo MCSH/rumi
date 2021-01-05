@@ -14,7 +14,7 @@ class KeywordParser : public ParseRule {
   Keyword match;
   KeywordToken *findkey(CC *cc, Source *s, int pos);
 public:
-  virtual Token *scheme(CC *cc, Source *s, int pos);
+  virtual ParseResult scheme(CC *cc, Source *s, int pos);
   KeywordParser(Keyword );
   KeywordParser();
 };

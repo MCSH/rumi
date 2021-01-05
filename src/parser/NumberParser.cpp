@@ -1,7 +1,7 @@
 #include "../base.h"
 #include "NumberParser.h"
 
-Token *NumberParser::scheme(CC *cc, Source *s, int pos){
+ParseResult NumberParser::scheme(CC *cc, Source *s, int pos){
   int p = skipws(&s->str, pos);
   if(p == -1) return 0;
   char n = s->str.at(p);

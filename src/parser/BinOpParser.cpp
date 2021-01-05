@@ -2,16 +2,16 @@
 #include "Symbols.h"
 #include "../base.h"
 
-Token *BinOpParser::scheme(CC *cc, Source *s, int pos){
+ParseResult BinOpParser::scheme(CC *cc, Source *s, int pos){
   ParseState *ps = s->resolveState(pos);
   if(ps->binOp) return ps->binToken; // recursive
   ps->binOp = true;
 
-  ps->binToken = innerscheme(cc, s, pos);
+  ps->binToken = innerscheme(cc, s, pos).token;
   return ps->binToken;
 }
 
-Token *BinOpParser::innerscheme(CC *cc, Source *s, int pos){
+ParseResult BinOpParser::innerscheme(CC *cc, Source *s, int pos){
   // exp op exp
   auto v1 = vp.parse(cc, s, pos);
 

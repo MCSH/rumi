@@ -2,7 +2,7 @@
 #include "Symbols.h"
 #include "Keywords.h"
 
-Token *ReturnParser::scheme(CC *cc, Source *s, int pos){
+ParseResult ReturnParser::scheme(CC *cc, Source *s, int pos){
   auto r = rp.parse(cc, s, pos);
   auto tmp = r >> vp;
   if(tmp) return tmp; // semicolon is handled inside that

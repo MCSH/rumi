@@ -2,7 +2,7 @@
 #include "Symbols.h"
 #include "Keywords.h"
 
-Token *WhileParser::scheme(CC *cc, Source *s, int pos){
+ParseResult WhileParser::scheme(CC *cc, Source *s, int pos){
   return wp.parse(cc, s, pos) >> lpar >> vp >> rpar >> sp;
 }
 

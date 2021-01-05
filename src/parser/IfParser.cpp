@@ -2,7 +2,7 @@
 #include "Symbols.h"
 #include "Keywords.h"
 
-Token *IfParser::scheme(CC *cc, Source *s, int pos){
+ParseResult IfParser::scheme(CC *cc, Source *s, int pos){
   auto i = ip.parse(cc, s, pos) >> lpar >> vp >> rpar >> sp;
   auto tmp = i >> ep >> sp;
   if(tmp) return tmp;

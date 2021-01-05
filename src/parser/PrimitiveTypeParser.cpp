@@ -16,7 +16,7 @@ std::string TypeToken::desc(){
   return key;
 }
 
-Token *PrimitiveTypeParser::scheme(CC *cc, Source *s, int pos){
+ParseResult PrimitiveTypeParser::scheme(CC *cc, Source *s, int pos){
   int end = extractNextAlphaNumerical(&s->str, pos);
   if(end == -1) return 0;
   std::string w = s->str.substr(pos, end-pos);

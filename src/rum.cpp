@@ -14,11 +14,11 @@ int main(int argc, char **argv) {
 
   for(Source *s: cc.sources){
     cc.load(s);
-    Token *t;
+    ParseResult t;
     t = cc.parser.parseTop(s);
     while(t){
-      cc.debug(Verbosity::NONE) << *t << endl;
-      t = cc.parser.parseTop(s, t->epos + 1);
+      cc.debug(Verbosity::NONE) << t << endl;
+      t = cc.parser.parseTop(s, t.token->epos + 1);
     }
   }
 

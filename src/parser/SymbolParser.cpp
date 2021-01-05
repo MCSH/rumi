@@ -2,7 +2,7 @@
 #include "SymbolParser.h"
 #include "Symbols.h"
 
-Token *SymbolParser::scheme(CC *cc, Source *s, int pos){
+ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
   pos = skipws(&s->str, pos);
   if(pos == -1) return 0;
   char c = s->str.at(pos);

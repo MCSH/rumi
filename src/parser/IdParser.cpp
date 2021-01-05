@@ -1,7 +1,7 @@
 #include "../base.h"
 #include "IdParser.h"
 
-Token *IdParser::scheme(CC *cc, Source *s, int pos){
+ParseResult IdParser::scheme(CC *cc, Source *s, int pos){
   if(kp.parse(cc, s, pos)) return 0;
   pos = skipws(&s->str, pos);
   if(pos == -1) return 0;
@@ -21,4 +21,7 @@ IdToken::IdToken(CC *cc, Source *s, int spos, int epos, std::string val){
 
 std::string IdToken::desc(){
   return "Id<" + id + ">";
+}
+
+IdToken::~IdToken(){
 }

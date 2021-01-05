@@ -8,11 +8,12 @@ public:
   std::string id;
   IdToken(CC *cc, Source *s, int spos, int epos, std::string val);
   virtual std::string desc() override;
+  virtual ~IdToken();
 };
 
 class IdParser: public ParseRule{
 public:
-  virtual Token *scheme(CC *cc, Source *s, int pos);
+  virtual ParseResult scheme(CC *cc, Source *s, int pos);
 private:
   KeywordParser kp;
 };

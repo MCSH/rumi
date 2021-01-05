@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-Token *FunctionTypeParser::scheme(CC *cc, Source *s, int pos){
+ParseResult FunctionTypeParser::scheme(CC *cc, Source *s, int pos){
   auto tmp = lparsp.parse(cc, s, pos); // (
   auto bak = tmp;
   while(true){

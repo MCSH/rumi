@@ -1,7 +1,7 @@
 #include "FCallParser.h"
 #include "Symbols.h"
 
-Token *FCallParser::scheme(CC *cc, Source *s, int pos){
+ParseResult FCallParser::scheme(CC *cc, Source *s, int pos){
   // id ( )
   auto id = idp.parse(cc, s, pos) >> lpar;
   // arguments

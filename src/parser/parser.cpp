@@ -137,9 +137,9 @@ void Parser::registerStatementRule(ParseRule *p){
   statementRules.push_back(p);
 }
 
-Token* Parser::parseTop(Source *s, int pos){
+ParseResult Parser::parseTop(Source *s, int pos){
   // TODO
-  Token *ans = 0;
+  ParseResult ans;
   for(auto r: topRules){
     ans = r->parse(cc, s, pos);
     if(ans) return ans;
@@ -147,9 +147,9 @@ Token* Parser::parseTop(Source *s, int pos){
   return 0;
 }
 
-Token* Parser::parseType(Source *s, int pos){
+ParseResult Parser::parseType(Source *s, int pos){
   // TODO
-  Token *ans = 0;
+  ParseResult ans;
   for(auto r: typeRules){
     ans = r->parse(cc, s, pos);
     if(ans) return ans;
@@ -157,9 +157,9 @@ Token* Parser::parseType(Source *s, int pos){
   return 0;
 }
 
-Token* Parser::parseExpression(Source *s, int pos){
+ParseResult Parser::parseExpression(Source *s, int pos){
   // TODO
-  Token *ans = 0;
+  ParseResult ans;
   for(auto r: expressionRules){
     ans = r->parse(cc, s, pos);
     if(ans) return ans;
@@ -167,9 +167,9 @@ Token* Parser::parseExpression(Source *s, int pos){
   return 0;
 }
 
-Token* Parser::parseValue(Source *s, int pos){
+ParseResult Parser::parseValue(Source *s, int pos){
   // TODO
-  Token *ans = 0;
+  ParseResult ans;
   for(auto r: valueRules){
     ans = r->parse(cc, s, pos);
     if(ans) return ans;
@@ -177,9 +177,9 @@ Token* Parser::parseValue(Source *s, int pos){
   return 0;
 }
 
-Token* Parser::parseStatement(Source *s, int pos){
+ParseResult Parser::parseStatement(Source *s, int pos){
   // TODO
-  Token *ans = 0;
+  ParseResult ans;
   for(auto r: statementRules){
     ans = r->parse(cc, s, pos);
     if(ans) return ans;
@@ -193,11 +193,11 @@ std::ostream &operator<<(std::ostream &os, Token &s) {
 }
 
 
-Token *operator>>(Token *t, ParseRule &p2){
+ParseResult operator>>(ParseResult t, ParseRule &p2){
   if(!t) return t;
-  Token * ans = p2.parse(t->cc, t->s, t->epos + 1);
+  ParseResult ans = p2.parse(t.token->cc, t.token->s, t.token->epos + 1);
   if(!ans) return ans;
-  return new TupleToken(t, ans);
+  return ParseResult(new TupleToken(t.token, ans.token));
 }
 
 
@@ -209,15 +209,16 @@ TupleToken::TupleToken(Token *t1, Token *t2):t1(t1),t2(t2){
 }
 
 TupleToken::~TupleToken(){
-  delete t1;
-  delete t2;
+  // TODO
+  //delete t1;
+  //delete t2;
 }
 
 std::string TupleToken::desc(){
   return t1->desc() + " >> " + t2->desc();
 }
 
-Token *ParseRule::parse(CC *cc, Source *s, int pos){
+ParseResult ParseRule::parse(CC *cc, Source *s, int pos){
   // TODO memoization
   pos = skipwscomment(&s->str, pos);
   if(pos == -1) return 0;
@@ -237,4 +238,20 @@ int extractNextAlphaNumerical(std::string *str, int pos){
     c = str->at(end);
   } while(isalphanumerical(c));
   return end;
+}
+
+
+ParseResult::~ParseResult(){
+  if(token){
+    // TODO
+    // delete token;
+  }
+}
+
+
+std::ostream &operator<<(std::ostream &os, ParseResult &s){
+  return os << *s.token;
+}
+
+Token::~Token(){
 }

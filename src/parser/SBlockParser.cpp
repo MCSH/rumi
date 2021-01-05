@@ -2,7 +2,7 @@
 #include "Symbols.h"
 #include "Keywords.h"
 
-Token *SBlockParser::scheme(CC *cc, Source *s, int pos){
+ParseResult SBlockParser::scheme(CC *cc, Source *s, int pos){
   auto p = lbra.parse(cc, s, pos);
   auto tmp = p >> sp;
   while(tmp){
