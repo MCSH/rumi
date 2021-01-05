@@ -3,6 +3,15 @@
 #include "IdParser.h"
 #include "SymbolParser.h"
 
+class FCallToken: public Token{
+public:
+  std::string id;
+  std::vector<Token *> args;
+  FCallToken(std::string id, CC *cc, Source *s, int spos, int epos);
+  virtual ~FCallToken(){} // TODO
+  virtual std::string desc() override;
+};
+
 class FCallParser: public ParseRule{
  public:
   virtual ParseResult scheme(CC *cc, Source *s, int pos);

@@ -4,7 +4,7 @@
 //g: (*(int)->int, int) -> unit;
 
 a := 1;
-t := f(f());
+t := f(0, f());
 tval := 1;
 main := (i: int, j: f32, a: *string) -> unit{
   a := 1;
