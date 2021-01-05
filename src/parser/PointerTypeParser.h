@@ -3,6 +3,13 @@
 #include "SymbolParser.h"
 #include "TypeParser.h"
 
+class PointerTypeToken: public Token{
+public:
+  Token *innerType;
+  PointerTypeToken(Token *innerType, CC *cc, Source *s, int pos, int epos);
+  virtual std::string desc() override;
+};
+
 class PointerTypeParser: public ParseRule{
  public:
   virtual ParseResult scheme(CC *cc, Source *s, int pos);

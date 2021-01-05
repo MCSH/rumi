@@ -3,6 +3,13 @@
 #include "KeywordParser.h"
 #include "SymbolParser.h"
 
+class ReturnToken: public Token{
+public:
+  Token *value;
+  ReturnToken(Token *value, CC *cc, Source *s, int spos, int epos);
+  virtual std::string desc() override;
+};
+
 class ReturnParser: public ParseRule{
  public:
   virtual ParseResult scheme(CC *cc, Source *s, int pos);

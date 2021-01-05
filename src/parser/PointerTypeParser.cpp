@@ -1,8 +1,25 @@
 #include "PointerTypeParser.h"
 #include "Symbols.h"
 
+PointerTypeToken::PointerTypeToken(Token *innerType, CC *cc, Source *s, int pos,
+                                   int epos)
+  : innerType(innerType)
+{
+  this->cc = cc;
+  this->s = s;
+  this->spos = pos;
+  this->epos = epos;
+}
+
+std::string PointerTypeToken::desc(){
+  return "* " + innerType->desc();
+}
+
 ParseResult PointerTypeParser::scheme(CC *cc, Source *s, int pos){
-  return ssp.parse(cc, s, pos) >> tp;
+  auto ans = ssp.parse(cc, s, pos) >> tp;
+  if(!ans) return ans;
+  Token *innerType = ((TupleToken*) ans.token)->t2;
+  return ParseResult(new PointerTypeToken(innerType, cc, s, ans.token->spos, ans.token->epos));
 }
 
 PointerTypeParser::PointerTypeParser()
