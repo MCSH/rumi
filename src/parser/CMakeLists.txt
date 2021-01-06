@@ -3,5 +3,3 @@
 
 file(GLOB SRC "*.cpp")
 add_library(parser ${SRC})
-
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
