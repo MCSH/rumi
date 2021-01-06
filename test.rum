@@ -1,7 +1,7 @@
-//a :() -> int;
-//f: (int, int)->*int;
+a :() -> int;
+f: (int, int)->*int;
 
-//g: (*(int)->int, int) -> unit;
+g: (*(int)->int, int) -> unit;
 
 a := 1;
 t := f(0, f());

@@ -2,8 +2,29 @@
 #include "Symbols.h"
 #include "Keywords.h"
 
+WhileToken::WhileToken(Token *value, Token *statement, CC *cc, Source *s, int spos, int epos)
+  : value(value)
+  , statement(statement)
+{
+  this->cc = cc;
+  this->s = s;
+  this->spos = spos;
+  this->epos = epos;
+}
+
+std::string WhileToken::desc(){
+  return "while " + value->desc() + ":: " + statement->desc();
+}
+
 ParseResult WhileParser::scheme(CC *cc, Source *s, int pos){
-  return wp.parse(cc, s, pos) >> lpar >> vp >> rpar >> sp;
+  auto a = wp.parse(cc, s, pos) >> lpar >> vp;
+  auto b = a >> rpar >> sp;
+  if(!b) return b;
+
+  Token *v = ((TupleToken*) a.token)->t2;
+  Token *st = ((TupleToken*) b.token)->t2;
+
+  return ParseResult(new WhileToken(v, st, cc, s, b.token->spos, b.token->epos));
 }
 
 
