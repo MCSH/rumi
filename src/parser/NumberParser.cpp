@@ -1,5 +1,6 @@
 #include "../Source.h"
 #include "NumberParser.h"
+#include "../ast/ConstInt.h"
 
 ParseResult NumberParser::scheme(CC *cc, Source *s, int pos){
   int p = skipws(&s->str, pos);
@@ -16,6 +17,10 @@ ParseResult NumberParser::scheme(CC *cc, Source *s, int pos){
 
   auto ans = new NumberToken(cc, s, pos, p-1, val);
   return ans;
+}
+
+AST *NumberToken::toAST(CC *cc){
+  return new ConstInt(val);
 }
 
 std::string NumberToken::desc(){

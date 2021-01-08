@@ -15,6 +15,7 @@ public:
   int val;
   NumberToken(CC *cc, Source *s, int spos, int epos, int val);
   virtual std::string desc() override;
+  virtual AST *toAST(CC *cc) override;
 };
 
 class ParseRule {

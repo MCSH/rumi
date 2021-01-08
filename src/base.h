@@ -5,6 +5,7 @@
 void printInfo();
 
 class Source;
+class LLContext;
 
 enum Verbosity {
   NONE = 0,
@@ -18,9 +19,10 @@ public:
   std::vector<Source *> sources;
   int verbosity;
   Parser parser;
+  LLContext *llc;
   std::ostream &debug(int v);
   void load(Source *s);
- CompileContext(int argc, char **argv);
+  CompileContext(int argc, char **argv);
 };
 
 using CC = CompileContext;

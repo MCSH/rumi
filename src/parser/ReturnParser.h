@@ -8,6 +8,7 @@ public:
   Token *value;
   ReturnToken(Token *value, CC *cc, Source *s, int spos, int epos);
   virtual std::string desc() override;
+  virtual AST* toAST(CC *cc) override;
 };
 
 class ReturnParser: public ParseRule{

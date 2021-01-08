@@ -1,6 +1,8 @@
 #pragma once
 #include "../CC.h"
 
+class AST;
+
 class Token {
 public:
   virtual std::string desc() = 0;
@@ -10,6 +12,8 @@ public:
   // hack to allow operator
   Source *s;
   CC *cc;
+
+  virtual AST* toAST(CC *cc){return 0;}
 
   virtual ~Token() = 0;
 };

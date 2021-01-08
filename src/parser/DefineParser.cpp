@@ -1,5 +1,6 @@
 #include "DefineParser.h"
 #include "../base.h"
+#include "FunctionParser.h"
 #include "Symbols.h"
 
 DefineToken::DefineToken(std::string id, Token *type, Token *value, CC *CC, Source *s, int pos, int epos)
@@ -43,4 +44,20 @@ DefineParser::DefineParser()
   :csp(s_col)
   ,scp(s_semicolon)
   ,esp(s_eq)
-{}    
+{}
+
+
+AST *DefineToken::toAST(CC *cc){
+  // TODO
+  if(!type){
+    if (FunctionBodyToken *fbt = dynamic_cast<FunctionBodyToken *>(value)) {
+      // TODO We have a static function
+      auto tmp = fbt->toAST(cc);
+
+      tmp -> setId(id);
+      return tmp;
+    }
+  }
+
+  return 0;
+}

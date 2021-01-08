@@ -3,5 +3,5 @@
 
 class Statement: public AST{
  public:
-  void codegen(CC *cc);
+  virtual void codegen(CC *cc) = 0;
 };

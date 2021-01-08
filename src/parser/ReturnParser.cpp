@@ -1,6 +1,9 @@
 #include "ReturnParser.h"
 #include "Symbols.h"
 #include "Keywords.h"
+#include "../ast/Return.h"
+#include "../base.h"
+#include <ostream>
 
 ReturnToken::ReturnToken(Token *value, CC *cc, Source *s, int spos, int epos)
   : value(value)
@@ -9,6 +12,20 @@ ReturnToken::ReturnToken(Token *value, CC *cc, Source *s, int spos, int epos)
   this->s = s;
   this->spos = spos;
   this->epos = epos;
+}
+
+AST *ReturnToken::toAST(CC *cc){
+  if(!value){
+    return new Return(0);
+  }
+
+  Expression *e = dynamic_cast<Expression *>(value->toAST(cc));
+
+  if(!e){
+    cc->debug(NONE) << "Expected Expression didn't convert to Expression\n" << *value << std::endl;
+    exit(1);
+  }
+  return new Return(e);
 }
 
 std::string ReturnToken::desc(){
