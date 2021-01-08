@@ -1,6 +1,6 @@
 #include "BinOpParser.h"
 #include "Symbols.h"
-#include "../base.h"
+#include "../Source.h"
 
 ParseResult BinOpParser::scheme(CC *cc, Source *s, int pos){
   ParseState *ps = s->resolveState(pos);

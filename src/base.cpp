@@ -1,4 +1,5 @@
 #include "base.h"
+#include "Source.h"
 #include "RumiConfig.h"
 #include <fstream>
 #include <iostream>
@@ -6,7 +7,7 @@
 
 void printInfo() {
   std::cout << "Rumi Version " << Rumi_VERSION_MAJOR << "."
-            << Rumi_VERSION_MINOR << endl;
+            << Rumi_VERSION_MINOR << std::endl;
 }
 
 CompileContext::CompileContext(int argc, char **argv){
@@ -21,7 +22,7 @@ CompileContext::CompileContext(int argc, char **argv){
     }
   }
   this->debug(Verbosity::LOW)
-      << "Verbosity set at " << this->verbosity << endl;
+    << "Verbosity set at " << this->verbosity << std::endl;
   /// TODO PrintInfo and exit on arg parsing error
   parser.init(this);
 }
@@ -57,7 +58,7 @@ void Source::fetch(){
 void CompileContext::load(Source *s) {
   s->loadBuff();
   s->fetch();
-  this->debug(LOW) << s->str << endl;
+  this->debug(LOW) << s->str << std::endl;
 }
 
 void Source::loadBuff() {
