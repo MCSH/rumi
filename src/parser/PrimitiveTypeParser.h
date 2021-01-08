@@ -1,11 +1,13 @@
 #pragma once
 #include "parser.h"
+#include "../TypeEnum.h"
 
 class TypeToken: public Token{
  public:
-  std::string key;
-  TypeToken(std::string key, int spos, int epos, CC *cc, Source *s);
+  TypeEnum key;
+  TypeToken(TypeEnum key, int spos, int epos, CC *cc, Source *s);
   virtual std::string desc() override;
+  virtual AST *toAST(CC *cc) override;
 };
 
 class PrimitiveTypeParser : public ParseRule {

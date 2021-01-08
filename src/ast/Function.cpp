@@ -3,6 +3,7 @@
 #include <llvm/IR/BasicBlock.h>
 #include "../base.h"
 #include "../LLContext.h"
+#include "Type.h"
 
 void Function::prepeare(CC *cc){
   for(Statement *s: statements){
@@ -27,13 +28,12 @@ void Function::compile(CC *cc){
   // TODO args, returnType
 }
 
-#include <iostream>
-
 void Function::codegen(CC *cc){
   // TODO
-  std::cout << "From codegen inside function!" << std::endl;
+  llvm::Type* rt = returnType?(llvm::Type*)returnType->typegen(cc):
+    llvm::Type::getVoidTy(cc->llc->context);
 
-  auto ft = llvm::FunctionType::get(llvm::IntegerType::get(cc->llc->context, 32), false);
+  auto ft = llvm::FunctionType::get(rt, false);
 
   auto f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, this->id, cc->llc->module);
 

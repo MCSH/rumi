@@ -1,4 +1,4 @@
 
-main := () -> int{
-  return 134;
+main := () -> int {
+  return 1;
 }

@@ -25,6 +25,10 @@ Function *FunctionBodyToken::toAST(CC *cc){
     f->statements.push_back(s);
   }
 
+  if(rt){
+    f->returnType = (Type *)rt->toAST(cc);
+  }
+
   return f;
 }
 
