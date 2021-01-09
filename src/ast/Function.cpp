@@ -26,6 +26,10 @@ void Function::compile(CC *cc){
     }
   }
   // TODO args, returnType
+
+  for(Statement *s: statements){
+    s->compile(cc);
+  }
 }
 
 void Function::codegen(CC *cc){

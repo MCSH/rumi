@@ -76,3 +76,35 @@ ParseState *Source::resolveState(int pos){
   mem[pos] = ParseState();
   return &mem[pos];
 }
+
+
+void CompileContext::pushContext(){
+  auto b = new BlockContext();
+  b -> parent = block;
+  block = b;
+}
+
+void CompileContext::popContext(){
+  auto b = block;
+  block = b->parent;
+  delete b;
+}
+
+void CompileContext::registerNamed(std::string id, Named *n){
+  /// TODO check for overriding instances;
+  block->named[id] = n;
+}
+
+Named *CompileContext::lookup(std::string id){
+  auto b = block;
+  while(b){
+    auto p = b->named.find(id);
+    if(p != b->named.end()){
+      return p->second;
+    }
+
+    b = b->parent;
+  }
+
+  return 0;
+}

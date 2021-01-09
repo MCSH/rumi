@@ -41,4 +41,3 @@ target_link_libraries(rum PUBLIC base ${llvm_libs})
 add_executable(rumi rumi.cpp)
 target_link_libraries(rumi PUBLIC base)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")

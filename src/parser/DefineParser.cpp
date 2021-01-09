@@ -2,6 +2,7 @@
 #include "../base.h"
 #include "FunctionParser.h"
 #include "Symbols.h"
+#include "../ast/Define.h"
 
 DefineToken::DefineToken(std::string id, Token *type, Token *value, CC *CC, Source *s, int pos, int epos)
   : id(id)
@@ -59,5 +60,5 @@ AST *DefineToken::toAST(CC *cc){
     }
   }
 
-  return 0;
+  return new Define(id, (Expression *)value->toAST(cc), (Type *)type->toAST(cc));
 }

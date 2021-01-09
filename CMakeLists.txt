@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+
 project(Rumi VERSION 1.0)
 
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
