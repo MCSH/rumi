@@ -62,37 +62,41 @@ ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
   return new SymbolToken(sb, pos, epos, cc, s);
 }
 
-std::string SymbolToken::desc(){
+std::string symbolDesc(Symbol sb){
   switch(sb){
   case s_plus:
-    return "<Symbol +>";
+    return "+";
   case s_semicolon:
-    return "<Symbol ;>";
+    return ";";
   case s_col:
-    return "<Symbol :>";
+    return ":";
   case s_eq:
-    return "<Symbol =>";
+    return "=";
   case s_lpar:
-    return "<Symbol (>";
+    return "(";
   case s_rpar:
-    return "<Symbol )>";
+    return ")";
   case s_lbra:
-    return "<Symbol {>";
+    return "{";
   case s_rbra:
-    return "<Symbol }>";
+    return "}";
   case s_to:
-    return "<Symbol ->>";
+    return "->";
   case s_minus:
-    return "<Symbol ->";
+    return "-";
   case s_mult:
-    return "<Symbol *>";
+    return "*";
   case s_div:
-    return "<Symbol />";
+    return "/";
   case s_rem:
-    return "<Symbol %>";
+    return "%";
   case s_comma:
-    return "<Symbol ,>";
+    return ",";
   default:
     return "<Unprogrammed Symbol>";
   }
+}
+
+std::string SymbolToken::desc(){
+  return "<Symbol " + symbolDesc(sb) + ">";
 }

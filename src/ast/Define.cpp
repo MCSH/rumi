@@ -12,15 +12,14 @@ void Define::prepeare(CC *cc){
 }
 
 void Define::compile(CC *cc){
+  if(!type){
+    type = expression->type(cc);
+  }
   Named *named = new Named();
   named -> id = id;
   named -> type = type;
   named -> alloca = 0;
   cc->registerNamed(id, named);
-
-  if(!type){
-    type = expression->type(cc);
-  }
 }
 
 void Define::codegen(CC *cc){

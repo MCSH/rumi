@@ -10,6 +10,8 @@ public:
   virtual ~SymbolToken(){} // TODO
 };
 
+std::string symbolDesc(Symbol s);
+
 class SymbolParser: public ParseRule{
 private:
   bool sb_set;

@@ -2,6 +2,7 @@
 
 #include "parser/parser.h"
 #include <map>
+#include <ostream>
 
 void printInfo();
 
