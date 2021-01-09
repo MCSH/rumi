@@ -19,6 +19,8 @@ void Function::prepeare(CC *cc){
   }
 }
 
+#include <ostream>
+
 void Function::compile(CC *cc){
   for(Statement *s: statements){
     for(AST *dep: s->linkDeps){

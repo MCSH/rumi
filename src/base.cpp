@@ -93,6 +93,9 @@ void CompileContext::popContext(){
 void CompileContext::registerNamed(std::string id, Named *n){
   /// TODO check for overriding instances;
   block->named[id] = n;
+
+
+  debug(NONE) << "Registering " << id << std::endl;
 }
 
 Named *CompileContext::lookup(std::string id){

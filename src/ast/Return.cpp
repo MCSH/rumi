@@ -14,7 +14,7 @@ void Return::compile(CC *cc){
 }
 
 void Return::prepeare(CC *cc){
-  if(value) value->compile(cc);
+  if(value) value->prepeare(cc);
 }
 
 void Return::codegen(CC *cc){
