@@ -8,6 +8,7 @@
 // TODO prepreare and compile
 
 void Define::prepeare(CC *cc){
+  // TODO ensure type
 }
 
 void Define::compile(CC *cc){
@@ -16,6 +17,10 @@ void Define::compile(CC *cc){
   named -> type = type;
   named -> alloca = 0;
   cc->registerNamed(id, named);
+
+  if(!type){
+    type = expression->type(cc);
+  }
 }
 
 void Define::codegen(CC *cc){

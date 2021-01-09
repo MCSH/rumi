@@ -1,6 +1,7 @@
 #include "ConstInt.h"
 #include "../base.h"
 #include "../LLContext.h"
+#include "PrimitiveType.h"
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
 
@@ -14,3 +15,7 @@ void *ConstInt::exprgen(CC *cc){
 ConstInt::ConstInt(long long value)
   : value(value)
 {}
+
+Type *ConstInt::type(CC *cc){
+  return new PrimitiveType(t_int);
+}

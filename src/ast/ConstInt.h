@@ -9,4 +9,5 @@ class ConstInt: public Expression{
   virtual void compile(CC *cc);
   virtual void prepeare(CC *cc);
   virtual void* exprgen(CC *cc);
+  virtual Type* type(CC *cc);
 };

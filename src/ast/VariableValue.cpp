@@ -21,3 +21,7 @@ void *VariableValue::exprgen(CC *cc){
 VariableValue::VariableValue(std::string id)
   : id(id)
 {}
+
+Type *VariableValue::type(CC *cc){
+  return cc->lookup(id)->type;
+}
