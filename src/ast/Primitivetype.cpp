@@ -31,6 +31,20 @@ bool isInt(TypeEnum key){
   return key == t_int || key == t_u8 || key == t_u16 || key == t_u32 || key == t_u64 || key == t_s8 || key == t_s16 || key == t_s32 || key == t_s64;
 }
 
+Type* PrimitiveType::optyperesolve(CC *cc, std::string op, Expression *rhs){
+  // TODO
+  if((op == "+" || op == "-" || op == "*" || op == "/" || op == "%")
+     && isInt(key)){
+    Type *rt = rhs->type(cc);
+    if(PrimitiveType *prt = dynamic_cast<PrimitiveType*>(rt)){
+      if (isInt(prt->key))
+        return this;
+    }
+  }
+
+  return 0;
+}
+
 bool PrimitiveType::hasOp(CC *cc, std::string op, Expression *rhs){
   // TODO
   if((op == "+" || op == "-" || op == "*" || op == "/" || op == "%")
@@ -51,6 +65,10 @@ void *PrimitiveType::opgen(CC *cc, Expression *lhs,  std::string op, Expression 
   if(isInt(key) && isInt(prt->key)){
     if(op == "+"){
       return cc->llc->builder->CreateAdd((llvm::Value*)lhs->exprgen(cc), (llvm::Value*)rhs->exprgen(cc));
+    }
+
+    if(op == "*"){
+      return cc->llc->builder->CreateMul((llvm::Value*)lhs->exprgen(cc), (llvm::Value*)rhs->exprgen(cc));
     }
   }
 

@@ -2,5 +2,6 @@
 main := () -> int {
   a : int = 1;
   b := 2;
-  return a + b;
+  //return b * 3 + a;
+  return a + b *3;
 }

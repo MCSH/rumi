@@ -2,6 +2,21 @@
 #include "Symbols.h"
 #include "../Source.h"
 #include "../ast/BinOp.h"
+#include <iostream>
+
+int precSymbol(Symbol op){
+  switch(op){
+  case s_plus:
+  case s_minus:
+    return 1;
+  case s_mult:
+  case s_div:
+  case s_rem:
+    return 3;
+  }
+  std::cout << "UNKNOWN OP IN PREC " << std::endl;
+  exit(1);
+}
 
 BinOpToken::BinOpToken(Symbol op, Token *lhs, Token *rhs, CC *cc,
                        Source *s, int pos, int epos)
@@ -13,16 +28,38 @@ BinOpToken::BinOpToken(Symbol op, Token *lhs, Token *rhs, CC *cc,
   this -> s = s;
   this -> spos = pos;
   this -> epos = epos;
-  // TODO handle the precedence
+
+  prec = precSymbol(op);
 }
 
 AST *BinOpToken::toAST(CC* cc){
+  if(BinOpToken *r = dynamic_cast<BinOpToken*>(rhs)){
+    // TODO handle the precedence
+    if(r->prec < prec){
+      // swap the op
+      auto tmpO = op;
+      op = r->op;
+      r->op = tmpO;
+
+      auto hs = lhs;
+      lhs = rhs;
+      rhs = hs;
+
+      hs = r->lhs;
+      r->lhs = r->rhs;
+      r->rhs = hs;
+
+      hs = r->lhs;
+      r->lhs = rhs;
+      rhs = hs;
+    }
+  }
   std::string ops = symbolDesc(op);
   return new BinOp((Expression *)lhs->toAST(cc), ops, (Expression *)rhs->toAST(cc));
 }
 
 std::string BinOpToken::desc(){
-  return lhs -> desc() + " " + symbolDesc(op) + " " + rhs -> desc();
+  return "(" + lhs -> desc() + " " + symbolDesc(op) + " " + rhs -> desc() + ")";
 }
 
 ParseResult BinOpParser::scheme(CC *cc, Source *s, int pos){

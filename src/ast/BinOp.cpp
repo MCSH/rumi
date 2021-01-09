@@ -23,8 +23,7 @@ void BinOp::prepeare(CC *cc){
 }
 
 Type *BinOp::type(CC *cc){
-  // TODO provide a correct type
-  return lhs->type(cc);
+  return lhs->type(cc)->optyperesolve(cc, op, rhs);
 }
 
 void *BinOp::exprgen(CC *cc){
