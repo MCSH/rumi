@@ -98,7 +98,7 @@ int skipwscomment(std::string *w, int pos){
     }
 
     if(c == '*'){
-      // TODO block comments
+      // block comments
       int level = 1;
       while(level){
         pos ++;
