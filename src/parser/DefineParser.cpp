@@ -1,6 +1,7 @@
 #include "DefineParser.h"
 #include "../base.h"
 #include "FunctionParser.h"
+#include "FunctionSigParser.h"
 #include "Symbols.h"
 #include "../ast/Define.h"
 
@@ -54,6 +55,13 @@ AST *DefineToken::toAST(CC *cc){
     if (FunctionBodyToken *fbt = dynamic_cast<FunctionBodyToken *>(value)) {
       // TODO We have a static function
       auto tmp = fbt->toAST(cc);
+
+      tmp -> setId(id);
+      return tmp;
+    }
+    if (FunctionSigToken *fst = dynamic_cast<FunctionSigToken *>(value)) {
+      // TODO We have a static function
+      auto tmp = fst->toAST(cc);
 
       tmp -> setId(id);
       return tmp;

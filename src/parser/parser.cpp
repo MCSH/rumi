@@ -19,6 +19,7 @@
 #include "BinOpParser.h"
 #include "FCallParser.h"
 #include "FCallStmtParser.h"
+#include "FunctionSigParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
@@ -31,6 +32,7 @@ void Parser::init(CompileContext *cc){
   this->registerExpressionRule(new FCallParser());
   this->registerExpressionRule(new VariableValueParser());
   this->registerValueRule(new FunctionParser());
+  this->registerValueRule(new FunctionSigParser());
 
   this->registerStatementRule(new FCallStmtParser());
   this->registerStatementRule(new AssignParser());
