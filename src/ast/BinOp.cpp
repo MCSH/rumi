@@ -17,9 +17,9 @@ void BinOp::compile(CC *cc){
   }
 }
 
-void BinOp::prepeare(CC *cc){
-  lhs->prepeare(cc);
-  rhs->prepeare(cc);
+void BinOp::prepare(CC *cc){
+  lhs->prepare(cc);
+  rhs->prepare(cc);
 }
 
 Type *BinOp::type(CC *cc){

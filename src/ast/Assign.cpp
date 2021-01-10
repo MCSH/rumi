@@ -10,8 +10,8 @@ Assign::Assign(std::string id, Expression *e)
 {
 }
 
-void Assign::prepeare(CC *cc){
-  expression->prepeare(cc);
+void Assign::prepare(CC *cc){
+  expression->prepare(cc);
 }
 
 void Assign::compile(CC *cc){

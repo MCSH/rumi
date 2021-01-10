@@ -11,7 +11,7 @@ void Arg::compile(CC *cc){
   cc->registerNamed(id, named);
 }
 
-void Arg::prepeare(CC *cc){
+void Arg::prepare(CC *cc){
   // TODO
 }
 

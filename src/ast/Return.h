@@ -9,6 +9,6 @@ class Return: public Statement{
   Return(Expression *value);
 
   virtual void compile(CC *cc);
-  virtual void prepeare(CC *cc);
+  virtual void prepare(CC *cc);
   virtual void codegen(CC *cc);
 };

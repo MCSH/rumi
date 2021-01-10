@@ -12,7 +12,7 @@ PrimitiveType::PrimitiveType(TypeEnum key)
 }
 
 void PrimitiveType::compile(CC *cc) {}
-void PrimitiveType::prepeare(CC *cc) {}
+void PrimitiveType::prepare(CC *cc) {}
 
 void *PrimitiveType::typegen(CC *cc){
 

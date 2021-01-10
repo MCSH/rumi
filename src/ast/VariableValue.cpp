@@ -12,7 +12,8 @@ void VariableValue::compile(CC *cc){
   }
 }
 
-void VariableValue::prepeare(CC *cc) {}
+// TODO
+void VariableValue::prepare(CC *cc) {}
 
 void *VariableValue::exprgen(CC *cc){
   return cc->llc->builder->CreateLoad((llvm::Value*)cc->lookup(id)->alloca);

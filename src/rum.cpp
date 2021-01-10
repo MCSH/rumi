@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
   }
 
   for(AST *a: asts){
-    a->prepeare(&cc);
+    a->prepare(&cc);
   }
   for(AST *a: asts){
     a->compile(&cc);

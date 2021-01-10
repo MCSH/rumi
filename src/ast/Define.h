@@ -13,7 +13,7 @@ class Define: public Statement{
 
   Define(std::string id, Expression *e, Type *t);
 
-  virtual void prepeare(CC *cc) override;
+  virtual void prepare(CC *cc) override;
   virtual void compile(CC *cc) override;
   virtual void codegen(CC *cc) override;
 };

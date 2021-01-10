@@ -10,8 +10,8 @@ void FCall::compile(CC *cc){
   for(auto e: args) e->compile(cc);
 }
 
-void FCall::prepeare(CC *cc){
-  for(auto e: args) e->prepeare(cc);
+void FCall::prepare(CC *cc){
+  for(auto e: args) e->prepare(cc);
 }
 
 Type *FCall::type(CC *cc){

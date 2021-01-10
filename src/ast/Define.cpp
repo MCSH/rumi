@@ -5,8 +5,8 @@
 #include "Expression.h"
 #include "Type.h"
 
-void Define::prepeare(CC *cc){
-  if(expression) expression->prepeare(cc);
+void Define::prepare(CC *cc){
+  if(expression) expression->prepare(cc);
   if(type) type -> compile(cc);
 }
 

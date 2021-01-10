@@ -8,6 +8,6 @@ class Arg: public Statement{
   Type *type;
 
   virtual void compile(CC *cc);
-  virtual void prepeare(CC *cc);
+  virtual void prepare(CC *cc);
   virtual void codegen(CC *cc);
 };

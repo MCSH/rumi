@@ -9,16 +9,16 @@
 #include "Named.h"
 #include "Arg.h"
 
-void Function::prepeare(CC *cc){
+void Function::prepare(CC *cc){
   cc->pushContext();
   for(Arg *a: args){
-    a->prepeare(cc);
+    a->prepare(cc);
   }
 
-  returnType->prepeare(cc);
+  returnType->prepare(cc);
 
   for(Statement *s: statements){
-    s->prepeare(cc);
+    s->prepare(cc);
   }
 
   b = cc->popContext();

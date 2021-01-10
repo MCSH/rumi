@@ -12,7 +12,7 @@ class Assign: public Statement{
 
   Assign(std::string id, Expression *e);
 
-  virtual void prepeare(CC *cc) override;
+  virtual void prepare(CC *cc) override;
   virtual void compile(CC *cc) override;
   virtual void codegen(CC *cc) override;
 };

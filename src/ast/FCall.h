@@ -9,7 +9,7 @@ class FCall: public Expression{
   std::vector<Expression *>args;
 
   virtual void compile(CC *cc);
-  virtual void prepeare(CC *cc);
+  virtual void prepare(CC *cc);
   virtual void* exprgen(CC *cc);
   virtual Type* type(CC *cc);
 };
@@ -18,6 +18,6 @@ class FCallStmt: public Statement{
  public:
   FCall fc;
   virtual void compile(CC *cc);
-  virtual void prepeare(CC *cc);
+  virtual void prepare(CC *cc);
   virtual void codegen(CC *cc);
 };

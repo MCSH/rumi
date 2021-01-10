@@ -8,7 +8,7 @@ class VariableValue: public Expression{
   VariableValue(std::string id);
 
   virtual void compile(CC *cc);
-  virtual void prepeare(CC *cc);
+  virtual void prepare(CC *cc);
   virtual void* exprgen(CC *cc);
   virtual Type *type(CC *cc);
 };

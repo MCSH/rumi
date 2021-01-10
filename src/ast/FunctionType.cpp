@@ -1,5 +1,7 @@
 #include "FunctionType.h"
 
+// TODO compile & prep
+
 void* FunctionType::typegen(CC *cc){
   return 0;
 }
@@ -7,7 +9,7 @@ void* FunctionType::typegen(CC *cc){
 void FunctionType::compile(CC *cc){
 }
 
-void FunctionType::prepeare(CC *cc){
+void FunctionType::prepare(CC *cc){
 }
 
 bool FunctionType::hasOp(CC *cc, std::string op, Expression *rhs){

@@ -6,7 +6,8 @@
 #include <llvm/IR/DerivedTypes.h>
 
 void ConstInt::compile(CC *cc){}
-void ConstInt::prepeare(CC *cc){}
+// TODO check the size
+void ConstInt::prepare(CC *cc){}
 
 void *ConstInt::exprgen(CC *cc){
   return llvm::ConstantInt::get(llvm::IntegerType::getInt64Ty(cc->llc->context), value, true);

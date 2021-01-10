@@ -11,8 +11,8 @@ void Return::compile(CC *cc){
   if(value) value->compile(cc);
 }
 
-void Return::prepeare(CC *cc){
-  if(value) value->prepeare(cc);
+void Return::prepare(CC *cc){
+  if(value) value->prepare(cc);
 }
 
 void Return::codegen(CC *cc){

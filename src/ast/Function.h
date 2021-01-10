@@ -18,7 +18,7 @@ public:
   std::string id;
 
   virtual void compile(CC *cc);
-  virtual void prepeare(CC *cc);
+  virtual void prepare(CC *cc);
   virtual void codegen(CC *cc);
 
   void setId(std::string id);
