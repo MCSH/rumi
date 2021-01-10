@@ -2,8 +2,6 @@
 #include "../base.h"
 #include "../LLContext.h"
 
-// TODO computational graph
-
 Return::Return(Expression *value)
   : value(value)
 {
@@ -22,7 +20,6 @@ void Return::codegen(CC *cc){
   if(!value){
     cc->llc->builder->CreateRetVoid();
   } else {
-    // TODO
     cc->llc->builder->CreateRet((llvm::Value *)value->exprgen(cc));
   }
 }

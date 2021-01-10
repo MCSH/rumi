@@ -5,16 +5,15 @@
 #include "Expression.h"
 #include "Type.h"
 
-// TODO prepreare and compile
-
 void Define::prepeare(CC *cc){
-  // TODO ensure type
+  if(expression) expression->prepeare(cc);
 }
 
 void Define::compile(CC *cc){
   if(!type){
     type = expression->type(cc);
   }
+  if(expression) expression->compile(cc);
   Named *named = new Named();
   named -> id = id;
   named -> type = type;
@@ -23,7 +22,6 @@ void Define::compile(CC *cc){
 }
 
 void Define::codegen(CC *cc){
-  // TODO
   auto named = cc->lookup(id);
   named -> alloca = cc->llc->builder->CreateAlloca((llvm::Type*)type->typegen(cc), 0, id.c_str());
 

@@ -11,12 +11,6 @@
 
 void Function::prepeare(CC *cc){
   cc->pushContext();
-  for(Statement *s: statements){
-    for(AST *dep: s->compileDeps){
-      compileDeps.insert(dep);
-    }
-  }
-
   // TODO args, returnType
   for(Arg *a: args){
     a->prepeare(cc);
@@ -40,11 +34,6 @@ void Function::compile(CC *cc){
   cc->registerNamed(id, named);
 
   cc->pushContext(b);
-  for(Statement *s: statements){
-    for(AST *dep: s->linkDeps){
-      linkDeps.insert(dep);
-    }
-  }
   // TODO args, returnType
   for(Arg *a: args){
     a->compile(cc);
