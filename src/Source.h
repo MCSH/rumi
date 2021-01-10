@@ -11,6 +11,8 @@ struct ParseState{
   Token * token = 0;
   bool binOp = false;
   Token *binToken = 0;
+  bool castOp = false;
+  Token *castToken = 0;
 };
 
 class Source {

@@ -3,7 +3,7 @@ printString := (s: string) -> unit;
 
 main := () -> int {
   i := 2;
-  a := 2;
+  a : s64 = 2;
 
   while(i){
     i = i - 1;
@@ -16,8 +16,8 @@ main := () -> int {
   else
     a = a + 4;
 
-  c: u8;
-  c = a;
+  c: u16;
+  c = a -> u8;
 
   printString("Hello Rumi!\n\"\\ We're inside the string!!!");
 

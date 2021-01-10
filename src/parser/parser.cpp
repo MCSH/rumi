@@ -21,6 +21,7 @@
 #include "FCallStmtParser.h"
 #include "FunctionSigParser.h"
 #include "StringParser.h"
+#include "CastExpr.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
@@ -28,6 +29,7 @@ void Parser::init(CompileContext *cc){
   this->registerTopRule(new DefineParser());
 
 
+  this->registerExpressionRule(new CastExpr());
   this->registerExpressionRule(new BinOpParser());
   this->registerExpressionRule(new NumberParser());
   this->registerExpressionRule(new FCallParser());
