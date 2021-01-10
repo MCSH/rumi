@@ -9,6 +9,7 @@ public:
   Token *value, *statement;
   WhileToken(Token *value, Token *statement, CC *cc, Source *s, int pos, int epos);
   virtual std::string desc() override;
+  virtual AST *toAST(CC *cc) override;
 };
 
 class WhileParser: public ParseRule{

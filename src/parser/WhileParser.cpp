@@ -1,6 +1,7 @@
 #include "WhileParser.h"
 #include "Symbols.h"
 #include "Keywords.h"
+#include "../ast/While.h"
 
 WhileToken::WhileToken(Token *value, Token *statement, CC *cc, Source *s, int spos, int epos)
   : value(value)
@@ -10,6 +11,10 @@ WhileToken::WhileToken(Token *value, Token *statement, CC *cc, Source *s, int sp
   this->s = s;
   this->spos = spos;
   this->epos = epos;
+}
+
+AST *WhileToken::toAST(CC *cc){
+  return new While((Expression *) value->toAST(cc), (Statement*) statement->toAST(cc));
 }
 
 std::string WhileToken::desc(){

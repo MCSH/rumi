@@ -33,6 +33,8 @@ void If::codegen(CC *cc){
   else stFalseB = ifCont;
 
   // TODO check v
+  auto zeroConst = llvm::ConstantInt::get(llvm::IntegerType::getInt64Ty(cc->llc->context), 0, true);
+  v = cc->llc->builder->CreateICmpNE(v, zeroConst);
   cc->llc->builder->CreateCondBr(v, stTrueB, stFalseB);
 
   // generate true statement

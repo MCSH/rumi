@@ -71,6 +71,7 @@ bool PrimitiveType::hasOp(CC *cc, std::string op, Expression *rhs){
 }
 
 void *PrimitiveType::opgen(CC *cc, Expression *lhs,  std::string op, Expression *rhs){
+  // TODO take care of casting
   Type *rt = rhs->type(cc);
   PrimitiveType *prt = dynamic_cast<PrimitiveType*>(rt);
   if(isInt(key) && isInt(prt->key)){
@@ -80,6 +81,10 @@ void *PrimitiveType::opgen(CC *cc, Expression *lhs,  std::string op, Expression 
 
     if(op == "*"){
       return cc->llc->builder->CreateMul((llvm::Value*)lhs->exprgen(cc), (llvm::Value*)rhs->exprgen(cc));
+    }
+
+    if(op == "-"){
+      return cc->llc->builder->CreateSub((llvm::Value*)lhs->exprgen(cc), (llvm::Value*)rhs->exprgen(cc));
     }
   }
 
