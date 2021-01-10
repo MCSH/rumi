@@ -12,6 +12,8 @@ class Assign: public Statement{
 
   Assign(std::string id, Expression *e);
 
+  bool casting;
+
   virtual void prepare(CC *cc) override;
   virtual void compile(CC *cc) override;
   virtual void codegen(CC *cc) override;

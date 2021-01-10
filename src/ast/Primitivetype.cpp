@@ -45,6 +45,47 @@ bool isInt(TypeEnum key){
   return key == t_int || key == t_u8 || key == t_u16 || key == t_u32 || key == t_u64 || key == t_s8 || key == t_s16 || key == t_s32 || key == t_s64;
 }
 
+int sizeInt(TypeEnum key){
+  switch(key){
+  case t_int:
+  case t_s64:
+  case t_u64:
+    return 64;
+  case t_u32:
+  case t_s32:
+    return 32;
+  case t_u16:
+  case t_s16:
+    return 16;
+  case t_u8:
+  case t_s8:
+    return 8;
+  default:
+    return -1;
+  }
+}
+
+#include <iostream>
+
+bool isSigned(TypeEnum key){
+  switch(key){
+  case t_int:
+  case t_s64:
+  case t_s32:
+  case t_s16:
+  case t_s8:
+    return true;
+  case t_u64:
+  case t_u32:
+  case t_u16:
+  case t_u8:
+    return false;
+  default:
+    std::cout << "Calling isSigned on non-signed types" << std::endl;
+    exit(1);
+  }
+}
+
 Type* PrimitiveType::optyperesolve(CC *cc, std::string op, Expression *rhs){
   // TODO
   if((op == "+" || op == "-" || op == "*" || op == "/" || op == "%")
@@ -107,8 +148,9 @@ Compatibility PrimitiveType::compatible(Type *t){
   if(isInt(key) && isInt(pt->key)){
     if(key == t_u8 || key == t_s8){
       switch(pt->key){
-      case t_u8:
       case t_int:
+        return ImpCast;
+      case t_u8:
       case t_s8:
         return OK;
       default:
@@ -119,10 +161,10 @@ Compatibility PrimitiveType::compatible(Type *t){
       switch(pt->key){
       case t_u8:
       case t_s8:
+      case t_int:
         return ImpCast;
       case t_u16:
       case t_s16:
-      case t_int:
         return OK;
       default:
         return ExpCast;
@@ -134,10 +176,10 @@ Compatibility PrimitiveType::compatible(Type *t){
       case t_s8:
       case t_u16:
       case t_s16:
+      case t_int:
         return ImpCast;
       case t_u32:
       case t_s32:
-      case t_int:
         return OK;
       default:
         return ExpCast;
@@ -147,7 +189,6 @@ Compatibility PrimitiveType::compatible(Type *t){
       switch(pt->key){
       case t_u64:
       case t_s64:
-      case t_int:
         return OK;
       default:
         return ImpCast;
@@ -158,7 +199,17 @@ Compatibility PrimitiveType::compatible(Type *t){
   return INCOMPATIBLE;
 }
 
-Expression *PrimitiveType::castFrom(Expression *e){
-  // TODO
-  return e;
+void *PrimitiveType::castgen(CC *cc, Expression *e){
+  PrimitiveType *pt = dynamic_cast<PrimitiveType *>(e->type(cc));
+  if(!pt) return 0;
+  if(key == pt->key)
+    return e->exprgen(cc);
+
+  if(!isInt(key) || !isInt(pt->key)){
+    std::cout << "Calling cast on non-integer types" << std::endl;
+    exit(1);
+  }
+
+  std::cout << "Cast integer was invoked" << std::endl;
+  return cc->llc->builder->CreateIntCast((llvm::Value*)e->exprgen(cc), (llvm::Type *)typegen(cc), isSigned(pt->key));
 }

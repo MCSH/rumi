@@ -38,6 +38,9 @@ void Assign::compile(CC *cc){
   }
   if(compatible == ImpCast){
     cc->debug(LOW) << "Casting implicitly" << std::endl;
+    casting = true;
+  } else {
+    casting = false;
   }
 }
 
@@ -45,7 +48,13 @@ void Assign::codegen(CC *cc){
   // get alloca
   Named *name = cc->lookup(id);
   // genereate value
-  llvm::Value *v = (llvm::Value *)expression->exprgen(cc);
+  llvm::Value *v;
+  if(casting){
+    Named *named = cc->lookup(id);
+    v = (llvm::Value *)named->type->castgen(cc, expression);
+  } else {
+    v = (llvm::Value *)expression->exprgen(cc);
+  }
   // create store
   cc->llc->builder->CreateStore(v, (llvm::Value *)name->alloca);
 }

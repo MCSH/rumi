@@ -27,6 +27,6 @@ Compatibility FunctionType::compatible(Type *t){
   return INCOMPATIBLE;
 }
 
-Expression *FunctionType::castFrom(Expression *e){
+void *FunctionType::castgen(CC *cc, Expression *e){
   return 0;
 }

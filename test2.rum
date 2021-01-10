@@ -17,9 +17,9 @@ main := () -> int {
     a = a + 4;
 
   c: u8;
-  a = c;
+  c = a;
 
   printString("Hello Rumi!\n\"\\ We're inside the string!!!");
 
-  return a;
+  return c;
 }
