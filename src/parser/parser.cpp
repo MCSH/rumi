@@ -18,6 +18,7 @@
 #include "ReturnParser.h"
 #include "BinOpParser.h"
 #include "FCallParser.h"
+#include "FCallStmtParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
@@ -31,6 +32,7 @@ void Parser::init(CompileContext *cc){
   this->registerExpressionRule(new VariableValueParser());
   this->registerValueRule(new FunctionParser());
 
+  this->registerStatementRule(new FCallStmtParser());
   this->registerStatementRule(new AssignParser());
   this->registerStatementRule(new DefineParser());
   this->registerStatementRule(new ReturnParser());
@@ -98,17 +100,18 @@ int skipwscomment(std::string *w, int pos){
     }
 
     if(c == '*'){
+      pos ++;
       // block comments
       int level = 1;
       while(level){
         pos ++;
-        if(w->at(pos) == '*' && w->at(pos+1) == '/'){
-          pos ++;
-          level --;
-        }
         if(w->at(pos) == '/' && w->at(pos+1) == '*'){
           level ++;
           pos ++;
+        }
+        if(w->at(pos) == '*' && w->at(pos+1) == '/'){
+          pos += 2;
+          level --;
         }
         if(pos == len) return -1;
       }
@@ -157,6 +160,7 @@ void Parser::registerStatementRule(ParseRule *p){
 
 ParseResult Parser::parseTop(Source *s, int pos){
   // TODO
+  // TODO produce an error when you can't parse
   ParseResult ans;
   for(auto r: topRules){
     ans = r->parse(cc, s, pos);

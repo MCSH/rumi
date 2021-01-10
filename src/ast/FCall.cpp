@@ -30,3 +30,13 @@ void *FCall::exprgen(CC *cc){
   }
   return cc->llc->builder->CreateCall(f->getFunctionType(), f, params);
 }
+
+void FCallStmt::compile(CC *cc){
+  fc.compile(cc);
+}
+void FCallStmt::prepare(CC *cc){
+  fc.prepare(cc);
+}
+void FCallStmt::codegen(CC *cc){
+  fc.exprgen(cc);
+}
