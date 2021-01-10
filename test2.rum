@@ -11,5 +11,7 @@ main := () -> int {
   a : s64 = 1;
   b := 2;
   b = succ(b);
+  // line comments
+  /* block comment /* nested! */ */
   return a + b * 3 + test();
 }

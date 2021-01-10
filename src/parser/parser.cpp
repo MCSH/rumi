@@ -96,7 +96,21 @@ int skipwscomment(std::string *w, int pos){
       pos = skipws(w, pos);
       c = w->at(pos);
     }
-    // TODO block comments
+
+    if(c == '*'){
+      // TODO block comments
+      int level = 1;
+      while(level){
+        pos ++;
+        if(w->at(pos) == '*' && w->at(pos+1) == '/'){
+          pos ++;
+          level --;
+        }
+        if(pos == len) return -1;
+      }
+      pos = skipws(w, pos);
+      c = w->at(pos);
+    }
   }
   return pos;
 }
