@@ -7,12 +7,14 @@
 
 void Define::prepeare(CC *cc){
   if(expression) expression->prepeare(cc);
+  if(type) type -> compile(cc);
 }
 
 void Define::compile(CC *cc){
   if(!type){
     type = expression->type(cc);
   }
+  type -> compile(cc);
   if(expression) expression->compile(cc);
   Named *named = new Named();
   named -> id = id;

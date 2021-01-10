@@ -16,7 +16,6 @@ void Return::prepeare(CC *cc){
 }
 
 void Return::codegen(CC *cc){
-  // TODO
   if(!value){
     cc->llc->builder->CreateRetVoid();
   } else {

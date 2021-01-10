@@ -11,10 +11,11 @@
 
 void Function::prepeare(CC *cc){
   cc->pushContext();
-  // TODO args, returnType
   for(Arg *a: args){
     a->prepeare(cc);
   }
+
+  returnType->prepeare(cc);
 
   for(Statement *s: statements){
     s->prepeare(cc);
@@ -34,11 +35,12 @@ void Function::compile(CC *cc){
   cc->registerNamed(id, named);
 
   cc->pushContext(b);
-  // TODO args, returnType
   for(Arg *a: args){
     a->compile(cc);
     type->args.push_back(a->type);
   }
+
+  returnType->compile(cc);
 
   for(Statement *s: statements){
     s->compile(cc);
@@ -47,8 +49,8 @@ void Function::compile(CC *cc){
 }
 
 void Function::codegen(CC *cc){
+  // TODO handle varargs
   cc->pushContext(b);
-  // TODO
   llvm::Type* rt = returnType?(llvm::Type*)returnType->typegen(cc):
     llvm::Type::getVoidTy(cc->llc->context);
 

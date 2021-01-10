@@ -106,6 +106,10 @@ int skipwscomment(std::string *w, int pos){
           pos ++;
           level --;
         }
+        if(w->at(pos) == '/' && w->at(pos+1) == '*'){
+          level ++;
+          pos ++;
+        }
         if(pos == len) return -1;
       }
       pos = skipws(w, pos);
