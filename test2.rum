@@ -1,7 +1,10 @@
 
+test := () -> int{
+  return 1;
+}
+
 main := () -> int {
-  a : int = 1;
+  a : s64 = 1;
   b := 2;
-  //return b * 3 + a;
-  return a + b *3;
+  return a + b * 3 + test();
 }

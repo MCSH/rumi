@@ -4,6 +4,8 @@
 #include "../base.h"
 #include "../LLContext.h"
 #include "Type.h"
+#include "FunctionType.h"
+#include "Named.h"
 
 void Function::prepeare(CC *cc){
   for(Statement *s: statements){
@@ -19,8 +21,6 @@ void Function::prepeare(CC *cc){
   }
 }
 
-#include <ostream>
-
 void Function::compile(CC *cc){
   for(Statement *s: statements){
     for(AST *dep: s->linkDeps){
@@ -32,6 +32,17 @@ void Function::compile(CC *cc){
   for(Statement *s: statements){
     s->compile(cc);
   }
+
+  FunctionType *type = new FunctionType();
+  type->returnType = returnType;
+
+  // TODO add args to the type
+
+  Named *named = new Named();
+  named -> id = id;
+  named -> type = type;
+  named -> alloca = 0;
+  cc->registerNamed(id, named);
 }
 
 void Function::codegen(CC *cc){
@@ -42,6 +53,9 @@ void Function::codegen(CC *cc){
   auto ft = llvm::FunctionType::get(rt, false);
 
   auto f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, this->id, cc->llc->module);
+
+  Named *named = cc->lookup(id);
+  named->alloca = f;
 
   auto entry = llvm::BasicBlock::Create(cc->llc->context, "entry", f);
 

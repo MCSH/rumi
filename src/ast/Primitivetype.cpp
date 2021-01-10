@@ -18,6 +18,7 @@ void *PrimitiveType::typegen(CC *cc){
 
   switch(key){
   case t_int:
+  case t_s64:
     return llvm::IntegerType::get(cc->llc->context, 64);
   case t_unit:
     return llvm::Type::getVoidTy(cc->llc->context);

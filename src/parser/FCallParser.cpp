@@ -10,6 +10,18 @@ FCallToken::FCallToken(std::string id, CC *cc, Source *s, int spos, int epos)
   this->s = s;
 }
 
+FCall *FCallToken::toAST(CC *cc){
+  // TODO
+  FCall *f = new FCall();
+
+  f->id = id;
+  for(Token *a: args){
+    f->args.push_back((Expression *)a->toAST(cc));
+  }
+
+  return f;
+}
+
 std::string FCallToken::desc(){
   std::string argsS = "";
   int len = args.size();

@@ -2,6 +2,7 @@
 #include "ExpressionParser.h"
 #include "IdParser.h"
 #include "SymbolParser.h"
+#include "../ast/FCall.h"
 
 class FCallToken: public Token{
 public:
@@ -10,6 +11,7 @@ public:
   FCallToken(std::string id, CC *cc, Source *s, int spos, int epos);
   virtual ~FCallToken(){} // TODO
   virtual std::string desc() override;
+  virtual FCall *toAST(CC *cc) override;
 };
 
 class FCallParser: public ParseRule{
