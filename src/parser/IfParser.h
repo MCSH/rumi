@@ -9,6 +9,7 @@ public:
   Token *value, *st1, *st2;
   IfToken(Token *value, Token *st1, Token *st2, CC *cc, Source *s, int pos, int epos);
   virtual std::string desc() override;
+  virtual AST *toAST(CC *cc) override;
 };
 
 class IfParser: public ParseRule{

@@ -61,6 +61,8 @@ void Function::codegen(CC *cc){
 
   auto f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, this->id, cc->llc->module);
 
+  cc->llc->f = f;
+
   auto entry = llvm::BasicBlock::Create(cc->llc->context, "entry", f);
   cc->llc->builder->SetInsertPoint(entry);
 

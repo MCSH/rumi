@@ -8,4 +8,5 @@ class LLContext{
   llvm::LLVMContext context;
   llvm::Module *module;
   llvm::IRBuilder<> *builder;
+  llvm::Function *f;
 };

@@ -1,6 +1,7 @@
 #include "IfParser.h"
 #include "Symbols.h"
 #include "Keywords.h"
+#include "../ast/If.h"
 
 IfToken::IfToken(Token *value, Token *st1, Token *st2, CC *cc, Source *s, int spos, int epos)
   : value(value)
@@ -11,6 +12,10 @@ IfToken::IfToken(Token *value, Token *st1, Token *st2, CC *cc, Source *s, int sp
   this->s = s;
   this->spos = spos;
   this->epos = epos;
+}
+
+AST *IfToken::toAST(CC *cc){
+  return new If((Expression*)value->toAST(cc), (Statement*)st1->toAST(cc), (Statement*)st2->toAST(cc));
 }
 
 std::string IfToken::desc(){
