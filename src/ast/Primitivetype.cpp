@@ -32,6 +32,9 @@ void *PrimitiveType::typegen(CC *cc){
     return llvm::IntegerType::get(cc->llc->context, 64);
   case t_unit:
     return llvm::Type::getVoidTy(cc->llc->context);
+
+  case t_string:
+    return llvm::PointerType::getUnqual(llvm::IntegerType::get(cc->llc->context, 8));
   }
 
   cc->debug(NONE) << "Not supporting this type in primitivetypes!" << std::endl;

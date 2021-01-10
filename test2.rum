@@ -1,4 +1,5 @@
 printInt := (i: int) -> unit;
+printString := (s: string) -> unit;
 
 main := () -> int {
   i := 2;
@@ -14,6 +15,8 @@ main := () -> int {
     a = a - 10;
   else
     a = a + 4;
+
+  printString("Hello Rumi!\n\"\\ We're inside the string!!!");
 
   return a;
 }

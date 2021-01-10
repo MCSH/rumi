@@ -20,6 +20,7 @@
 #include "FCallParser.h"
 #include "FCallStmtParser.h"
 #include "FunctionSigParser.h"
+#include "StringParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
@@ -31,6 +32,7 @@ void Parser::init(CompileContext *cc){
   this->registerExpressionRule(new NumberParser());
   this->registerExpressionRule(new FCallParser());
   this->registerExpressionRule(new VariableValueParser());
+  this->registerExpressionRule(new StringParser());
   this->registerValueRule(new FunctionParser());
   this->registerValueRule(new FunctionSigParser());
 
