@@ -23,3 +23,10 @@ void* FunctionType::opgen(CC *cc, Expression *lhs, std::string op, Expression *r
 Type* FunctionType::optyperesolve(CC *cc, std::string op, Expression *rhs){
   return 0;
 }
+Compatibility FunctionType::compatible(Type *t){
+  return INCOMPATIBLE;
+}
+
+Expression *FunctionType::castFrom(Expression *e){
+  return 0;
+}

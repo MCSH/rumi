@@ -3,6 +3,7 @@
 #include "../base.h"
 #include "../LLContext.h"
 #include "Named.h"
+#include "Type.h"
 
 Assign::Assign(std::string id, Expression *e)
   : id(id)
@@ -23,6 +24,21 @@ void Assign::compile(CC *cc){
   }
 
   // TODO take care of casting
+  auto compatible = v->type->compatible(expression->type(cc));
+
+  if(compatible == ExpCast){
+    // TODO add name of types
+    cc->debug(NONE) << "Cannot explictly cast types" << std::endl;
+    exit(1);
+  }
+  if(compatible == INCOMPATIBLE){
+    // TODO add name of types
+    cc->debug(NONE) << "Cannot cast types" << std::endl;
+    exit(1);
+  }
+  if(compatible == ImpCast){
+    cc->debug(LOW) << "Casting implicitly" << std::endl;
+  }
 }
 
 void Assign::codegen(CC *cc){

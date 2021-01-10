@@ -95,3 +95,70 @@ void *PrimitiveType::opgen(CC *cc, Expression *lhs,  std::string op, Expression 
   exit(1);
   return 0;
 }
+
+Compatibility PrimitiveType::compatible(Type *t){
+  // TODO implement this.
+  PrimitiveType *pt = dynamic_cast<PrimitiveType *>(t);
+  if(!pt) return INCOMPATIBLE;
+
+  if(key == pt->key)
+    return OK;
+
+  if(isInt(key) && isInt(pt->key)){
+    if(key == t_u8 || key == t_s8){
+      switch(pt->key){
+      case t_u8:
+      case t_int:
+      case t_s8:
+        return OK;
+      default:
+        return ExpCast;
+      }
+    }
+    if(key == t_u16 || key == t_s16){
+      switch(pt->key){
+      case t_u8:
+      case t_s8:
+        return ImpCast;
+      case t_u16:
+      case t_s16:
+      case t_int:
+        return OK;
+      default:
+        return ExpCast;
+      }
+    }
+    if(key == t_u32 || key == t_s32){
+      switch(pt->key){
+      case t_u8:
+      case t_s8:
+      case t_u16:
+      case t_s16:
+        return ImpCast;
+      case t_u32:
+      case t_s32:
+      case t_int:
+        return OK;
+      default:
+        return ExpCast;
+      }
+    }
+    if(key == t_u64 || key == t_s64 || key == t_int){
+      switch(pt->key){
+      case t_u64:
+      case t_s64:
+      case t_int:
+        return OK;
+      default:
+        return ImpCast;
+      }
+    }
+  }
+
+  return INCOMPATIBLE;
+}
+
+Expression *PrimitiveType::castFrom(Expression *e){
+  // TODO
+  return e;
+}

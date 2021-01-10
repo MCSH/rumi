@@ -16,6 +16,9 @@ main := () -> int {
   else
     a = a + 4;
 
+  c: u8;
+  a = c;
+
   printString("Hello Rumi!\n\"\\ We're inside the string!!!");
 
   return a;

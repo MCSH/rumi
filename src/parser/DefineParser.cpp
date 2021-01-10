@@ -68,5 +68,5 @@ AST *DefineToken::toAST(CC *cc){
     }
   }
 
-  return new Define(id, (Expression *)value->toAST(cc), type?(Type *)type->toAST(cc):0);
+  return new Define(id, value?(Expression *)value->toAST(cc):0, type?(Type *)type->toAST(cc):0);
 }

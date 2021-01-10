@@ -33,6 +33,7 @@ void *FCall::exprgen(CC *cc){
 
 void FCallStmt::compile(CC *cc){
   fc.compile(cc);
+  // TODO casting
 }
 void FCallStmt::prepare(CC *cc){
   fc.prepare(cc);

@@ -21,6 +21,8 @@ void Define::compile(CC *cc){
   named -> type = type;
   named -> alloca = 0;
   cc->registerNamed(id, named);
+
+  // TODO casting
 }
 
 void Define::codegen(CC *cc){
