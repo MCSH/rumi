@@ -17,8 +17,18 @@ void PrimitiveType::prepare(CC *cc) {}
 void *PrimitiveType::typegen(CC *cc){
 
   switch(key){
+  case t_s8:
+  case t_u8:
+    return llvm::IntegerType::get(cc->llc->context, 8);
+  case t_s16:
+  case t_u16:
+    return llvm::IntegerType::get(cc->llc->context, 16);
+  case t_s32:
+  case t_u32:
+    return llvm::IntegerType::get(cc->llc->context, 32);
   case t_int:
   case t_s64:
+  case t_u64:
     return llvm::IntegerType::get(cc->llc->context, 64);
   case t_unit:
     return llvm::Type::getVoidTy(cc->llc->context);

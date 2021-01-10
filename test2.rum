@@ -9,10 +9,9 @@ succ := (i: int) -> int{
 }
 
 main := () -> int {
-  a : s64 = 1;
-  b := 2;
-  b = succ(b);
-  test();
-  // line comments
-  return a + b * 3 + test();
+  a := 1;
+  b := a;
+  // ...
+  a := 5;
+  return a + b;
 }
