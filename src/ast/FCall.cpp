@@ -5,13 +5,13 @@
 #include "Named.h"
 
 void FCall::compile(CC *cc){
-  // TODO call args
   // TODO ensure function exists
   // TODO ensure the arguments match the type
+  for(auto e: args) e->compile(cc);
 }
 
 void FCall::prepeare(CC *cc){
-  // TODO call args
+  for(auto e: args) e->prepeare(cc);
 }
 
 Type *FCall::type(CC *cc){
@@ -24,6 +24,9 @@ Type *FCall::type(CC *cc){
 
 void *FCall::exprgen(CC *cc){
   llvm::Function *f = (llvm::Function*)cc->lookup(id)->alloca;
-  // TODO args
-  return cc->llc->builder->CreateCall(f->getFunctionType(), f);
+  std::vector<llvm::Value *> params;
+  for(auto e: args){
+    params.push_back((llvm::Value *)e->exprgen(cc));
+  }
+  return cc->llc->builder->CreateCall(f->getFunctionType(), f, params);
 }

@@ -4,6 +4,7 @@
 #include <ostream>
 
 #include "../base.h"
+#include "../ast/Arg.h"
 
 FunctionBodyToken::FunctionBodyToken(CC *cc, Source *s, int pos, int epos){
   this->cc = cc;
@@ -15,6 +16,12 @@ FunctionBodyToken::FunctionBodyToken(CC *cc, Source *s, int pos, int epos){
 Function *FunctionBodyToken::toAST(CC *cc){
   Function *f = new Function();
 
+  for(auto a: args){
+    Arg *ar = new Arg();
+    ar->id = a->id;
+    ar->type = (Type *)a->type->toAST(cc);
+    f->args.push_back(ar);
+  }
   // TODO
   for(Token *t: statements){
     Statement *s = dynamic_cast<Statement *>(t->toAST(cc));

@@ -84,10 +84,14 @@ void CompileContext::pushContext(){
   block = b;
 }
 
-void CompileContext::popContext(){
+void CompileContext::pushContext(BlockContext *b){
+  block = b;
+}
+
+BlockContext *CompileContext::popContext(){
   auto b = block;
   block = b->parent;
-  delete b;
+  return b;
 }
 
 void CompileContext::registerNamed(std::string id, Named *n){

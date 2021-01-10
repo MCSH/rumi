@@ -3,14 +3,17 @@
 #include "ast.h"
 #include <vector>
 
-class Args;
+class Arg;
 class Type;
+class BlockContext;
 
 class Function: public Statement{
 public:
   std::vector<Statement *> statements;
-  std::vector<Args *> args;
+  std::vector<Arg *> args;
   Type * returnType;
+
+  BlockContext *b;
 
   std::string id;
 

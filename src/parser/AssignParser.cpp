@@ -1,5 +1,6 @@
 #include "AssignParser.h"
 #include "Symbols.h"
+#include "../ast/Assign.h"
 
 AssignToken::AssignToken(std::string id, Token *value, CC *cc, Source *s, int pos,
                                    int epos)
@@ -10,6 +11,10 @@ AssignToken::AssignToken(std::string id, Token *value, CC *cc, Source *s, int po
   this->s = s;
   this->spos = pos;
   this->epos = epos;
+}
+
+AST *AssignToken::toAST(CC* cc){
+  return new Assign(id, (Expression *)value->toAST(cc));
 }
 
 std::string AssignToken::desc(){

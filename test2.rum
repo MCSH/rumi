@@ -3,8 +3,13 @@ test := () -> int{
   return 1;
 }
 
+succ := (i: int) -> int{
+  return i + 1;
+}
+
 main := () -> int {
   a : s64 = 1;
   b := 2;
+  b = succ(b);
   return a + b * 3 + test();
 }

@@ -36,7 +36,8 @@ public:
   BlockContext *block = new BlockContext();
 
   void pushContext();
-  void popContext();
+  void pushContext(BlockContext *b);
+  BlockContext *popContext();
 
   void registerNamed(std::string id, Named *n);
   Named *lookup(std::string id);

@@ -9,6 +9,7 @@ public:
   Token *value;
   AssignToken(std::string id, Token *value, CC *cc, Source *s, int pos, int epos);
   virtual std::string desc() override;
+  virtual AST *toAST(CC *cc) override;
 };
 
 class AssignParser: public ParseRule{
