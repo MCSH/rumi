@@ -2,9 +2,9 @@
 #include "Symbols.h"
 #include "../ast/Assign.h"
 
-AssignToken::AssignToken(std::string id, Token *value, CC *cc, Source *s, int pos,
+AssignToken::AssignToken(Token *expr, Token *value, CC *cc, Source *s, int pos,
                                    int epos)
-  : id(id)
+  : expr(expr)
   , value(value)
 {
   this->cc = cc;
@@ -14,11 +14,11 @@ AssignToken::AssignToken(std::string id, Token *value, CC *cc, Source *s, int po
 }
 
 AST *AssignToken::toAST(CC* cc){
-  return new Assign(id, (Expression *)value->toAST(cc));
+  return new Assign((Expression *) expr->toAST(cc), (Expression *)value->toAST(cc));
 }
 
 std::string AssignToken::desc(){
-  return id + " = " + value->desc();
+  return expr->desc() + " = " + value->desc();
 }
 
 ParseResult AssignParser::scheme(CC *cc, Source *s, int pos){
@@ -26,7 +26,7 @@ ParseResult AssignParser::scheme(CC *cc, Source *s, int pos){
   auto ans = tid >> esp >> vp;
   if(!ans) return ans;
   return ParseResult(new AssignToken(
-                                     ((IdToken*)tid.token)->id,
+                                     tid.token,
                                      ((TupleToken*) ans.token)->t2,
                                      cc, s,
                                      ans.token->spos,

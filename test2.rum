@@ -5,15 +5,14 @@ free := (i: *any) -> unit;
 
 main := () -> int {
 
-  i: int = 5;
+  i: int = 3;
   ptr : *int = malloc(3 * sizeof int) -> *int;
 
+  i = 5;
   *ptr = 0;
   *(ptr + 1) = 1;
   *(ptr +2) = 5;
   *(ptr +2) = (*ptr +2) * 20;
-
-  // ptr +2 = &i; // TODO
 
   printInt(i);
   printInt((*ptr) + 10);

@@ -1,5 +1,6 @@
 #include "BinOp.h"
 #include "../base.h"
+#include "PointerType.h"
 
 BinOp::BinOp(Expression *lhs, std::string op, Expression *rhs)
   : lhs(lhs)

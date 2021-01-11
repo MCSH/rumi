@@ -1,13 +1,12 @@
 #pragma once
-#include "IdParser.h"
+#include "ExpressionParser.h"
 #include "SymbolParser.h"
 #include "ValueParser.h"
 
 class AssignToken: public Token{
 public:
-  std::string id;
-  Token *value;
-  AssignToken(std::string id, Token *value, CC *cc, Source *s, int pos, int epos);
+  Token *expr, *value;
+  AssignToken(Token *expr, Token *value, CC *cc, Source *s, int pos, int epos);
   virtual std::string desc() override;
   virtual AST *toAST(CC *cc) override;
 };
@@ -17,7 +16,7 @@ class AssignParser: public ParseRule{
   virtual ParseResult scheme(CC *cc, Source *s, int pos);
   AssignParser();
  private:
-  IdParser ip;
+  ExpressionParser ip;
   ValueParser vp;
   SymbolParser esp;
 };

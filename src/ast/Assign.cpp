@@ -5,26 +5,23 @@
 #include "Named.h"
 #include "Type.h"
 
-Assign::Assign(std::string id, Expression *e)
-  : id(id)
+Assign::Assign(Expression *baseExpr, Expression *e)
+  : baseExpr(baseExpr)
   , expression(e)
 {
 }
 
 void Assign::prepare(CC *cc){
   expression->prepare(cc);
+  baseExpr->prepare(cc);
 }
 
 void Assign::compile(CC *cc){
   expression->compile(cc);
-  auto v = cc->lookup(id);
-  if(!v){
-    cc->debug(NONE) << "Couldn't find variable " << id << std::endl;
-    exit(1);
-  }
+  baseExpr->compile(cc);
 
   // TODO take care of casting
-  auto compatible = v->type->compatible(expression->type(cc));
+  auto compatible = baseExpr->type(cc)->compatible(expression->type(cc));
 
   if(compatible == ExpCast){
     // TODO add name of types
@@ -46,15 +43,13 @@ void Assign::compile(CC *cc){
 
 void Assign::codegen(CC *cc){
   // get alloca
-  Named *name = cc->lookup(id);
   // genereate value
   llvm::Value *v;
   if(casting){
-    Named *named = cc->lookup(id);
-    v = (llvm::Value *)named->type->castgen(cc, expression);
+    v = (llvm::Value *)baseExpr->type(cc)->castgen(cc, expression);
   } else {
     v = (llvm::Value *)expression->exprgen(cc);
   }
   // create store
-  cc->llc->builder->CreateStore(v, (llvm::Value *)name->alloca);
+  cc->llc->builder->CreateStore(v, (llvm::Value *)baseExpr->allocagen(cc));
 }

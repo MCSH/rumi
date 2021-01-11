@@ -7,10 +7,10 @@ class Expression;
 
 class Assign: public Statement{
  public:
-  std::string id;
-  Expression *expression = 0;
+  Expression *baseExpr;
+  Expression *expression;
 
-  Assign(std::string id, Expression *e);
+  Assign(Expression *baseExpr, Expression *e);
 
   bool casting;
 
