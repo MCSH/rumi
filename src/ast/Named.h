@@ -8,5 +8,6 @@ class Named{
   std::string id;
   Type *type = 0;
   void *alloca = 0;
+  bool isType = false;
 };
 

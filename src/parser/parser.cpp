@@ -26,12 +26,14 @@
 #include "PtrValueParser.h"
 #include "SizeofParser.h"
 #include "ParenParser.h"
+#include "StructParser.h"
+#include "NamedTypeParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
   this->cc = cc;
   this->registerTopRule(new DefineParser());
-
+  this->registerTopRule(new StructParser());
 
   this->registerExpressionRule(new AddressParser());
   this->registerExpressionRule(new CastExpr());
@@ -58,13 +60,7 @@ void Parser::init(CompileContext *cc){
   this->registerTypeRule(new PrimitiveTypeParser());
   this->registerTypeRule(new PointerTypeParser());
   this->registerTypeRule(new FunctionTypeParser());
-  /*
-  this->registerTopRule(new FunctionParser());
-  this->registerTopRule(new KeywordParser());
-  this->registerTopRule(new NumberParser());
-  this->registerTopRule(new IdParser());
-  this->registerTopRule(new SymbolParser());
-  */
+  this->registerTypeRule(new NamedTypeParser());
 }
 
 bool isalpha(char c){

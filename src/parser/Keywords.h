@@ -6,4 +6,5 @@ enum Keyword : short {
   k_while,
   k_else,
   k_sizeof,
+  k_struct,
 };

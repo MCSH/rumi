@@ -7,7 +7,7 @@
 
 void Define::prepare(CC *cc){
   if(expression) expression->prepare(cc);
-  if(type) type -> compile(cc);
+  if(type) type -> prepare(cc);
 }
 
 void Define::compile(CC *cc){

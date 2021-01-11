@@ -1,0 +1,30 @@
+printInt := (i: int) -> unit;
+printString := (s: string) -> unit;
+malloc := (i: int) -> *any;
+free := (i: *any) -> unit;
+
+TestS: struct{
+  id: int;
+  name: string;
+}
+
+main := () -> int {
+
+  i: int = 3;
+  ptr : *int = malloc(3 * sizeof int) -> *int;
+
+  i = 5;
+  *ptr = 0;
+  *(ptr + 1) = 1;
+  *(ptr +2) = 5;
+  *(ptr +2) = (*ptr +2) * 20;
+
+  printInt(i);
+  printInt((*ptr) + 10);
+  printInt(*(ptr+1));
+  printInt(*(ptr+ 2 * 1));
+
+  free(ptr);
+
+  return 0;
+}

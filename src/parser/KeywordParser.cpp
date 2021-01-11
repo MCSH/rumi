@@ -4,7 +4,6 @@
 #include "Keywords.h"
 
 KeywordToken* KeywordParser::findkey(CC *cc, Source *s, int pos){
-  // TODO
   int end = extractNextAlphaNumerical(&s->str, pos);
   if(end == -1) return 0;
   std::string w = s->str.substr(pos, end - pos);
@@ -14,6 +13,7 @@ KeywordToken* KeywordParser::findkey(CC *cc, Source *s, int pos){
   if(w == "else") return new KeywordToken(Keyword::k_else, pos, end, cc, s);
   if(w == "while") return new KeywordToken(Keyword::k_while, pos, end, cc, s);
   if(w == "sizeof") return new KeywordToken(Keyword::k_sizeof, pos, end, cc, s);
+  if(w == "struct") return new KeywordToken(Keyword::k_struct, pos, end, cc, s);
   return 0;
 }
 
@@ -38,6 +38,8 @@ std::string KeywordToken::desc(){
     return "while";
   case k_sizeof:
     return "sizeof";
+  case k_struct:
+    return "struct";
   default:
     return "[Unknown keyword]";
   }
