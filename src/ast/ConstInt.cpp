@@ -20,3 +20,9 @@ ConstInt::ConstInt(long long value)
 Type *ConstInt::type(CC *cc){
   return new PrimitiveType(t_int);
 }
+
+
+void *ConstInt::allocagen(CC *cc){
+  cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
+  exit(1);
+}

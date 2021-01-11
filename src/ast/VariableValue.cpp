@@ -26,3 +26,7 @@ VariableValue::VariableValue(std::string id)
 Type *VariableValue::type(CC *cc){
   return cc->lookup(id)->type;
 }
+
+void *VariableValue::allocagen(CC *cc){
+  return cc->lookup(id)->alloca;
+}

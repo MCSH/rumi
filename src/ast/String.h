@@ -10,4 +10,5 @@ class String: public Expression{
   virtual void prepare(CC *cc);
   virtual void* exprgen(CC *cc);
   virtual Type* type(CC *cc);
+  virtual void *allocagen(CC *cc);
 };

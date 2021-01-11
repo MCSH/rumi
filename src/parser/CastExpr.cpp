@@ -30,13 +30,13 @@ ParseResult CastExpr::innerscheme(CC *cc, Source *s, int pos){
 
 ParseResult CastExpr::scheme(CC *cc, Source *s, int pos){
   ParseState *ps = s->resolveState(pos);
-  if(ps->castOp) return ps->castToken; // recursive
-  ps->castOp = true;
+  if(ps->hasParser("cast")) return ps->getToken("cast"); // recursive
+  ps->setToken("cast", 0);
 
   Token* tmp =  innerscheme(cc, s, pos).token;
 
-  ps->castToken = tmp;
-  return ParseResult(ps->castToken);
+  ps->setToken("cast", tmp);
+  return ParseResult(tmp);
 }
 
 

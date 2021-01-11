@@ -4,7 +4,7 @@ printString := (s: string) -> unit;
 main := () -> int {
 
   i: int = 0;
-  ptr : *int; // = &i;
+  ptr : *int = &i;
 
   //*ptr = 3;
 

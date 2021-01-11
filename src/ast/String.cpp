@@ -17,3 +17,8 @@ void *String::exprgen(CC *cc){
 Type *String::type(CC *cc){
   return new PrimitiveType(t_string);
 }
+
+void *String::allocagen(CC *cc){
+  cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
+  exit(1);
+}

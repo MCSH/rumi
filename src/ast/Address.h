@@ -1,14 +1,15 @@
 #pragma once
 #include "Expression.h"
 
-class ConstInt: public Expression{
+class Address: public Expression{
  public:
-  long long value;
-  ConstInt(long long v);
+  Expression *exp;
+
+  Address(Expression *);
 
   virtual void compile(CC *cc);
   virtual void prepare(CC *cc);
   virtual void* exprgen(CC *cc);
-  virtual Type* type(CC *cc);
+  virtual Type *type(CC *cc);
   virtual void *allocagen(CC *cc);
 };

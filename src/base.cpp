@@ -70,11 +70,11 @@ void Source::loadBuff() {
 ParseState *Source::resolveState(int pos){
   auto it = mem.find(pos);
   if(it != mem.end()){
-    return &(*it).second;
+    return (*it).second;
   }
   /// Create it
-  mem[pos] = ParseState();
-  return &mem[pos];
+  mem[pos] = new ParseState();
+  return mem[pos];
 }
 
 
@@ -114,4 +114,20 @@ Named *CompileContext::lookup(std::string id){
   }
 
   return 0;
+}
+
+bool ParseState::hasParser(std::string name){
+  auto it = memoizations.find(name);
+  if(it != memoizations.end()){
+    return true;
+  }
+  return false;
+}
+
+void ParseState::setToken(std::string name, Token * token){
+  memoizations[name] = token;
+}
+
+Token *ParseState::getToken(std::string name){
+  return memoizations[name];
 }

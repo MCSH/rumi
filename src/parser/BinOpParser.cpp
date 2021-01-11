@@ -64,8 +64,8 @@ std::string BinOpToken::desc(){
 
 ParseResult BinOpParser::scheme(CC *cc, Source *s, int pos){
   ParseState *ps = s->resolveState(pos);
-  if(ps->binOp) return ps->binToken; // recursive
-  ps->binOp = true;
+  if(ps->hasParser("binOp")) return ps->getToken("binOp"); // recursive
+  ps->setToken("binOp", 0);
 
   Token* tmp =  innerscheme(cc, s, pos).token;
 
@@ -77,8 +77,8 @@ ParseResult BinOpParser::scheme(CC *cc, Source *s, int pos){
     tmp = new BinOpToken(((SymbolToken *)tt->t2)->sb, tt->t1, t->t2, cc, s, t->spos, t->epos);
   }
 
-  ps->binToken = tmp;
-  return ParseResult(ps->binToken);
+  ps->setToken("binOp", tmp);
+  return ParseResult(tmp);
 }
 
 ParseResult BinOpParser::innerscheme(CC *cc, Source *s, int pos){

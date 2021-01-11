@@ -15,6 +15,9 @@ ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
   case ';':
     sb = s_semicolon;
     break;
+  case '&':
+    sb = s_and;
+    break;
   case ':':
     sb = s_col;
     break;
@@ -72,6 +75,8 @@ std::string symbolDesc(Symbol sb){
     return ":";
   case s_eq:
     return "=";
+  case s_and:
+    return "&";
   case s_lpar:
     return "(";
   case s_rpar:

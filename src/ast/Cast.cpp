@@ -30,3 +30,8 @@ Type* Cast::type(CC *cc){
 void *Cast::exprgen(CC *cc){
   return type_->castgen(cc, exp);
 }
+
+void *Cast::allocagen(CC *cc){
+  cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
+  exit(1);
+}

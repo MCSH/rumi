@@ -22,6 +22,7 @@
 #include "FunctionSigParser.h"
 #include "StringParser.h"
 #include "CastExpr.h"
+#include "AddressParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
@@ -29,6 +30,7 @@ void Parser::init(CompileContext *cc){
   this->registerTopRule(new DefineParser());
 
 
+  this->registerExpressionRule(new AddressParser());
   this->registerExpressionRule(new CastExpr());
   this->registerExpressionRule(new BinOpParser());
   this->registerExpressionRule(new NumberParser());

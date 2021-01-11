@@ -29,3 +29,8 @@ Type *BinOp::type(CC *cc){
 void *BinOp::exprgen(CC *cc){
   return lhs->type(cc)->opgen(cc, lhs, op, rhs);
 }
+
+void *BinOp::allocagen(CC *cc){
+  cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
+  exit(1);
+}

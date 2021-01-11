@@ -15,4 +15,5 @@ enum Symbol : short {
   s_div,
   s_rem,
   s_comma,
+  s_and,
 };

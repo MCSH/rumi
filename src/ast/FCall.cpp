@@ -31,6 +31,11 @@ void *FCall::exprgen(CC *cc){
   return cc->llc->builder->CreateCall(f->getFunctionType(), f, params);
 }
 
+void *FCall::allocagen(CC *cc){
+  cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
+  exit(1);
+}
+
 void FCallStmt::compile(CC *cc){
   fc.compile(cc);
   // TODO casting
