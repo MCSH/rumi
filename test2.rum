@@ -6,7 +6,7 @@ main := () -> int {
   i: int = 0;
   ptr : *int = &i;
 
-  //*ptr = 3;
+  *ptr = 3;
 
   printInt(i);
 
