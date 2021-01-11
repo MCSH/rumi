@@ -21,6 +21,7 @@ AST* PtrValueToken::toAST(CC *cc){
 
 PtrValueParser::PtrValueParser()
   : ssp(s_mult)
+  , ep(5)
 {}
 
 ParseResult PtrValueParser::scheme(CC *cc, Source *s, int pos){

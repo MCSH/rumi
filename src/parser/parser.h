@@ -21,6 +21,7 @@ public:
 class ParseRule {
 public:
   virtual ParseResult scheme(CC *cc, Source *s, int pos) = 0;
+  virtual int prec();
   ParseResult parse(CC *cc, Source *s, int pos);
 };
 
@@ -42,7 +43,7 @@ public:
   void registerStatementRule(ParseRule *p);
   ParseResult parseTop(Source *s, int pos = 0);
   ParseResult parseType(Source *s, int pos = 0);
-  ParseResult parseExpression(Source *s, int pos = 0);
+  ParseResult parseExpression(Source *s, int pos, int prec);
   ParseResult parseValue(Source *s, int pos = 0);
   ParseResult parseStatement(Source *s, int pos = 0);
 };

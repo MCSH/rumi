@@ -29,3 +29,7 @@ ParseResult ParenParser::scheme(CC *cc, Source *s, int pos){
   if(!ans) return ans;
   return ParseResult(new ParenToken(((TupleToken*) tmp.token)->t2, cc, s, ans.token->spos, ans.token->epos));
 }
+
+int ParenParser::prec(){
+  return 0;
+}

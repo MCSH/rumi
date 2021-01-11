@@ -196,10 +196,11 @@ ParseResult Parser::parseType(Source *s, int pos){
   return 0;
 }
 
-ParseResult Parser::parseExpression(Source *s, int pos){
+ParseResult Parser::parseExpression(Source *s, int pos, int prec){
   // TODO
   ParseResult ans;
   for(auto r: expressionRules){
+    if(prec > -1 && r->prec() > prec) continue;
     ans = r->parse(cc, s, pos);
     if(ans) return ans;
   }
@@ -293,4 +294,8 @@ std::ostream &operator<<(std::ostream &os, ParseResult &s){
 }
 
 Token::~Token(){
+}
+
+int ParseRule::prec(){
+  return 10;
 }

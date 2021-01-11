@@ -23,6 +23,7 @@ AST *PtrAssignToken::toAST(CC *cc){
 PtrAssignParser::PtrAssignParser()
   : esp(s_eq)
   , ssp(s_mult)
+  , ep(5)
 {}
 
 ParseResult PtrAssignParser::scheme(CC *cc, Source *s, int pos){
