@@ -15,3 +15,5 @@ public:
   Compatibility compatible(Type *t);
   void* castgen(CC *cc, Expression *e);
 };
+
+bool isInt(TypeEnum key);

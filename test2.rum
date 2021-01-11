@@ -1,16 +1,26 @@
 printInt := (i: int) -> unit;
 printString := (s: string) -> unit;
 malloc := (i: int) -> *any;
+free := (i: *any) -> unit;
 
 main := () -> int {
 
-  i: int = 0;
-  ptr : *int = malloc(sizeof int) -> *int;
+  i: int = 5;
+  ptr : *int = malloc(3 * sizeof int) -> *int;
 
-  *ptr = 3;
+  *ptr = 0;
+  *(ptr + 1) = 1;
+  *ptr +2 = 5;
+  *ptr +2 = (*ptr +2) * 20;
+
+  // ptr +2 = &i; // TODO
 
   printInt(i);
-  printInt(*ptr);
+  printInt((*ptr) + 10);
+  printInt(*(ptr+1));
+  printInt(*(ptr+ 2 * 1));
+
+  free(ptr);
 
   return 0;
 }

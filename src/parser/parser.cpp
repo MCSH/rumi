@@ -26,6 +26,7 @@
 #include "PtrAssignParser.h"
 #include "PtrValueParser.h"
 #include "SizeofParser.h"
+#include "ParenParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
@@ -42,6 +43,8 @@ void Parser::init(CompileContext *cc){
   this->registerExpressionRule(new StringParser());
   this->registerExpressionRule(new PtrValueParser());
   this->registerExpressionRule(new SizeofParser());
+  this->registerExpressionRule(new ParenParser());
+
   this->registerValueRule(new FunctionParser());
   this->registerValueRule(new FunctionSigParser());
 
