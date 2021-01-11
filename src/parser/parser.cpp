@@ -24,6 +24,7 @@
 #include "CastExpr.h"
 #include "AddressParser.h"
 #include "PtrAssignParser.h"
+#include "PtrValueParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
@@ -38,6 +39,7 @@ void Parser::init(CompileContext *cc){
   this->registerExpressionRule(new FCallParser());
   this->registerExpressionRule(new VariableValueParser());
   this->registerExpressionRule(new StringParser());
+  this->registerExpressionRule(new PtrValueParser());
   this->registerValueRule(new FunctionParser());
   this->registerValueRule(new FunctionSigParser());
 

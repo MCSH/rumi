@@ -9,6 +9,7 @@ main := () -> int {
   *ptr = 3;
 
   printInt(i);
+  printInt(*ptr);
 
   return 0;
 }
