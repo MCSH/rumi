@@ -1,5 +1,6 @@
 #include "PointerTypeParser.h"
 #include "Symbols.h"
+#include "../ast/PointerType.h"
 
 PointerTypeToken::PointerTypeToken(Token *innerType, CC *cc, Source *s, int pos,
                                    int epos)
@@ -9,6 +10,10 @@ PointerTypeToken::PointerTypeToken(Token *innerType, CC *cc, Source *s, int pos,
   this->s = s;
   this->spos = pos;
   this->epos = epos;
+}
+
+AST *PointerTypeToken::toAST(CC *cc){
+  return new PointerType((Type*) innerType->toAST(cc));
 }
 
 std::string PointerTypeToken::desc(){

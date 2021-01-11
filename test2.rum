@@ -2,24 +2,13 @@ printInt := (i: int) -> unit;
 printString := (s: string) -> unit;
 
 main := () -> int {
-  i := 2;
-  a : s64 = 2;
 
-  while(i){
-    i = i - 1;
-    a = a * a;
-    printInt(a);
-  }
+  i: int = 0;
+  ptr : *int; // = &i;
 
-  if(a)
-    a = a - 10;
-  else
-    a = a + 4;
+  //*ptr = 3;
 
-  c: u16;
-  c = a -> u8;
+  printInt(i);
 
-  printString("Hello Rumi!\n\"\\ We're inside the string!!!");
-
-  return c;
+  return 0;
 }
