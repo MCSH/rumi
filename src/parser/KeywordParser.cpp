@@ -13,6 +13,7 @@ KeywordToken* KeywordParser::findkey(CC *cc, Source *s, int pos){
   if(w == "if") return new KeywordToken(Keyword::k_if, pos, end, cc, s);
   if(w == "else") return new KeywordToken(Keyword::k_else, pos, end, cc, s);
   if(w == "while") return new KeywordToken(Keyword::k_while, pos, end, cc, s);
+  if(w == "sizeof") return new KeywordToken(Keyword::k_sizeof, pos, end, cc, s);
   return 0;
 }
 
@@ -35,6 +36,8 @@ std::string KeywordToken::desc(){
     return "else";
   case k_while:
     return "while";
+  case k_sizeof:
+    return "sizeof";
   default:
     return "[Unknown keyword]";
   }
@@ -42,9 +45,3 @@ std::string KeywordToken::desc(){
 
 KeywordParser::KeywordParser():has_match(false){}
 KeywordParser::KeywordParser(Keyword kw):has_match(true),match(kw){}
-
-/*
-Token *TwoKeywordParser::scheme(CC *cc, Source *s, int pos){
-  return kps.parse(cc, s, pos) >> kps;
-}
-*/

@@ -1,10 +1,11 @@
 printInt := (i: int) -> unit;
 printString := (s: string) -> unit;
+malloc := (i: int) -> *any;
 
 main := () -> int {
 
   i: int = 0;
-  ptr : *int = &i;
+  ptr : *int = malloc(sizeof int) -> *int;
 
   *ptr = 3;
 

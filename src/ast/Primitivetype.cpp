@@ -19,6 +19,7 @@ void *PrimitiveType::typegen(CC *cc){
   switch(key){
   case t_s8:
   case t_u8:
+  case t_any:
     return llvm::IntegerType::get(cc->llc->context, 8);
   case t_s16:
   case t_u16:
@@ -42,7 +43,7 @@ void *PrimitiveType::typegen(CC *cc){
 }
 
 bool isInt(TypeEnum key){
-  return key == t_int || key == t_u8 || key == t_u16 || key == t_u32 || key == t_u64 || key == t_s8 || key == t_s16 || key == t_s32 || key == t_s64;
+  return key == t_int || key == t_u8 || key == t_u16 || key == t_u32 || key == t_u64 || key == t_s8 || key == t_s16 || key == t_s32 || key == t_s64 || key == t_any;
 }
 
 int sizeInt(TypeEnum key){
@@ -59,6 +60,7 @@ int sizeInt(TypeEnum key){
     return 16;
   case t_u8:
   case t_s8:
+  case t_any:
     return 8;
   default:
     return -1;
@@ -75,6 +77,7 @@ bool isSigned(TypeEnum key){
   case t_s16:
   case t_s8:
     return true;
+  case t_any:
   case t_u64:
   case t_u32:
   case t_u16:
@@ -149,6 +152,7 @@ Compatibility PrimitiveType::compatible(Type *t){
     if(key == t_u8 || key == t_s8){
       switch(pt->key){
       case t_int:
+      case t_any:
         return ImpCast;
       case t_u8:
       case t_s8:
@@ -162,6 +166,7 @@ Compatibility PrimitiveType::compatible(Type *t){
       case t_u8:
       case t_s8:
       case t_int:
+      case t_any:
         return ImpCast;
       case t_u16:
       case t_s16:
@@ -177,6 +182,7 @@ Compatibility PrimitiveType::compatible(Type *t){
       case t_u16:
       case t_s16:
       case t_int:
+      case t_any:
         return ImpCast;
       case t_u32:
       case t_s32:

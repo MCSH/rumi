@@ -1,5 +1,6 @@
 #include "PointerType.h"
 #include "Type.h"
+#include "Expression.h"
 #include "../LLContext.h"
 
 PointerType::PointerType(Type *innerType)
@@ -32,9 +33,12 @@ Type *PointerType::optyperesolve(CC *cc, std::string op, Expression *rhs){
 }
 Compatibility PointerType::compatible(Type *t){
   // TODO
+  if(PointerType *pt = dynamic_cast<PointerType*>(t)){
+    return OK;
+  }
   return INCOMPATIBLE;
 }
 void *PointerType::castgen(CC *cc, Expression *e){
   // TODO
-  return 0;
+  return e->exprgen(cc);
 }
