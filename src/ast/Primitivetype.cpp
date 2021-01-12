@@ -133,6 +133,20 @@ void *PrimitiveType::opgen(CC *cc, Expression *lhs,  std::string op, Expression 
     if(op == "-"){
       return cc->llc->builder->CreateSub((llvm::Value*)lhs->exprgen(cc), (llvm::Value*)rhs->exprgen(cc));
     }
+
+    if(op == "/"){
+      if(isSigned(key))
+        return cc->llc->builder->CreateSDiv((llvm::Value*)lhs->exprgen(cc), (llvm::Value*)rhs->exprgen(cc));
+      else
+        return cc->llc->builder->CreateUDiv((llvm::Value*)lhs->exprgen(cc), (llvm::Value*)rhs->exprgen(cc));
+    }
+
+    if(op == "%"){
+      if(isSigned(key))
+        return cc->llc->builder->CreateSRem((llvm::Value*)lhs->exprgen(cc), (llvm::Value*)rhs->exprgen(cc));
+      else
+        return cc->llc->builder->CreateURem((llvm::Value*)lhs->exprgen(cc), (llvm::Value*)rhs->exprgen(cc));
+    }
   }
 
   cc->debug(NONE) << "INCOMPLETE IMPLEMENTATION FOR OPGEN PRIM"  << std::endl;
