@@ -8,6 +8,8 @@ public:
   std::vector<Type *> args;
   Type *returnType;
 
+  bool vararg = false;
+
   virtual void* typegen(CC *cc);
   virtual void compile(CC *cc);
   virtual void prepare(CC *cc);

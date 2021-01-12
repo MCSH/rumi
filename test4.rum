@@ -1,0 +1,37 @@
+printInt := (i: int) -> unit;
+printString := (s: string) -> unit;
+malloc := (i: int) -> *any;
+free := (i: *any) -> unit;
+
+InnerTest: struct{
+  id: int;
+}
+
+TestS: struct{
+  name: string;
+  id: int;
+  it: InnerTest;
+}
+
+main := () -> int {
+
+  t: TestS;
+  pt : *TestS = malloc(sizeof TestS) -> *TestS;
+
+  //(*pt).id = 10;
+  pt.id = 10;
+
+  t.id = 2;
+  t.name = "Sajjad";
+
+  t.it.id = 5;
+
+  printInt(t.id);
+  printString(t.name);
+  printInt(t.it.id);
+
+  printInt((*pt).id);
+  printInt(pt.id);
+
+  return 0;
+}

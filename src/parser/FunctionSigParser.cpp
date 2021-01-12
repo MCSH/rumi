@@ -20,6 +20,7 @@ FunctionSig *FunctionSigToken::toAST(CC *cc){
   }
 
   fs->returnType = (Type *) returnType->toAST(cc);
+  fs->vararg = vararg;
   return fs;
 }
 
@@ -36,25 +37,37 @@ FunctionSigParser::FunctionSigParser()
   , ssp(s_semicolon)
   , csp(s_col)
   , comsp(s_comma)
+  , tripledotsp(s_tripledot)
 {}
 
 ParseResult FunctionSigParser::scheme(CC *cc, Source *s, int pos){
   FunctionSigToken *fst = new FunctionSigToken(cc, s, pos, pos);
   auto ans = lpsp.parse(cc, s, pos);
   if(!ans) return ans;
-  auto tmp = ans >> ip >> csp >> tp;
+  auto tmpId = ans >> ip;
+  auto tmpC = tmpId >> csp;
+  auto tmp3 = tmpC >> tripledotsp;
+  if(tmp3){
+    fst->vararg = true;
+    tmpC = tmp3;
+  }
+  auto tmp = tmpC >> tp;
   while(tmp){
     ans = tmp;
-    auto firstTuple = (TupleToken*) tmp.token;
-    auto secondTuple = (TupleToken*) firstTuple->t1;
-    auto thirdTuple = (TupleToken*) secondTuple->t1;
-    std::string id = ((IdToken*)((TupleToken*) thirdTuple)->t2)->id;
-    Token *t = (firstTuple)->t2;
+    std::string id = ((IdToken*)((TupleToken*) tmpId.token)->t2)->id;
+    Token *t = ((TupleToken*) tmp.token)->t2;
     fst->args.push_back(new DefineToken(id, t, 0, cc, s, ans.token->spos, ans.token->epos));
     if(!(tmp >> comsp)){
       break;
     }
-    tmp = tmp >> comsp >> ip >> csp >> tp;
+    tmpId = tmp >> comsp >> ip;
+    tmpC = tmpId >> csp;
+    tmp3 = tmpC >> tripledotsp;
+    if (tmp3) {
+      fst->vararg = true;
+      tmpC = tmp3;
+    }
+    tmp = tmpC >> tp;
   }
 
   auto atp = ans >> rpsp >> asp >> tp;

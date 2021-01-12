@@ -2,36 +2,13 @@ printInt := (i: int) -> unit;
 printString := (s: string) -> unit;
 malloc := (i: int) -> *any;
 free := (i: *any) -> unit;
-
-InnerTest: struct{
-  id: int;
-}
-
-TestS: struct{
-  name: string;
-  id: int;
-  it: InnerTest;
-}
+printf := (f: string, a: ...any)->unit;
 
 main := () -> int {
 
-  t: TestS;
-  pt : *TestS = malloc(sizeof TestS) -> *TestS;
+  printf("Hello World!\n");
 
-  //(*pt).id = 10;
-  pt.id = 10;
-
-  t.id = 2;
-  t.name = "Sajjad";
-
-  t.it.id = 5;
-
-  printInt(t.id);
-  printString(t.name);
-  printInt(t.it.id);
-
-  printInt((*pt).id);
-  printInt(pt.id);
+  printf("3 = %d\n", 3);
 
   return 0;
 }

@@ -10,6 +10,7 @@ class FunctionSig: public Statement{
 public:
   std::vector<Arg *> args;
   Type * returnType;
+  bool vararg;
 
   std::string id;
 

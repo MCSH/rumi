@@ -17,4 +17,5 @@ enum Symbol : short {
   s_comma,
   s_and,
   s_dot,
+  s_tripledot,
 };

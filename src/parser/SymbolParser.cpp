@@ -37,6 +37,13 @@ ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
     sb = s_rbra;
     break;
   case '.':
+    if( s->str.at(pos+1) == s->str.at(pos+2) ){
+      if(s->str.at(pos+1) == '.'){
+        sb = s_tripledot;
+        epos += 2;
+        break;
+      }
+    }
     sb = s_dot;
     break;
   case '-':
@@ -102,6 +109,8 @@ std::string symbolDesc(Symbol sb){
     return ",";
   case s_dot:
     return ".";
+  case s_tripledot:
+    return "<...>";
   default:
     return "<Unprogrammed Symbol>";
   }

@@ -26,6 +26,11 @@ void FunctionSig::compile(CC *cc){
   for(Arg *a: args){
     type->args.push_back(a->type);
   }
+
+  if(vararg)
+    type->args.pop_back();
+
+  type->vararg = vararg;
 }
 
 void FunctionSig::codegen(CC *cc){
@@ -35,8 +40,10 @@ void FunctionSig::codegen(CC *cc){
 
   std::vector<llvm::Type *> types;
   for(Arg *a: args) types.push_back((llvm::Type *)a->type->typegen(cc));
+  if(vararg)
+    types.pop_back();
 
-  auto ft = llvm::FunctionType::get(rt, types, false);
+  auto ft = llvm::FunctionType::get(rt, types, vararg);
 
   auto f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, this->id, cc->llc->module);
 

@@ -17,6 +17,8 @@ class FunctionSigToken: public Token{
 
   virtual std::string desc() override;
   virtual FunctionSig* toAST(CC *cc);
+
+  bool vararg = false;
 };
 
 class FunctionSigParser: public ParseRule{
@@ -27,6 +29,7 @@ class FunctionSigParser: public ParseRule{
   SymbolParser lpsp, rpsp;
   SymbolParser asp, csp;
   SymbolParser comsp, ssp;
+  SymbolParser tripledotsp;
   TypeParser tp;
   IdParser ip;
 };
