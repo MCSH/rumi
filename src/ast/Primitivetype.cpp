@@ -219,3 +219,19 @@ void *PrimitiveType::castgen(CC *cc, Expression *e){
   std::cout << "Cast integer was invoked" << std::endl;
   return cc->llc->builder->CreateIntCast((llvm::Value*)e->exprgen(cc), (llvm::Type *)typegen(cc), isSigned(pt->key));
 }
+
+bool PrimitiveType::hasMem(CC *cc, Expression *exp, std::string id){
+  return false;
+}
+
+void *PrimitiveType::memgen(CC *cc, Expression *exp, std::string id){
+  return 0;
+}
+
+void *PrimitiveType::memalloca(CC *cc, Expression *exp, std::string id){
+  return 0;
+}
+
+Type *PrimitiveType::memtyperesolve(CC *cc, Expression *exp, std::string id){
+  return 0;
+}

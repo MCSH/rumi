@@ -70,3 +70,19 @@ void *PointerType::castgen(CC *cc, Expression *e){
   // TODO
   return e->exprgen(cc);
 }
+
+bool PointerType::hasMem(CC *cc, Expression *exp, std::string id){
+  return false;
+}
+
+void *PointerType::memgen(CC *cc, Expression *exp, std::string id){
+  return 0;
+}
+
+void *PointerType::memalloca(CC *cc, Expression *exp, std::string id){
+  return 0;
+}
+
+Type *PointerType::memtyperesolve(CC *cc, Expression *exp, std::string id){
+  return 0;
+}

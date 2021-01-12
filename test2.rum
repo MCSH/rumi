@@ -4,13 +4,19 @@ malloc := (i: int) -> *any;
 free := (i: *any) -> unit;
 
 TestS: struct{
-  id: int;
   name: string;
+  id: int;
 }
 
 main := () -> int {
 
   t: TestS;
+
+  t.id = 2;
+  t.name = "Sajjad";
+
+  printInt(t.id);
+  printString(t.name);
 
   return 0;
 }

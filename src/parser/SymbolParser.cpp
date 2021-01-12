@@ -36,6 +36,9 @@ ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
   case '}':
     sb = s_rbra;
     break;
+  case '.':
+    sb = s_dot;
+    break;
   case '-':
     c = s->str.at(pos+1);
     if(c == '>'){
@@ -97,6 +100,8 @@ std::string symbolDesc(Symbol sb){
     return "%";
   case s_comma:
     return ",";
+  case s_dot:
+    return ".";
   default:
     return "<Unprogrammed Symbol>";
   }

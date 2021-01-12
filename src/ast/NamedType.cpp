@@ -43,3 +43,19 @@ Compatibility NamedType::compatible(Type *t){
 void* NamedType::castgen(CC *cc, Expression *e){
   return resolvedType->castgen(cc, e);
 }
+
+bool NamedType::hasMem(CC *cc, Expression *exp, std::string id){
+  return resolvedType->hasMem(cc, exp, id);
+}
+
+void *NamedType::memgen(CC *cc, Expression *exp, std::string id){
+  return resolvedType->memgen(cc, exp, id);
+}
+
+void *NamedType::memalloca(CC *cc, Expression *exp, std::string id){
+  return resolvedType->memalloca(cc, exp, id);
+}
+
+Type *NamedType::memtyperesolve(CC *cc, Expression *exp, std::string id){
+  return resolvedType->memtyperesolve(cc, exp, id);
+}

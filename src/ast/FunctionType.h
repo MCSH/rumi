@@ -11,9 +11,16 @@ public:
   virtual void* typegen(CC *cc);
   virtual void compile(CC *cc);
   virtual void prepare(CC *cc);
-  bool hasOp(CC *cc, std::string op, Expression *rhs);
-  void* opgen(CC *cc, Expression *lhs, std::string op, Expression *rhs);
-  Type* optyperesolve(CC *cc, std::string op, Expression *rhs);
-  Compatibility compatible(Type *t);
-  void* castgen(CC *cc, Expression *e);
+
+  virtual bool hasOp(CC *cc, std::string op, Expression *rhs) override;
+  virtual void* opgen(CC *cc, Expression *lhs, std::string op, Expression *rhs) override;
+  virtual Type* optyperesolve(CC *cc, std::string op, Expression *rhs) override;
+
+  virtual Compatibility compatible(Type *t) override;
+  virtual void* castgen(CC *cc, Expression *e) override;
+  
+  virtual bool hasMem(CC *cc, Expression *exp, std::string id) override;
+  virtual void* memgen(CC *cc, Expression *exp, std::string id) override;
+  virtual Type* memtyperesolve(CC *cc, Expression *exp, std::string id) override;
+  virtual void* memalloca(CC *cc, Expression *exp, std::string id) override;
 };

@@ -28,6 +28,7 @@
 #include "ParenParser.h"
 #include "StructParser.h"
 #include "NamedTypeParser.h"
+#include "MemAccessParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
@@ -35,6 +36,7 @@ void Parser::init(CompileContext *cc){
   this->registerTopRule(new DefineParser());
   this->registerTopRule(new StructParser());
 
+  this->registerExpressionRule(new MemAccessParser());
   this->registerExpressionRule(new AddressParser());
   this->registerExpressionRule(new CastExpr());
   this->registerExpressionRule(new BinOpParser());

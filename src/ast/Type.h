@@ -14,4 +14,9 @@ class Type: public AST{
 
   virtual Compatibility compatible(Type *t) = 0;
   virtual void* castgen(CC *cc, Expression *e) = 0;
+
+  virtual bool hasMem(CC *cc, Expression *exp, std::string id) = 0;
+  virtual void* memgen(CC *cc, Expression *exp, std::string id) = 0;
+  virtual Type* memtyperesolve(CC *cc, Expression *exp, std::string id) = 0;
+  virtual void* memalloca(CC *cc, Expression *exp, std::string id) = 0;
 };

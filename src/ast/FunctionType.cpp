@@ -30,3 +30,19 @@ Compatibility FunctionType::compatible(Type *t){
 void *FunctionType::castgen(CC *cc, Expression *e){
   return 0;
 }
+
+bool FunctionType::hasMem(CC *cc, Expression *exp, std::string id){
+  return false;
+}
+
+void *FunctionType::memgen(CC *cc, Expression *exp, std::string id){
+  return 0;
+}
+
+void *FunctionType::memalloca(CC *cc, Expression *exp, std::string id){
+  return 0;
+}
+
+Type *FunctionType::memtyperesolve(CC *cc, Expression *exp, std::string id){
+  return 0;
+}
