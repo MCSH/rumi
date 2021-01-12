@@ -5,6 +5,7 @@
 #include "PrimitiveType.h"
 #include "../base.h"
 #include "../LLContext.h"
+#include "PtrValue.h"
 
 PointerType::PointerType(Type *innerType)
   : innerType(innerType)    
@@ -71,18 +72,24 @@ void *PointerType::castgen(CC *cc, Expression *e){
   return e->exprgen(cc);
 }
 
+// TODO check to be only one layer deep
+
 bool PointerType::hasMem(CC *cc, Expression *exp, std::string id){
-  return false;
+  PtrValue pe(exp);
+  return innerType->hasMem(cc, &pe, id);
 }
 
 void *PointerType::memgen(CC *cc, Expression *exp, std::string id){
-  return 0;
+  PtrValue pe(exp);
+  return innerType->memgen(cc, &pe, id);
 }
 
 void *PointerType::memalloca(CC *cc, Expression *exp, std::string id){
-  return 0;
+  PtrValue pe(exp);
+  return innerType->memalloca(cc, &pe, id);
 }
 
 Type *PointerType::memtyperesolve(CC *cc, Expression *exp, std::string id){
-  return 0;
+  PtrValue pe(exp);
+  return innerType->memtyperesolve(cc, &pe, id);
 }

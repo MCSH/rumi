@@ -16,6 +16,10 @@ TestS: struct{
 main := () -> int {
 
   t: TestS;
+  pt : *TestS = malloc(sizeof TestS) -> *TestS;
+
+  //(*pt).id = 10;
+  pt.id = 10;
 
   t.id = 2;
   t.name = "Sajjad";
@@ -25,6 +29,9 @@ main := () -> int {
   printInt(t.id);
   printString(t.name);
   printInt(t.it.id);
+
+  printInt((*pt).id);
+  printInt(pt.id);
 
   return 0;
 }
