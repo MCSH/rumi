@@ -4,11 +4,20 @@ malloc := (i: int) -> *any;
 free := (i: *any) -> unit;
 printf := (f: string, a: ...any)->unit;
 
+TestS : struct{
+  id: int;
+}
+
+TestS.print := () -> unit{
+  printf("<TestS id=%d>", self.id);
+  return ;
+}
+
 main := () -> int {
+  t : TestS;
+  t.id = 10;
 
-  printf("Hello World!\n");
-
-  printf("3 = %d\n", 3);
+  // t.print();
 
   return 0;
 }

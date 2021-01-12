@@ -29,12 +29,14 @@
 #include "StructParser.h"
 #include "NamedTypeParser.h"
 #include "MemAccessParser.h"
+#include "MethodParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
   this->cc = cc;
   this->registerTopRule(new DefineParser());
   this->registerTopRule(new StructParser());
+  this->registerTopRule(new MethodParser());
 
   this->registerExpressionRule(new MemAccessParser());
   this->registerExpressionRule(new AddressParser());

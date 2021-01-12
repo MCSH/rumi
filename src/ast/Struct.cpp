@@ -4,6 +4,7 @@
 #include "Named.h"
 #include "Type.h"
 #include "Expression.h"
+#include "Method.h"
 
 StructType::StructType(std::string id)
   : id(id)
@@ -108,4 +109,8 @@ void *StructType::memalloca(CC *cc, Expression *exp, std::string id){
 
   // TODO check sanity
   return cc->llc->builder->CreateInBoundsGEP(alloc, indices);
+}
+
+void StructType::addMethod(CC *cc, Method *m){
+  methods[m->methodName] = m;
 }

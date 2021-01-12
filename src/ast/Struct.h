@@ -2,15 +2,21 @@
 #include "Define.h"
 #include "Type.h"
 #include <vector>
+#include <map>
+
+class Method;
 
 class StructType: public Type{
 public:
   std::string id;
   std::vector<Define *> members;
+  std::map<std::string, Method *> methods;
 
   void *generatedType = 0;
 
   StructType(std::string id);
+
+  void addMethod(CC *cc, Method *m);
 
   virtual void* typegen(CC *cc);
   virtual void compile(CC *cc);
