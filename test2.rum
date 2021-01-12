@@ -3,9 +3,14 @@ printString := (s: string) -> unit;
 malloc := (i: int) -> *any;
 free := (i: *any) -> unit;
 
+InnerTest: struct{
+  id: int;
+}
+
 TestS: struct{
   name: string;
   id: int;
+  it: InnerTest;
 }
 
 main := () -> int {
@@ -15,8 +20,11 @@ main := () -> int {
   t.id = 2;
   t.name = "Sajjad";
 
+  t.it.id = 5;
+
   printInt(t.id);
   printString(t.name);
+  printInt(t.it.id);
 
   return 0;
 }

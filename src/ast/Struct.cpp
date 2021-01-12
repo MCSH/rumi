@@ -24,6 +24,9 @@ void StructType::prepare(CC *cc){
 void StructType::compile(CC *cc){
   // TODO do I want anything here?
   // TODO make sure types are valid
+  for(auto m: members){
+    m->type->compile(cc);
+  }
 }
 
 void *StructType::typegen(CC *cc){
