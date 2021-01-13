@@ -19,4 +19,6 @@ class Type: public AST{
   virtual void* memgen(CC *cc, Expression *exp, std::string id) = 0;
   virtual Type* memtyperesolve(CC *cc, Expression *exp, std::string id) = 0;
   virtual void* memalloca(CC *cc, Expression *exp, std::string id) = 0;
+
+  virtual Type *baseType(CC *cc){return this;}
 };

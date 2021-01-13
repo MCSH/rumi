@@ -59,3 +59,7 @@ void *NamedType::memalloca(CC *cc, Expression *exp, std::string id){
 Type *NamedType::memtyperesolve(CC *cc, Expression *exp, std::string id){
   return resolvedType->memtyperesolve(cc, exp, id);
 }
+
+Type *NamedType::baseType(CC *cc){
+  return resolvedType->baseType(cc);
+}

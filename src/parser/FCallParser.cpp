@@ -49,6 +49,7 @@ ParseResult FCallParser::scheme(CC *cc, Source *s, int pos){
   auto tmp = id >> ep;
   if (!tmp){
     auto ans = id >> rpar; // no arguments
+    if(!ans) return ans;
     fct->epos = ans.token->epos;
     return ParseResult(fct);
   }

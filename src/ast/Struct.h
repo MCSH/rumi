@@ -17,6 +17,7 @@ public:
   StructType(std::string id);
 
   void addMethod(CC *cc, Method *m);
+  Method *resolveMethod(CC *cc, std::string methodId);
 
   virtual void* typegen(CC *cc);
   virtual void compile(CC *cc);

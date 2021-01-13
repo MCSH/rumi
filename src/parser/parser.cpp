@@ -30,6 +30,8 @@
 #include "NamedTypeParser.h"
 #include "MemAccessParser.h"
 #include "MethodParser.h"
+#include "MethodCallParser.h"
+#include "MethodCallStmtParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
@@ -38,6 +40,7 @@ void Parser::init(CompileContext *cc){
   this->registerTopRule(new StructParser());
   this->registerTopRule(new MethodParser());
 
+  this->registerExpressionRule(new MethodCallParser());
   this->registerExpressionRule(new MemAccessParser());
   this->registerExpressionRule(new AddressParser());
   this->registerExpressionRule(new CastExpr());
@@ -60,6 +63,7 @@ void Parser::init(CompileContext *cc){
   this->registerStatementRule(new IfParser());
   this->registerStatementRule(new WhileParser());
   this->registerStatementRule(new SBlockParser());
+  this->registerStatementRule(new MethodCallStmtParser());
 
   this->registerTypeRule(new PrimitiveTypeParser());
   this->registerTypeRule(new PointerTypeParser());

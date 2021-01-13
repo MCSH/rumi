@@ -114,3 +114,9 @@ void *StructType::memalloca(CC *cc, Expression *exp, std::string id){
 void StructType::addMethod(CC *cc, Method *m){
   methods[m->methodName] = m;
 }
+
+Method *StructType::resolveMethod(CC *cc, std::string id){
+  auto ans = methods.find(id);
+  if(ans == methods.end()) return 0;
+  return ans->second;
+}

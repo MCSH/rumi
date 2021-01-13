@@ -26,4 +26,6 @@ public:
   virtual void* memgen(CC *cc, Expression *exp, std::string id) override;
   virtual Type* memtyperesolve(CC *cc, Expression *exp, std::string id) override;
   virtual void* memalloca(CC *cc, Expression *exp, std::string id) override;
+
+  virtual Type *baseType(CC *cc);
 };
