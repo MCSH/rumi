@@ -9,10 +9,17 @@ void MethodCall::compile(CC *cc){
   // TODO
   exp->exp->compile(cc);
 
-  s = dynamic_cast<StructType *>(exp->exp->type(cc)->baseType(cc));
+  auto bt = exp->exp->type(cc)->baseType(cc);
+  s = dynamic_cast<StructType *>(bt);
   if(!s){
-    cc->debug(NONE) << "Can't call method on non-structs" << std::endl;
-    exit(1);
+    if(PointerType *pt = dynamic_cast<PointerType *>(bt)){
+      s = dynamic_cast<StructType *>(pt->innerType->baseType(cc));
+    }
+
+    if(!s){
+      cc->debug(NONE) << "Can't call method on non-structs" << std::endl;
+      exit(1);
+    }
   }
 
   method = s->resolveMethod(cc, exp->id);
@@ -21,7 +28,7 @@ void MethodCall::compile(CC *cc){
     exit(1);
   }
 
-  // TODO add self to arguments
+  // add self to arguments
   auto base = exp->exp;
   if(PointerType *pt = dynamic_cast<PointerType *>(base->type(cc))){
     // TODO make sure its only one level deep 
@@ -34,7 +41,7 @@ void MethodCall::compile(CC *cc){
   args.insert(args.begin(), base);
 
   auto fname = s->id + "$" + exp->id;
-  // TODO setup fcall
+  // setup fcall
   fcall = new FCall();
   fcall->id = fname;
   fcall->args = args;

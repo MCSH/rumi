@@ -18,7 +18,7 @@ TestS.getId := () -> int{
 }
 
 main := () -> int {
-  t : TestS;
+  t : *TestS = malloc(sizeof TestS);
   t.id = 10;
 
   t.print();
