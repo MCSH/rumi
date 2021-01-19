@@ -18,6 +18,6 @@ class BinOpParser: public ParseRule{
   ParseResult innerscheme(CC *cc, Source *s, int pos);
   BinOpParser();
  private:
-  SymbolParser addp, minusp, multp, divp, remp;
+  SymbolParser addp, minusp, multp, divp, remp, eqp;
   ExpressionParser vp;
 };

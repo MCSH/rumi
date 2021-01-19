@@ -105,11 +105,17 @@ Type* PrimitiveType::optyperesolve(CC *cc, std::string op, Expression *rhs){
     }
   }
 
+  if(op == "=="){
+    return new PrimitiveType(t_bool);
+  }
+
   return 0;
 }
 
 bool PrimitiveType::hasOp(CC *cc, std::string op, Expression *rhs){
   // TODO
+  if(op == "==" || key != t_string)
+    return true;
   if((op == "+" || op == "-" || op == "*" || op == "/" || op == "%")
      && isInt(key)){
     Type *rt = rhs->type(cc);
@@ -124,6 +130,17 @@ bool PrimitiveType::hasOp(CC *cc, std::string op, Expression *rhs){
 
 void *PrimitiveType::opgen(CC *cc, Expression *lhs,  std::string op, Expression *rhs){
   // TODO take care of casting
+
+  if(op == "=="){
+    if(isInt(key)){
+      return cc->llc->builder->CreateICmpEQ((llvm::Value*) lhs->exprgen(cc), (llvm::Value*) rhs->exprgen(cc));
+    } else {
+      // TODO assuming float
+      cc->debug(NONE) << " == Not supported for floating points" << std::endl;
+      exit(1);
+    }
+  }
+  
   Type *rt = rhs->type(cc);
   PrimitiveType *prt = dynamic_cast<PrimitiveType*>(rt);
   if(isInt(key) && isInt(prt->key)){

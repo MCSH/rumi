@@ -19,4 +19,5 @@ enum Symbol : short {
   s_dot,
   s_tripledot,
   s_exc,
+  s_eqeq,
 };

@@ -15,5 +15,13 @@ main := () -> int{
     printf("inside else\n");
   }
 
+  i := 3;
+
+  if(i - 1 == 2){
+    printf("Inside if\n");
+  } else {
+    printf("inside else\n");
+  }
+
   return 0;
 }

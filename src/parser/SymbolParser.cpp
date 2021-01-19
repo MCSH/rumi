@@ -22,6 +22,11 @@ ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
     sb = s_col;
     break;
   case '=':
+    if(s->str.at(pos+1) == '='){ // ==
+      sb = s_eqeq;
+      epos ++;
+      break;
+    }
     sb = s_eq;
     break;
   case '(':
@@ -88,6 +93,8 @@ std::string symbolDesc(Symbol sb){
     return ":";
   case s_eq:
     return "=";
+  case s_eqeq:
+    return "==";
   case s_and:
     return "&";
   case s_lpar:

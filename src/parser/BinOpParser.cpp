@@ -6,6 +6,8 @@
 
 int precSymbol(Symbol op){
   switch(op){
+  case s_eqeq:
+    return 0;
   case s_plus:
   case s_minus:
     return 1;
@@ -105,6 +107,10 @@ ParseResult BinOpParser::innerscheme(CC *cc, Source *s, int pos){
   tmp = v1 >> remp;
   if(tmp) return tmp >> vp;
 
+  // op = ==?
+  tmp = v1 >> eqp;
+  if(tmp) return tmp >> vp;
+
   return 0;
 }
 
@@ -115,4 +121,5 @@ BinOpParser::BinOpParser()
   , multp(s_mult)
   , divp(s_div)
   , remp(s_rem)
+  , eqp(s_eqeq)
 {}
