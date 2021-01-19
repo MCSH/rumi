@@ -5,7 +5,11 @@
 #include "Named.h"
 
 void FCall::compile(CC *cc){
-  // TODO ensure function exists
+  // ensure function exists
+  if(!cc->lookup(id)){
+    cc->debug(NONE) << "Couldn't find function " << id << std::endl;
+    exit(1);
+  }
   // TODO ensure the arguments match the type
   for(auto e: args) e->compile(cc);
 }

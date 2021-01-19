@@ -1,6 +1,8 @@
 #include "While.h"
 #include "../base.h"
 #include "../LLContext.h"
+#include "PrimitiveType.h"
+#include "Cast.h"
 
 While::While(Expression *condition, Statement *st)
   : condition(condition)
@@ -16,6 +18,13 @@ void While::prepare(CC *cc){
 void While::compile(CC *cc){
   condition->compile(cc);
   st->compile(cc);
+
+  // check condition type
+  auto booleanType = new PrimitiveType(t_bool);
+
+  if(condition->type(cc)->compatible(cc, booleanType) != OK){
+    condition = new Cast(condition, booleanType);
+  }
 }
 
 void While::codegen(CC *cc){
@@ -29,8 +38,6 @@ void While::codegen(CC *cc){
   cc->llc->builder->SetInsertPoint(whileCondB);
   // TODO clean this up
   auto cond = (llvm::Value*)condition->exprgen(cc);
-  auto zeroConst = llvm::ConstantInt::get(llvm::IntegerType::getInt64Ty(cc->llc->context), 0, true);
-  cond = cc->llc->builder->CreateICmpNE(cond, zeroConst);
   cc->llc->builder->CreateCondBr(cond, whileBodyB, whileContB);
 
   cc->llc->builder->SetInsertPoint(whileBodyB);

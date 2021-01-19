@@ -29,6 +29,22 @@ ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
     }
     sb = s_eq;
     break;
+  case '<':
+    if(s->str.at(pos+1) == '='){ // <=
+      sb = s_lte;
+      epos ++;
+      break;
+    }
+    sb = s_lt;
+    break;
+  case '>':
+    if(s->str.at(pos+1) == '='){ // >=
+      sb = s_gte;
+      epos ++;
+      break;
+    }
+    sb = s_gt;
+    break;
   case '(':
     sb = s_lpar;
     break;
@@ -73,6 +89,11 @@ ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
     sb = s_comma;
     break;
   case '!':
+    if(s->str.at(pos+1) == '='){ // !=
+      sb = s_neq;
+      epos ++;
+      break;
+    }
     sb = s_exc;
     break;
   default:
@@ -93,6 +114,8 @@ std::string symbolDesc(Symbol sb){
     return ":";
   case s_eq:
     return "=";
+  case s_neq:
+    return "!=";
   case s_eqeq:
     return "==";
   case s_and:
@@ -123,6 +146,14 @@ std::string symbolDesc(Symbol sb){
     return "!";
   case s_tripledot:
     return "<...>";
+  case s_gt:
+    return ">";
+  case s_gte:
+    return ">=";
+  case s_lt:
+    return "<";
+  case s_lte:
+    return "<=";
   default:
     return "<Unprogrammed Symbol>";
   }

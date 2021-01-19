@@ -5,6 +5,7 @@
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Type.h>
 #include "Expression.h"
+#include "Type.h"
 
 PrimitiveType::PrimitiveType(TypeEnum key)
   : key(key)
@@ -105,7 +106,7 @@ Type* PrimitiveType::optyperesolve(CC *cc, std::string op, Expression *rhs){
     }
   }
 
-  if(op == "=="){
+  if(op == "==" || op =="!=" || op=="<" || op=="<=" || op==">" || op==">="){
     return new PrimitiveType(t_bool);
   }
 
@@ -114,8 +115,18 @@ Type* PrimitiveType::optyperesolve(CC *cc, std::string op, Expression *rhs){
 
 bool PrimitiveType::hasOp(CC *cc, std::string op, Expression *rhs){
   // TODO
-  if(op == "==" || key != t_string)
-    return true;
+
+  if(op == ">" || op == ">=" || op == "<" || op == "<="){
+    if(compatible(cc, rhs->type(cc)) != INCOMPATIBLE)
+      if(isInt(key)){
+        return true;
+      }
+  }
+  if((op == "==" || op == "!=") || key != t_string){
+    if(compatible(cc, rhs->type(cc)) != INCOMPATIBLE)
+      if(isInt(key))
+        return true;
+  }
   if((op == "+" || op == "-" || op == "*" || op == "/" || op == "%")
      && isInt(key)){
     Type *rt = rhs->type(cc);
@@ -130,6 +141,44 @@ bool PrimitiveType::hasOp(CC *cc, std::string op, Expression *rhs){
 
 void *PrimitiveType::opgen(CC *cc, Expression *lhs,  std::string op, Expression *rhs){
   // TODO take care of casting
+
+  if(op == ">"){
+    if(isInt(key)){
+      if(isSigned(key))
+        return cc->llc->builder->CreateICmpSGT((llvm::Value*) lhs->exprgen(cc), (llvm::Value*) rhs->exprgen(cc));
+      else
+        return cc->llc->builder->CreateICmpUGT((llvm::Value*) lhs->exprgen(cc), (llvm::Value*) rhs->exprgen(cc));
+    }
+  }
+  if(op == ">="){
+    if(isInt(key)){
+      if(isSigned(key))
+        return cc->llc->builder->CreateICmpSGE((llvm::Value*) lhs->exprgen(cc), (llvm::Value*) rhs->exprgen(cc));
+      else
+        return cc->llc->builder->CreateICmpUGE((llvm::Value*) lhs->exprgen(cc), (llvm::Value*) rhs->exprgen(cc));
+    }
+  }
+  if(op == "<"){
+    if(isInt(key)){
+      if(isSigned(key))
+        return cc->llc->builder->CreateICmpSLT((llvm::Value*) lhs->exprgen(cc), (llvm::Value*) rhs->exprgen(cc));
+      else
+        return cc->llc->builder->CreateICmpULT((llvm::Value*) lhs->exprgen(cc), (llvm::Value*) rhs->exprgen(cc));
+    }
+  }
+  if(op == "<="){
+    if(isInt(key)){
+      if(isSigned(key))
+        return cc->llc->builder->CreateICmpSLE((llvm::Value*) lhs->exprgen(cc), (llvm::Value*) rhs->exprgen(cc));
+      else
+        return cc->llc->builder->CreateICmpULE((llvm::Value*) lhs->exprgen(cc), (llvm::Value*) rhs->exprgen(cc));
+    }
+  }
+  if(op == "!="){
+    if(isInt(key)){
+      return cc->llc->builder->CreateICmpNE((llvm::Value*) lhs->exprgen(cc), (llvm::Value*) rhs->exprgen(cc));
+    }
+  }
 
   if(op == "=="){
     if(isInt(key)){
@@ -261,6 +310,11 @@ void *PrimitiveType::castgen(CC *cc, Expression *e){
   if(!isInt(key) || !isInt(pt->key)){
     std::cout << "Calling cast on non-integer types" << std::endl;
     exit(1);
+  }
+
+  if(key == t_bool){
+    auto zeroConst = llvm::ConstantInt::get((llvm::Type*)pt->typegen(cc), 0, true);
+    return cc->llc->builder->CreateICmpNE((llvm::Value*)e->exprgen(cc), zeroConst);
   }
 
   std::cout << "Cast integer was invoked" << std::endl;

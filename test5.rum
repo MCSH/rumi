@@ -17,10 +17,23 @@ main := () -> int{
 
   i := 3;
 
-  if(i - 1 == 2){
+  if(i - 1 > 1){
     printf("Inside if\n");
   } else {
     printf("inside else\n");
+  }
+
+  if(i < 4)printf("Correct\n"); else printf("Wrong!\n");
+  if(i <= 3)printf("Correct\n"); else printf("Wrong!\n");
+  if(i >= 3)printf("Correct\n"); else printf("Wrong!\n");
+  if(i > 2)printf("Correct\n"); else printf("Wrong!\n");
+  if(i != 2)printf("Correct\n"); else printf("Wrong!\n");
+
+  if(100) printf("Sanity Check for boolean integers\n"); else printf("WRONG!!!\n");
+
+  while(i){
+    printf("%d * %d = %d\n", i, i, i*i);
+    i = i -1;
   }
 
   return 0;

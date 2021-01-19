@@ -1,6 +1,8 @@
 #include "If.h"
 #include "../base.h"
 #include "../LLContext.h"
+#include "PrimitiveType.h"
+#include "Cast.h"
 
 If::If(Expression *condition, Statement *st1, Statement *st2)
   : condition(condition)
@@ -18,6 +20,13 @@ void If::compile(CC *cc){
   condition->compile(cc);
   st1->compile(cc);
   if(st2)st2->compile(cc);
+
+  // check condition type
+  auto booleanType = new PrimitiveType(t_bool);
+
+  if(condition->type(cc)->compatible(cc, booleanType) != OK){
+    condition = new Cast(condition, booleanType);
+  }
 }
 
 void If::codegen(CC *cc){
@@ -32,9 +41,6 @@ void If::codegen(CC *cc){
   if(st2) stFalseB = llvm::BasicBlock::Create(cc->llc->context, "ifF", f);
   else stFalseB = ifCont;
 
-  // TODO check v
-  auto zeroConst = llvm::ConstantInt::get(llvm::IntegerType::getInt64Ty(cc->llc->context), 0, true);
-  v = cc->llc->builder->CreateICmpNE(v, zeroConst);
   cc->llc->builder->CreateCondBr(v, stTrueB, stFalseB);
 
   // generate true statement

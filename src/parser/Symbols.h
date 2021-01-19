@@ -20,4 +20,9 @@ enum Symbol : short {
   s_tripledot,
   s_exc,
   s_eqeq,
+  s_neq,
+  s_gt,
+  s_gte,
+  s_lt,
+  s_lte,
 };
