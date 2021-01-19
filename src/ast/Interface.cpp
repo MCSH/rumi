@@ -216,3 +216,16 @@ int Interface::methodInd(CC *cc, std::string mid){
   cc->debug(NONE) << "methodInd resolve failed" << std::endl;
   exit(1);
 }
+
+
+bool Interface::hasPreOp(CC *cc, std::string op){
+  return false;
+}
+
+Type *Interface::preoptyperesolve(CC *cc, std::string op){
+  return 0;
+}
+
+void *Interface::preopgen(CC *cc, std::string op, Expression *value){
+  return 0;
+}

@@ -93,3 +93,16 @@ Type *PointerType::memtyperesolve(CC *cc, Expression *exp, std::string id){
   PtrValue pe(exp);
   return innerType->memtyperesolve(cc, &pe, id);
 }
+
+
+bool PointerType::hasPreOp(CC *cc, std::string op){
+  return false;
+}
+
+Type *PointerType::preoptyperesolve(CC *cc, std::string op){
+  return 0;
+}
+
+void *PointerType::preopgen(CC *cc, std::string op, Expression *value){
+  return 0;
+}

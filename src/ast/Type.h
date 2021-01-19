@@ -21,4 +21,8 @@ class Type: public AST{
   virtual void* memalloca(CC *cc, Expression *exp, std::string id) = 0;
 
   virtual Type *baseType(CC *cc){return this;}
+
+  virtual bool hasPreOp(CC *cc, std::string op) = 0;
+  virtual Type *preoptyperesolve(CC *cc, std::string op) = 0;
+  virtual void *preopgen(CC *cc, std::string op, Expression *value) = 0;
 };

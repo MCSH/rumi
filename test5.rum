@@ -9,7 +9,7 @@ main := () -> int{
   a: bool = true;
   a = false;
 
-  if(a){
+  if(!a){
     printf("Inside if\n");
   } else {
     printf("inside else\n");

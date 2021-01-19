@@ -46,3 +46,15 @@ void *FunctionType::memalloca(CC *cc, Expression *exp, std::string id){
 Type *FunctionType::memtyperesolve(CC *cc, Expression *exp, std::string id){
   return 0;
 }
+
+bool FunctionType::hasPreOp(CC *cc, std::string op){
+  return false;
+}
+
+Type *FunctionType::preoptyperesolve(CC *cc, std::string op){
+  return 0;
+}
+
+void *FunctionType::preopgen(CC *cc, std::string op, Expression *value){
+  return 0;
+}

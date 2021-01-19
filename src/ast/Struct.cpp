@@ -151,3 +151,15 @@ int StructType::resolveInterfaceVptrInd(CC *cc, Interface *it){
 
   return i;
 }
+
+bool StructType::hasPreOp(CC *cc, std::string op){
+  return false;
+}
+
+Type *StructType::preoptyperesolve(CC *cc, std::string op){
+  return 0;
+}
+
+void *StructType::preopgen(CC *cc, std::string op, Expression *value){
+  return 0;
+}

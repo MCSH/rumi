@@ -21,6 +21,11 @@ public:
   virtual void* memgen(CC *cc, Expression *exp, std::string id) override;
   virtual Type* memtyperesolve(CC *cc, Expression *exp, std::string id) override;
   virtual void* memalloca(CC *cc, Expression *exp, std::string id) override;
+
+
+  virtual bool hasPreOp(CC *cc, std::string op) override;
+  virtual Type *preoptyperesolve(CC *cc, std::string op) override;
+  virtual void *preopgen(CC *cc, std::string op, Expression *value) override;
 };
 
 bool isInt(TypeEnum key);

@@ -63,3 +63,15 @@ Type *NamedType::memtyperesolve(CC *cc, Expression *exp, std::string id){
 Type *NamedType::baseType(CC *cc){
   return resolvedType->baseType(cc);
 }
+
+bool NamedType::hasPreOp(CC *cc, std::string op){
+  return resolvedType->hasPreOp(cc, op);
+}
+
+Type *NamedType::preoptyperesolve(CC *cc, std::string op){
+  return resolvedType->preoptyperesolve(cc, op);
+}
+
+void *NamedType::preopgen(CC *cc, std::string op, Expression *value){
+  return resolvedType->preopgen(cc, op, value);
+}

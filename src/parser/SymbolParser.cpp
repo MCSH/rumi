@@ -67,6 +67,9 @@ ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
   case ',':
     sb = s_comma;
     break;
+  case '!':
+    sb = s_exc;
+    break;
   default:
     return 0;
   }
@@ -109,6 +112,8 @@ std::string symbolDesc(Symbol sb){
     return ",";
   case s_dot:
     return ".";
+  case s_exc:
+    return "!";
   case s_tripledot:
     return "<...>";
   default:

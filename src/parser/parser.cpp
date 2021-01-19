@@ -34,6 +34,7 @@
 #include "MethodCallParser.h"
 #include "MethodCallStmtParser.h"
 #include "BoolValueParser.h"
+#include "PreOpParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
@@ -48,6 +49,7 @@ void Parser::init(CompileContext *cc){
   this->registerExpressionRule(new AddressParser());
   this->registerExpressionRule(new CastExpr());
   this->registerExpressionRule(new BinOpParser());
+  this->registerExpressionRule(new PreOpParser());
   this->registerExpressionRule(new NumberParser());
   this->registerExpressionRule(new FCallParser());
   this->registerExpressionRule(new VariableValueParser());

@@ -28,4 +28,8 @@ public:
   virtual void* memalloca(CC *cc, Expression *exp, std::string id) override;
 
   virtual Type *baseType(CC *cc);
+
+  virtual bool hasPreOp(CC *cc, std::string op) override;
+  virtual Type *preoptyperesolve(CC *cc, std::string op) override;
+  virtual void *preopgen(CC *cc, std::string op, Expression *value) override;
 };

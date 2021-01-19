@@ -265,3 +265,30 @@ void *PrimitiveType::memalloca(CC *cc, Expression *exp, std::string id){
 Type *PrimitiveType::memtyperesolve(CC *cc, Expression *exp, std::string id){
   return 0;
 }
+
+bool PrimitiveType::hasPreOp(CC *cc, std::string op){
+  if(op == "!"){
+    return key == t_bool;
+  }
+
+  return false;
+}
+
+Type *PrimitiveType::preoptyperesolve(CC *cc, std::string op){
+  if(op == "!"){
+    if(key == t_bool)
+      return this;
+  }
+
+  return 0;
+}
+
+void *PrimitiveType::preopgen(CC *cc, std::string op, Expression *value){
+  if(op == "!"){
+    if(key == t_bool){
+      return cc->llc->builder->CreateNot((llvm::Value *)value->exprgen(cc));
+    }
+  }
+
+  return 0;
+}
