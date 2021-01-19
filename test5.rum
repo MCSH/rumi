@@ -1,0 +1,19 @@
+printInt := (i: int) -> unit;
+printString := (s: string) -> unit;
+malloc := (i: int) -> *any;
+free := (i: *any) -> unit;
+printf := (f: string, a: ...any)->unit;
+
+main := () -> int{
+
+  a: bool = true;
+  a = false;
+
+  if(a){
+    printf("Inside if\n");
+  } else {
+    printf("inside else\n");
+  }
+
+  return 0;
+}

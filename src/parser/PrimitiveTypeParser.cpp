@@ -89,5 +89,7 @@ ParseResult PrimitiveTypeParser::scheme(CC *cc, Source *s, int pos){
     return new TypeToken(t_unit, pos, end, cc, s);
   if(w == "void")
     return new TypeToken(t_void, pos, end, cc, s);
+  if(w == "bool")
+    return new TypeToken(t_bool, pos, end, cc, s);
   return 0;
 }

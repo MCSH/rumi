@@ -15,6 +15,8 @@ KeywordToken* KeywordParser::findkey(CC *cc, Source *s, int pos){
   if(w == "sizeof") return new KeywordToken(Keyword::k_sizeof, pos, end, cc, s);
   if(w == "struct") return new KeywordToken(Keyword::k_struct, pos, end, cc, s);
   if(w == "interface") return new KeywordToken(Keyword::k_interface, pos, end, cc, s);
+  if(w == "true") return new KeywordToken(Keyword::k_true, pos, end, cc, s);
+  if(w == "false") return new KeywordToken(Keyword::k_false, pos, end, cc, s);
   return 0;
 }
 
@@ -43,6 +45,10 @@ std::string KeywordToken::desc(){
     return "struct";
   case k_interface:
     return "interface";
+  case k_true:
+    return "true";
+  case k_false:
+    return "false";
   default:
     return "[Unknown keyword]";
   }

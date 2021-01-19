@@ -16,4 +16,5 @@ enum TypeEnum{
   t_string,
   t_unit,
   t_void,
+  t_bool,
 };

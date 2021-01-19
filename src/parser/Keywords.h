@@ -8,4 +8,6 @@ enum Keyword : short {
   k_sizeof,
   k_struct,
   k_interface,
+  k_true,
+  k_false,
 };

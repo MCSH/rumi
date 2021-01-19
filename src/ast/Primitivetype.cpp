@@ -17,6 +17,8 @@ void PrimitiveType::prepare(CC *cc) {}
 void *PrimitiveType::typegen(CC *cc){
 
   switch(key){
+  case t_bool:
+    return llvm::IntegerType::get(cc->llc->context, 1);
   case t_s8:
   case t_u8:
   case t_any:
@@ -43,7 +45,7 @@ void *PrimitiveType::typegen(CC *cc){
 }
 
 bool isInt(TypeEnum key){
-  return key == t_int || key == t_u8 || key == t_u16 || key == t_u32 || key == t_u64 || key == t_s8 || key == t_s16 || key == t_s32 || key == t_s64 || key == t_any;
+  return key == t_int || key == t_u8 || key == t_u16 || key == t_u32 || key == t_u64 || key == t_s8 || key == t_s16 || key == t_s32 || key == t_s64 || key == t_any || key == t_bool;
 }
 
 int sizeInt(TypeEnum key){
@@ -62,6 +64,8 @@ int sizeInt(TypeEnum key){
   case t_s8:
   case t_any:
     return 8;
+  case t_bool:
+    return 1;
   default:
     return -1;
   }
@@ -82,6 +86,7 @@ bool isSigned(TypeEnum key){
   case t_u32:
   case t_u16:
   case t_u8:
+  case t_bool:
     return false;
   default:
     std::cout << "Calling isSigned on non-signed types" << std::endl;
@@ -163,10 +168,19 @@ Compatibility PrimitiveType::compatible(CC *cc, Type *t){
     return OK;
 
   if(isInt(key) && isInt(pt->key)){
+    if(key == t_bool){
+      switch(pt->key){
+      case t_bool:
+        return OK;
+      default:
+        return ExpCast;
+      }
+    }
     if(key == t_u8 || key == t_s8){
       switch(pt->key){
       case t_int:
       case t_any:
+      case t_bool:
         return ImpCast;
       case t_u8:
       case t_s8:
@@ -181,6 +195,7 @@ Compatibility PrimitiveType::compatible(CC *cc, Type *t){
       case t_s8:
       case t_int:
       case t_any:
+      case t_bool:
         return ImpCast;
       case t_u16:
       case t_s16:
@@ -197,6 +212,7 @@ Compatibility PrimitiveType::compatible(CC *cc, Type *t){
       case t_s16:
       case t_int:
       case t_any:
+      case t_bool:
         return ImpCast;
       case t_u32:
       case t_s32:

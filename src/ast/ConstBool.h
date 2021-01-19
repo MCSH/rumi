@@ -1,10 +1,10 @@
 #pragma once
 #include "Expression.h"
 
-class ConstInt: public Expression{
+class ConstBool: public Expression{
  public:
-  long long value;
-  ConstInt(long long v);
+  bool truth;
+  ConstBool(bool truth);
 
   virtual void compile(CC *cc);
   virtual void prepare(CC *cc);

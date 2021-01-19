@@ -33,6 +33,7 @@
 #include "MethodParser.h"
 #include "MethodCallParser.h"
 #include "MethodCallStmtParser.h"
+#include "BoolValueParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
@@ -54,6 +55,7 @@ void Parser::init(CompileContext *cc){
   this->registerExpressionRule(new PtrValueParser());
   this->registerExpressionRule(new SizeofParser());
   this->registerExpressionRule(new ParenParser());
+  this->registerExpressionRule(new BoolValueParser());
 
   this->registerValueRule(new FunctionParser());
   this->registerValueRule(new FunctionSigParser());
