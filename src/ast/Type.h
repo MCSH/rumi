@@ -12,7 +12,7 @@ class Type: public AST{
   virtual void* opgen(CC *cc, Expression *lhs, std::string op, Expression *rhs)=0;
   virtual Type* optyperesolve(CC *cc, std::string op, Expression *rhs) = 0;
 
-  virtual Compatibility compatible(Type *t) = 0;
+  virtual Compatibility compatible(CC *cc, Type *t) = 0;
   virtual void* castgen(CC *cc, Expression *e) = 0;
 
   virtual bool hasMem(CC *cc, Expression *exp, std::string id) = 0;

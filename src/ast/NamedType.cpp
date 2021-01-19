@@ -36,8 +36,8 @@ Type* NamedType::optyperesolve(CC *cc, std::string op, Expression *rhs){
   return resolvedType->optyperesolve(cc, op, rhs);
 }
 
-Compatibility NamedType::compatible(Type *t){
-  return resolvedType->compatible(t);
+Compatibility NamedType::compatible(CC *cc, Type *t){
+  return resolvedType->compatible(cc, t);
 }
 
 void* NamedType::castgen(CC *cc, Expression *e){

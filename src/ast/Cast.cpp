@@ -11,7 +11,7 @@ void Cast::compile(CC *cc){
   type_->compile(cc);
 
   // Ensure they are compatible
-  auto compatibility = type_->compatible(exp->type(cc));
+  auto compatibility = type_->compatible(cc, exp->type(cc)->baseType(cc));
   if(compatibility == INCOMPATIBLE){
     cc->debug(NONE) << "Explicitly casting incompatible types" << std::endl;
     exit(1);

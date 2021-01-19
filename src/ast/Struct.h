@@ -5,6 +5,7 @@
 #include <map>
 
 class Method;
+class Interface;
 
 class StructType: public Type{
 public:
@@ -17,7 +18,9 @@ public:
   StructType(std::string id);
 
   void addMethod(CC *cc, Method *m);
+
   Method *resolveMethod(CC *cc, std::string methodId);
+  int resolveInterfaceVptrInd(CC *cc, Interface *it);
 
   virtual void* typegen(CC *cc);
   virtual void compile(CC *cc);
@@ -27,7 +30,7 @@ public:
   virtual void* opgen(CC *cc, Expression *lhs, std::string op, Expression *rhs) override;
   virtual Type* optyperesolve(CC *cc, std::string op, Expression *rhs) override;
 
-  virtual Compatibility compatible(Type *t) override;
+  virtual Compatibility compatible(CC *cc, Type *t) override;
   virtual void* castgen(CC *cc, Expression *e) override;
   
   virtual bool hasMem(CC *cc, Expression *exp, std::string id) override;
@@ -37,4 +40,6 @@ public:
 
 private:
   int findmemindex(CC *cc, Expression *exp, std::string id);
+
+  void resetBody(CC *cc);
 };

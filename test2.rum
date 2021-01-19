@@ -4,12 +4,13 @@ malloc := (i: int) -> *any;
 free := (i: *any) -> unit;
 printf := (f: string, a: ...any)->unit;
 
-TestS : struct{
+TestS: struct{
   id: int;
 }
 
 TestS.print := () -> unit{
   printf("<TestS id=%d>\n", self.id);
+  //printf("Inside TestS Print!\n");
   return ;
 }
 
@@ -17,8 +18,21 @@ TestS.getId := () -> int{
   return self.id;
 }
 
+Printable: interface{
+  print := () -> unit;
+}
+
 main := () -> int {
+
+  i: Printable;
+  ip: *Printable = malloc(sizeof Printable);
+
   t : *TestS = malloc(sizeof TestS);
+  //t : TestS;
+
+  i = t -> Printable;
+  *ip = i;
+
   t.id = 10;
 
   t.print();
@@ -27,6 +41,9 @@ main := () -> int {
   t2 := t.id;
 
   printf("t.getId() = %d\nt.id=%d\n", tmp, t2);
+
+  i.print();
+  ip.print();
 
   return 0;
 }

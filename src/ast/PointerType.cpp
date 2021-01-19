@@ -60,7 +60,7 @@ Type *PointerType::optyperesolve(CC *cc, std::string op, Expression *rhs){
   return 0;
 }
 
-Compatibility PointerType::compatible(Type *t){
+Compatibility PointerType::compatible(CC *cc, Type *t){
   // TODO
   if(PointerType *pt = dynamic_cast<PointerType*>(t)){
     return OK;

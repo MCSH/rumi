@@ -154,7 +154,7 @@ void *PrimitiveType::opgen(CC *cc, Expression *lhs,  std::string op, Expression 
   return 0;
 }
 
-Compatibility PrimitiveType::compatible(Type *t){
+Compatibility PrimitiveType::compatible(CC *cc, Type *t){
   // TODO implement this.
   PrimitiveType *pt = dynamic_cast<PrimitiveType *>(t);
   if(!pt) return INCOMPATIBLE;

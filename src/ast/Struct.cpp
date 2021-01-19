@@ -5,11 +5,13 @@
 #include "Type.h"
 #include "Expression.h"
 #include "Method.h"
+#include "Interface.h"
 
 StructType::StructType(std::string id)
   : id(id)
 {}
 
+// TODO methods prepare and compile?
 
 void StructType::prepare(CC *cc){
   // TODO
@@ -31,23 +33,33 @@ void StructType::compile(CC *cc){
 }
 
 void *StructType::typegen(CC *cc){
-  // TODO
   if(generatedType) return generatedType;
 
   std::vector<llvm::Type *> mem_t;
   auto s = llvm::StructType::create(cc->llc->context, mem_t, id);
-
-  for(auto m: members){
-    mem_t.push_back((llvm::Type *)m->type->typegen(cc));
-  }
-
-  s->setBody(mem_t);
-
   generatedType = s;
+
+  resetBody(cc);
 
   cc->lookup(id)->alloca = s;
 
   return s;
+}
+
+void StructType::resetBody(CC *cc){
+  
+  std::vector<llvm::Type *> mem_t;
+  for(auto m: members){
+    auto id = &m->id;
+    if(id->size() > 5 && id->substr(0, 5) == "vptr$"){
+      auto it = (Interface *) m->type;
+      mem_t.push_back((llvm::Type *)it->generatedType); // TODO is this ok?
+    } else {
+      mem_t.push_back((llvm::Type *)m->type->typegen(cc));
+    }
+  }
+
+  ((llvm::StructType *)generatedType)->setBody(mem_t);
 }
 
 bool StructType::hasOp(CC *cc, std::string op, Expression *rhs){
@@ -62,7 +74,7 @@ Type* StructType::optyperesolve(CC *cc, std::string op, Expression *rhs){
   // TODO
   return 0;
 }
-Compatibility StructType::compatible(Type *t){
+Compatibility StructType::compatible(CC *cc, Type *t){
   // TODO
   return INCOMPATIBLE;
 }
@@ -119,4 +131,23 @@ Method *StructType::resolveMethod(CC *cc, std::string id){
   auto ans = methods.find(id);
   if(ans == methods.end()) return 0;
   return ans->second;
+}
+
+int StructType::resolveInterfaceVptrInd(CC *cc, Interface *it){
+  auto name = "vptr$" + it->id;
+  int i = 0;
+  for(auto mem: members){
+    if(mem->id == name){
+      return i;
+    }
+    i++;
+  }
+
+  // Add vptr and regen body
+  Define *d = new Define(name, 0, it); // type is handled in resetbody via substr match
+  members.push_back(d);
+
+  resetBody(cc);
+
+  return i;
 }

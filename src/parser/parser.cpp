@@ -27,6 +27,7 @@
 #include "SizeofParser.h"
 #include "ParenParser.h"
 #include "StructParser.h"
+#include "InterfaceParser.h"
 #include "NamedTypeParser.h"
 #include "MemAccessParser.h"
 #include "MethodParser.h"
@@ -38,6 +39,7 @@ void Parser::init(CompileContext *cc){
   this->cc = cc;
   this->registerTopRule(new DefineParser());
   this->registerTopRule(new StructParser());
+  this->registerTopRule(new InterfaceParser());
   this->registerTopRule(new MethodParser());
 
   this->registerExpressionRule(new MethodCallParser());
@@ -124,11 +126,11 @@ int skipwscomment(std::string *w, int pos){
       int level = 1;
       while(level){
         pos ++;
-        if(w->at(pos) == '/' && w->at(pos+1) == '*'){
+        if(pos < len -2 && w->at(pos) == '/' && w->at(pos+1) == '*'){
           level ++;
           pos ++;
         }
-        if(w->at(pos) == '*' && w->at(pos+1) == '/'){
+        if(pos < len -2 && w->at(pos) == '*' && w->at(pos+1) == '/'){
           pos += 2;
           level --;
         }

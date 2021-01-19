@@ -21,7 +21,7 @@ void Assign::compile(CC *cc){
   baseExpr->compile(cc);
 
   // TODO take care of casting
-  auto compatible = baseExpr->type(cc)->compatible(expression->type(cc));
+  auto compatible = baseExpr->type(cc)->compatible(cc, expression->type(cc)->baseType(cc));
 
   if(compatible == ExpCast){
     // TODO add name of types

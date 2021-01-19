@@ -23,7 +23,7 @@ void* FunctionType::opgen(CC *cc, Expression *lhs, std::string op, Expression *r
 Type* FunctionType::optyperesolve(CC *cc, std::string op, Expression *rhs){
   return 0;
 }
-Compatibility FunctionType::compatible(Type *t){
+Compatibility FunctionType::compatible(CC *cc, Type *t){
   return INCOMPATIBLE;
 }
 

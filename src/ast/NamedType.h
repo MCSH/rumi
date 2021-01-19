@@ -19,7 +19,7 @@ public:
   virtual void* opgen(CC *cc, Expression *lhs, std::string op, Expression *rhs) override;
   virtual Type* optyperesolve(CC *cc, std::string op, Expression *rhs) override;
 
-  virtual Compatibility compatible(Type *t) override;
+  virtual Compatibility compatible(CC *cc, Type *t) override;
   virtual void* castgen(CC *cc, Expression *e) override;
   
   virtual bool hasMem(CC *cc, Expression *exp, std::string id) override;

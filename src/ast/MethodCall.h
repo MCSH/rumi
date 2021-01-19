@@ -6,6 +6,7 @@
 #include "Method.h"
 #include "Struct.h"
 #include <vector>
+#include "Interface.h"
 
 class MethodCall: public Expression{
  public:
@@ -14,6 +15,8 @@ class MethodCall: public Expression{
 
   Method *method;
   StructType *s;
+  Interface *i = 0;
+  FunctionSig *fs;
   FCall *fcall;
 
   virtual void compile(CC *cc);
@@ -21,6 +24,10 @@ class MethodCall: public Expression{
   virtual void* exprgen(CC *cc);
   virtual Type* type(CC *cc);
   virtual void *allocagen(CC *cc);
+
+private:
+  void compileInterface(CC *cc);
+  void *exprgenInterface(CC *cc);
 };
 
 class MethodCallStmt: public Statement{

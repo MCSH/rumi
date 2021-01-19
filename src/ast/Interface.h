@@ -1,11 +1,27 @@
 #pragma once
+#include "Define.h"
 #include "Type.h"
+#include <vector>
+#include <map>
 
-class PointerType: public Type{
- public:
-  Type *innerType;
+class FunctionSig;
+class StructType;
 
-  PointerType(Type *innerType);
+class Interface: public Type{
+public:
+  std::string id;
+  std::map<std::string, FunctionSig*> methods;
+  std::set<std::string> structs;
+
+  void *generatedType = 0;
+  void *generatedTypePtr = 0;
+  void *generatedVptr = 0;
+
+  Interface(std::string id);
+
+  void addMethod(CC *cc, FunctionSig *m);
+  FunctionSig *resolveMethod(CC *cc, std::string methodId);
+  int methodInd(CC *cc, std::string mid);
 
   virtual void* typegen(CC *cc);
   virtual void compile(CC *cc);
@@ -22,4 +38,10 @@ class PointerType: public Type{
   virtual void* memgen(CC *cc, Expression *exp, std::string id) override;
   virtual Type* memtyperesolve(CC *cc, Expression *exp, std::string id) override;
   virtual void* memalloca(CC *cc, Expression *exp, std::string id) override;
+
+private:
+
+  bool hasImplemented(StructType *st);
+  void *resolveVptr(CC *cc, StructType *st);
+
 };

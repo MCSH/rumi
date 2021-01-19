@@ -7,4 +7,5 @@ enum Keyword : short {
   k_else,
   k_sizeof,
   k_struct,
+  k_interface,
 };
