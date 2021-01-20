@@ -16,6 +16,10 @@ CompileContext::CompileContext(int argc, char **argv){
     std::string arg = std::string(argv[i]);
     if (arg == "-v") {
       this->verbosity++;
+    } else if(arg == "-o"){
+      // TODO make sure this is safe
+      this->outFile = std::string(argv[i+1]);
+      i++;
     } else {
       this->sources.push_back(new Source(arg));
       // std::cout << argv[i] << std::endl;

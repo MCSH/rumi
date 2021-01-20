@@ -30,6 +30,7 @@ public:
   Parser parser;
   LLContext *llc;
   std::ostream &debug(int v);
+  std::string outFile = "out.o";
   void load(Source *s);
   CompileContext(int argc, char **argv);
 

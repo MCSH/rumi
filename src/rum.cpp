@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
   cc.llc->module->setTargetTriple(targetTriple);
 
   std::error_code EC;
-  auto output = "out.o";
+  auto output = cc.outFile;
   llvm::raw_fd_ostream dest(output, EC, llvm::sys::fs::F_None);
 
   if (EC) {
