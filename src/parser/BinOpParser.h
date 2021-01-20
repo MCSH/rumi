@@ -22,5 +22,6 @@ class BinOpParser: public ParseRule{
   SymbolParser eqp, neqp;
   SymbolParser gtp, gtep;
   SymbolParser ltp, ltep;
+  SymbolParser andp, orp;
   ExpressionParser vp;
 };

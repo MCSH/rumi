@@ -4,6 +4,7 @@
 #include <ostream>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Type.h>
+#include "Cast.h"
 #include "Expression.h"
 #include "Type.h"
 
@@ -106,7 +107,7 @@ Type* PrimitiveType::optyperesolve(CC *cc, std::string op, Expression *rhs){
     }
   }
 
-  if(op == "==" || op =="!=" || op=="<" || op=="<=" || op==">" || op==">="){
+  if(op == "==" || op =="!=" || op=="<" || op=="<=" || op==">" || op==">=" || op == "&&" || op == "||"){
     return new PrimitiveType(t_bool);
   }
 
@@ -115,6 +116,12 @@ Type* PrimitiveType::optyperesolve(CC *cc, std::string op, Expression *rhs){
 
 bool PrimitiveType::hasOp(CC *cc, std::string op, Expression *rhs){
   // TODO
+  if(op == "&&" || op == "||"){
+    PrimitiveType booleanType(t_bool);
+    if(compatible(cc, &booleanType))
+      if(rhs->type(cc)->compatible(cc, &booleanType))
+        return true;
+  }
 
   if(op == ">" || op == ">=" || op == "<" || op == "<="){
     if(compatible(cc, rhs->type(cc)) != INCOMPATIBLE)
@@ -122,7 +129,7 @@ bool PrimitiveType::hasOp(CC *cc, std::string op, Expression *rhs){
         return true;
       }
   }
-  if((op == "==" || op == "!=") || key != t_string){
+  if((op == "==" || op == "!=") && key != t_string){
     if(compatible(cc, rhs->type(cc)) != INCOMPATIBLE)
       if(isInt(key))
         return true;
@@ -188,6 +195,72 @@ void *PrimitiveType::opgen(CC *cc, Expression *lhs,  std::string op, Expression 
       cc->debug(NONE) << " == Not supported for floating points" << std::endl;
       exit(1);
     }
+  }
+
+  if(op == "&&"){
+    PrimitiveType booleanType(t_bool);
+    lhs = new Cast(lhs, &booleanType);
+    rhs = new Cast(rhs, &booleanType);
+    lhs->prepare(cc);
+    lhs->compile(cc);
+    rhs->prepare(cc);
+    rhs->compile(cc);
+
+    auto out = cc->llc->builder->CreateAlloca((llvm::Type*)booleanType.typegen(cc), 0, "andtmpval");
+
+    auto f = cc->llc->f;
+
+    llvm::BasicBlock *condB = llvm::BasicBlock::Create(cc->llc->context, "andCond", f);
+    llvm::BasicBlock *falseB = llvm::BasicBlock::Create(cc->llc->context, "andFalse", f);
+    llvm::BasicBlock *trueB = llvm::BasicBlock::Create(cc->llc->context, "andTrue", f);
+    llvm::BasicBlock *contB = llvm::BasicBlock::Create(cc->llc->context, "andContB", f);
+
+    cc->llc->builder->CreateCondBr((llvm::Value*)lhs->exprgen(cc), condB, falseB);
+    cc->llc->builder->SetInsertPoint(condB);
+    cc->llc->builder->CreateCondBr((llvm::Value*)rhs->exprgen(cc), trueB, falseB);
+    cc->llc->builder->SetInsertPoint(falseB);
+    auto falseV = llvm::ConstantInt::get(llvm::IntegerType::getInt1Ty(cc->llc->context), 0, true);
+    cc->llc->builder->CreateStore(falseV, out);
+    cc->llc->builder->CreateBr(contB);
+    cc->llc->builder->SetInsertPoint(trueB);
+    auto trueV = llvm::ConstantInt::get(llvm::IntegerType::getInt1Ty(cc->llc->context), 1, true);
+    cc->llc->builder->CreateStore(trueV, out);
+    cc->llc->builder->CreateBr(contB);
+    cc->llc->builder->SetInsertPoint(contB);
+    return cc->llc->builder->CreateLoad(out);
+  }
+
+  if(op == "||"){
+    PrimitiveType booleanType(t_bool);
+    lhs = new Cast(lhs, &booleanType);
+    rhs = new Cast(rhs, &booleanType);
+    lhs->prepare(cc);
+    lhs->compile(cc);
+    rhs->prepare(cc);
+    rhs->compile(cc);
+
+    auto out = cc->llc->builder->CreateAlloca((llvm::Type*)booleanType.typegen(cc), 0, "ortmpval");
+
+    auto f = cc->llc->f;
+
+    llvm::BasicBlock *condB = llvm::BasicBlock::Create(cc->llc->context, "orCond", f);
+    llvm::BasicBlock *falseB = llvm::BasicBlock::Create(cc->llc->context, "orFalse", f);
+    llvm::BasicBlock *trueB = llvm::BasicBlock::Create(cc->llc->context, "orTrue", f);
+    llvm::BasicBlock *contB = llvm::BasicBlock::Create(cc->llc->context, "orContB", f);
+
+    cc->llc->builder->CreateCondBr((llvm::Value*)lhs->exprgen(cc), trueB, condB);
+    cc->llc->builder->SetInsertPoint(condB);
+    cc->llc->builder->CreateCondBr((llvm::Value*)rhs->exprgen(cc), trueB, falseB);
+    cc->llc->builder->SetInsertPoint(falseB);
+    auto falseV = llvm::ConstantInt::get(llvm::IntegerType::getInt1Ty(cc->llc->context), 0, true);
+    cc->llc->builder->CreateStore(falseV, out);
+    cc->llc->builder->CreateBr(contB);
+    cc->llc->builder->SetInsertPoint(trueB);
+    auto trueV = llvm::ConstantInt::get(llvm::IntegerType::getInt1Ty(cc->llc->context), 1, true);
+    cc->llc->builder->CreateStore(trueV, out);
+    cc->llc->builder->CreateBr(contB);
+    cc->llc->builder->SetInsertPoint(contB);
+    return cc->llc->builder->CreateLoad(out);
   }
   
   Type *rt = rhs->type(cc);

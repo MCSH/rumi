@@ -6,16 +6,19 @@
 
 int precSymbol(Symbol op){
   switch(op){
+  case s_andand:
+  case s_pipepipe:
+    return 0;
   case s_eqeq:
   case s_neq:
   case s_gt:
   case s_gte:
   case s_lt:
   case s_lte:
-    return 0;
+    return 1;
   case s_plus:
   case s_minus:
-    return 1;
+    return 2;
   case s_mult:
   case s_div:
   case s_rem:
@@ -136,6 +139,14 @@ ParseResult BinOpParser::innerscheme(CC *cc, Source *s, int pos){
   tmp = v1 >> ltep;
   if(tmp) return tmp >> vp;
 
+  // op = &&?
+  tmp = v1 >> andp;
+  if(tmp) return tmp >> vp;
+
+  // op = ||?
+  tmp = v1 >> orp;
+  if(tmp) return tmp >> vp;
+
   return 0;
 }
 
@@ -152,4 +163,6 @@ BinOpParser::BinOpParser()
   , gtep(s_gte)
   , ltp(s_lt)
   , ltep(s_lte)
+  , andp(s_andand)
+  , orp(s_pipepipe)
 {}

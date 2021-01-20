@@ -7,11 +7,11 @@ main := () -> int{
   i := 1;
 
   while(target){
-    if(i % 3){} else
+    if(i % 3 == 0)
       printf("fizz ");
-    if(i % 5){} else 
+    if(i % 5 == 0)
       printf("buzz ");
-    if((i%3) * (i%5)) printf("%d ", i);
+    if((i % 3) * (i % 5)) printf("%d ", i);
 
     printf("\n");
     i = i + 1;

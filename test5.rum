@@ -4,6 +4,11 @@ malloc := (i: int) -> *any;
 free := (i: *any) -> unit;
 printf := (f: string, a: ...any)->unit;
 
+bf := (v: bool) -> bool{
+  printf("Called with %d\n", v);
+  return v;
+}
+
 main := () -> int{
 
   a: bool = true;
@@ -35,6 +40,20 @@ main := () -> int{
     printf("%d * %d = %d\n", i, i, i*i);
     i = i -1;
   }
+
+  i = 15;
+
+  if((i%5 != 0) && (i%3 != 0)){
+    printf("Wrong!\n");
+  } else {
+    printf("Correct!\n");
+  }
+
+  if(bf(false) || bf(true))
+  //if(false || true)
+  printf("Correct\n");
+  else
+  printf("Wrong\n");
 
   return 0;
 }
