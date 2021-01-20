@@ -1,11 +1,13 @@
 #include "PrimitiveType.h"
 #include "../base.h"
 #include "../LLContext.h"
+#include <llvm/IR/Constants.h>
 #include <ostream>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Type.h>
 #include "Cast.h"
 #include "Expression.h"
+#include "PointerType.h"
 #include "Type.h"
 
 PrimitiveType::PrimitiveType(TypeEnum key)
@@ -301,7 +303,14 @@ void *PrimitiveType::opgen(CC *cc, Expression *lhs,  std::string op, Expression 
 Compatibility PrimitiveType::compatible(CC *cc, Type *t){
   // TODO implement this.
   PrimitiveType *pt = dynamic_cast<PrimitiveType *>(t);
-  if(!pt) return INCOMPATIBLE;
+  if(!pt){
+    if(PointerType *pt = dynamic_cast<PointerType *>(t)){
+      if(key == t_bool){
+        return ImpCast;
+      }
+    }
+    return INCOMPATIBLE; 
+  }
 
   if(key == pt->key)
     return OK;
@@ -375,8 +384,21 @@ Compatibility PrimitiveType::compatible(CC *cc, Type *t){
 }
 
 void *PrimitiveType::castgen(CC *cc, Expression *e){
-  PrimitiveType *pt = dynamic_cast<PrimitiveType *>(e->type(cc));
-  if(!pt) return 0;
+  auto t = e->type(cc);
+  PrimitiveType *pt = dynamic_cast<PrimitiveType *>(t);
+  if(!pt){
+    if(PointerType *pt = dynamic_cast<PointerType *>(t)){
+      if(key == t_bool){
+        auto i64t = llvm::Type::getInt64Ty(cc->llc->context);
+        return cc->llc->builder->CreateICmpNE(
+            cc->llc->builder->CreatePtrToInt((llvm::Value *)e->exprgen(cc),
+                                             i64t),
+            llvm::ConstantInt::get(i64t, 0));
+      }
+    }
+    return 0; 
+  }
+
   if(key == pt->key)
     return e->exprgen(cc);
 

@@ -55,5 +55,10 @@ main := () -> int{
   else
   printf("Wrong\n");
 
+  p : * int = 0;
+
+  if(p) printf("Wrong ptr!\n");
+  else printf("Correct ptr!\n");
+
   return 0;
 }

@@ -1,4 +1,5 @@
 #include "Assign.h"
+#include "Cast.h"
 #include "Expression.h"
 #include "../base.h"
 #include "../LLContext.h"
@@ -35,21 +36,16 @@ void Assign::compile(CC *cc){
   }
   if(compatible == ImpCast){
     cc->debug(LOW) << "Casting implicitly" << std::endl;
-    casting = true;
-  } else {
-    casting = false;
+    expression = new Cast(expression, baseExpr->type(cc));
+    expression->prepare(cc);
+    expression->compile(cc);
   }
 }
 
 void Assign::codegen(CC *cc){
   // get alloca
   // genereate value
-  llvm::Value *v;
-  if(casting){
-    v = (llvm::Value *)baseExpr->type(cc)->castgen(cc, expression);
-  } else {
-    v = (llvm::Value *)expression->exprgen(cc);
-  }
+  llvm::Value *v = (llvm::Value *)expression->exprgen(cc);
   // create store
   cc->llc->builder->CreateStore(v, (llvm::Value *)baseExpr->allocagen(cc));
 }
