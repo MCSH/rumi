@@ -1,13 +1,17 @@
 import test_import
+import compiler
 
 test := () -> int{
   return 10;
 }
 
 @compile
-compile_test := () -> int{
+compile_test := (c: *compiler) -> int{
   printf("Running in compile time!\n");
   printf("Test() = %d\n", test());
+
+  c.exit(100);
+
   return 0;
 }
 

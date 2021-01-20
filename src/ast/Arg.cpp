@@ -9,10 +9,13 @@ void Arg::compile(CC *cc){
   named->type = type;
   named->alloca = 0;
   cc->registerNamed(id, named);
+
+  type->compile(cc);
 }
 
 void Arg::prepare(CC *cc){
   // TODO
+  type->prepare(cc);
 }
 
 void Arg::codegen(CC *cc){

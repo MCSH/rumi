@@ -1,7 +1,10 @@
+#include "LLContext.h"
 #include "base.h"
 #include "Source.h"
 #include <fstream>
 #include <iostream>
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/IR/IRBuilder.h>
 
 // Used in outputing to nowhere.
 class NullStream : public std::ostream {
@@ -92,4 +95,68 @@ std::string CompileContext::pathResolve(std::string path){
     path += ".rum";
   }
   return path;
+}
+
+void exitCallback(void *c, int i){
+  exit(i);
+}
+
+void *CompileContext::getCompileObj(void *e){
+
+  llvm::ExecutionEngine *EE = (llvm::ExecutionEngine*) e;
+  
+  if(compileObj) return compileObj;
+
+  compileObj = malloc(sizeof(int)); // nothign is insie, so we don't care
+
+  // Initialize compile functions in the module.
+
+  // == compiler$exit := (c: compiler, status: int)-> void ==
+  {
+    // Get the current function and create a replacement
+    llvm::Function *f = EE->FindFunctionNamed("compiler$exit");
+    llvm::Function *n = llvm::Function::Create(
+        f->getFunctionType(), llvm::Function::ExternalLinkage,
+        "compiler$exit_replace", *this->llc->module);
+
+    // Creaete a basic block
+    auto bb = llvm::BasicBlock::Create(this->llc->context, "entry", n);
+    llvm::IRBuilder<> builder(bb, bb->begin());
+    builder.SetInsertPoint(bb);
+
+    // Cast the callback function to int, and then the int to function pointer
+    // inside llvm
+    auto fp = builder.CreateIntToPtr(
+        llvm::ConstantInt::get(llvm::Type::getInt64Ty(llc->context),
+                               (uint64_t)&exitCallback, false),
+        f->getFunctionType()->getPointerTo());
+
+    // Set up the args
+    std::vector<llvm::Value *> *args;
+    args = new std::vector<llvm::Value *>();
+
+    auto inargs = n->args();
+
+    // Set the first argument to the first incoming arguments, compiler
+    // args->push_back(inargs.begin());
+
+    for (auto &arg : inargs)
+      args->push_back(&arg);
+
+    /*
+      // nullptr, removed in favor of inargs[0]
+    args->push_back(builder.CreateIntToPtr(
+        llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), 0, true),
+        llvm::Type::getInt64Ty(cc->context)->getPointerTo()));
+    */
+    builder.CreateCall(f->getFunctionType(), fp, *args);
+    builder.CreateRetVoid();
+
+    f->replaceAllUsesWith(n);
+    n->takeName(f);
+    f->eraseFromParent();
+  }
+
+
+  return compileObj;
 }

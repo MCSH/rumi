@@ -41,10 +41,25 @@ void Directive::codegen(CC *cc){
     cc->debug(NONE) << "There was a problem initializing the EE" << std::endl << e << std::endl;
   }
 
+  int retval;
+  bool isRan = false;
 
-  int (*faddress)() = (int (*) ()) EE->getFunctionAddress(f->id);
+  if(f->args.size() == 0){
+    int (*faddress)() = (int (*) ()) EE->getFunctionAddress(f->id);
+    retval = faddress();
+    isRan = true;
+  } else if(f->args.size() == 1){
+    // TODO pas in "compiler"
+    void *c = cc->getCompileObj(EE);
+    int (*faddress)(void*) = (int (*) (void*)) EE->getFunctionAddress(f->id);
+    retval = faddress(c);
+    isRan = true;
+  }
 
-  int retval = faddress();
+  if(!isRan){
+    cc->debug(NONE) << "Compile directive " << f->id << " doesn't have a correct signature." << std::endl;
+    exit(1);
+  }
 
   if(retval == 1){
     // WARNING

@@ -17,6 +17,8 @@ void NamedType::compile(CC *cc){
     exit(1);
   }
 
+  cc->debug(NONE) << "Resolved name of " << id << std::endl;
+
   resolvedType = named->type;
 }
 

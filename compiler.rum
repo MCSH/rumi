@@ -1,0 +1,2 @@
+compiler: struct{}
+compiler.exit := (i: int) -> unit{}

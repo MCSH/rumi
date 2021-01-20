@@ -44,6 +44,9 @@ public:
   Named *lookup(std::string id);
 
   std::string pathResolve(std::string path);
+  
+  void *compileObj = 0;
+  void *getCompileObj(void *ee);
 };
 
 using CC = CompileContext;
