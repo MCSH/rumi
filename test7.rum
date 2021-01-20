@@ -10,6 +10,13 @@ compile_test := (c: *compiler) -> int{
   printf("Running in compile time!\n");
   printf("Test() = %d\n", test());
 
+  // Compiler exits here with status 100, not finishing the process
+  printf("Currently, verbosity is set to %d\n", c.get("verbosity"));
+
+  c.set("verbosity", 1);
+
+  printf("Now, it is at %d\n", c.get("verbosity"));
+
   c.exit(100);
 
   return 0;

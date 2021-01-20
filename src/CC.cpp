@@ -102,6 +102,57 @@ void exitCallback(void *c, int i){
   exit(i);
 }
 
+void setCallback(void *c, char *ckey, void *value){
+  // TODO
+  CC *cc = (CC *) c;
+  std::string key(ckey);
+
+  if(key == "verbosity"){
+    // TODO
+    int v = (long long) value;
+    cc->verbosity = v;
+  } else {
+    cc->debug(NONE) << "Compiler key " << key << " not found." << std::endl;
+    exit(1);
+  }
+}
+
+void *getCallback(void *c, char *ckey){
+  CC *cc = (CC *) c;
+  std::string key(ckey);
+
+  if(key == "verbosity"){
+    return (void *)(long long)cc->verbosity;
+  } else {
+    cc->debug(NONE) << "Compiler key " << key << " not found." << std::endl;
+    exit(1);
+  }
+}
+
+#define REGISTER_CALLBACK(name, replace, cb)                                   \
+  {                                                                            \
+    llvm::Function *f = EE->FindFunctionNamed(name);                           \
+    llvm::Function *n = llvm::Function::Create(                                \
+        f->getFunctionType(), llvm::Function::ExternalLinkage, replace,        \
+        *this->llc->module);                                                   \
+    auto bb = llvm::BasicBlock::Create(this->llc->context, "entry", n);        \
+    llvm::IRBuilder<> builder(bb, bb->begin());                                \
+    builder.SetInsertPoint(bb);                                                \
+    auto fp = builder.CreateIntToPtr(                                          \
+        llvm::ConstantInt::get(llvm::Type::getInt64Ty(llc->context),           \
+                               (uint64_t)cb, false),                           \
+        f->getFunctionType()->getPointerTo());                                 \
+    std::vector<llvm::Value *> *args;                                          \
+    args = new std::vector<llvm::Value *>();                                   \
+    auto inargs = n->args();                                                   \
+    for (auto &arg : inargs)                                                   \
+      args->push_back(&arg);                                                   \
+    builder.CreateRet(builder.CreateCall(f->getFunctionType(), fp, *args));    \
+    f->replaceAllUsesWith(n);                                                  \
+    n->takeName(f);                                                            \
+    f->eraseFromParent();                                                      \
+  }
+
 void *CompileContext::getCompileObj(void *e){
 
   llvm::ExecutionEngine *EE = (llvm::ExecutionEngine*) e;
@@ -112,45 +163,10 @@ void *CompileContext::getCompileObj(void *e){
 
   // Initialize compile functions in the module.
 
-  // == compiler$exit := (c: compiler, status: int)-> void ==
-  {
-    // Get the current function and create a replacement
-    llvm::Function *f = EE->FindFunctionNamed("compiler$exit");
-    llvm::Function *n = llvm::Function::Create(
-        f->getFunctionType(), llvm::Function::ExternalLinkage,
-        "compiler$exit_replace", *this->llc->module);
-
-    // Creaete a basic block
-    auto bb = llvm::BasicBlock::Create(this->llc->context, "entry", n);
-    llvm::IRBuilder<> builder(bb, bb->begin());
-    builder.SetInsertPoint(bb);
-
-    // Cast the callback function to int, and then the int to function pointer
-    // inside llvm
-    auto fp = builder.CreateIntToPtr(
-        llvm::ConstantInt::get(llvm::Type::getInt64Ty(llc->context),
-                               (uint64_t)&exitCallback, false),
-        f->getFunctionType()->getPointerTo());
-
-    // Set up the args
-    std::vector<llvm::Value *> *args;
-    args = new std::vector<llvm::Value *>();
-
-    auto inargs = n->args();
-
-    // Set the first argument to the first incoming arguments, compiler
-
-    for (auto &arg : inargs)
-      args->push_back(&arg);
-
-    builder.CreateCall(f->getFunctionType(), fp, *args);
-    builder.CreateRetVoid();
-
-    f->replaceAllUsesWith(n);
-    n->takeName(f);
-    f->eraseFromParent();
-  }
-
+  // == compiler$exit := (c: compiler, status: int)-> unit ==
+  REGISTER_CALLBACK ("compiler$exit", "compiler$exit_replace", &exitCallback)
+  REGISTER_CALLBACK ("compiler$set", "compiler$set_replace", &setCallback)
+  REGISTER_CALLBACK ("compiler$get", "compiler$get_replace", &getCallback)
 
   return compileObj;
 }

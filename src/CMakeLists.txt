@@ -12,25 +12,6 @@ find_package(LLVM REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-# llvm_map_components_to_libnames(llvm_libs support core irreader mcjit)
-# llvm_map_components_to_libnames(llvm_libs
-#   core 
-#   ExecutionEngine
-#   Interpreter
-#   MC
-#   Support
-#   nativecodegen
-#   mcjit
-#   interpreter
-#   asmparser
-#   objcarcopts
-#   scalaropts
-#   transformutils
-#   irreader
-#   x86asmparser
-#   codegen
-#   )
-
 execute_process(COMMAND llvm-config --libs all
                 OUTPUT_VARIABLE llvm_libs)
 
@@ -43,7 +24,7 @@ target_include_directories(base PUBLIC "${PROJECT_BINARY_DIR}/src/")
 target_link_libraries(base PUBLIC parser ast)
 
 add_executable(rum rum.cpp)
-target_link_libraries(rum PUBLIC base ${llvm_libs})
+target_link_libraries(rum PUBLIC ${llvm_libs} base)
 add_executable(rumi rumi.cpp)
 target_link_libraries(rumi PUBLIC base)
 

@@ -49,7 +49,7 @@ void Directive::codegen(CC *cc){
     retval = faddress();
     isRan = true;
   } else if(f->args.size() == 1){
-    // TODO pas in "compiler"
+    // pass in "compiler"
     void *c = cc->getCompileObj(EE);
     int (*faddress)(void*) = (int (*) (void*)) EE->getFunctionAddress(f->id);
     retval = faddress(c);

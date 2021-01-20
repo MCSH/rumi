@@ -1,2 +1,4 @@
 compiler: struct{}
 compiler.exit := (i: int) -> unit{}
+compiler.set := (s: string, v: any) -> unit{}
+compiler.get := (s: string) -> any{}
