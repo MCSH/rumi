@@ -98,6 +98,7 @@ std::string CompileContext::pathResolve(std::string path){
 }
 
 void exitCallback(void *c, int i){
+  CC *cc = (CC *) c;
   exit(i);
 }
 
@@ -107,7 +108,7 @@ void *CompileContext::getCompileObj(void *e){
   
   if(compileObj) return compileObj;
 
-  compileObj = malloc(sizeof(int)); // nothign is insie, so we don't care
+  compileObj = this; // nothign is insie, so we don't care
 
   // Initialize compile functions in the module.
 
@@ -138,17 +139,10 @@ void *CompileContext::getCompileObj(void *e){
     auto inargs = n->args();
 
     // Set the first argument to the first incoming arguments, compiler
-    // args->push_back(inargs.begin());
 
     for (auto &arg : inargs)
       args->push_back(&arg);
 
-    /*
-      // nullptr, removed in favor of inargs[0]
-    args->push_back(builder.CreateIntToPtr(
-        llvm::ConstantInt::get(llvm::Type::getInt64Ty(cc->context), 0, true),
-        llvm::Type::getInt64Ty(cc->context)->getPointerTo()));
-    */
     builder.CreateCall(f->getFunctionType(), fp, *args);
     builder.CreateRetVoid();
 
