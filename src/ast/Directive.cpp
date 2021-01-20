@@ -46,5 +46,14 @@ void Directive::codegen(CC *cc){
 
   int retval = faddress();
 
+  if(retval == 1){
+    // WARNING
+    cc->debug(NONE) << "Compile directive "<< f->id << " returned warning" << std::endl;
+  } else if(retval > 1){
+    // ERROR
+    cc->debug(NONE) << "Compile directive " << f->id << " returned " << retval << std::endl;
+    exit(retval);
+  }
+
   EE->removeModule(cc->llc->module);
 }
