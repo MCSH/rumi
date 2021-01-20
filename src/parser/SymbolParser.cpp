@@ -15,6 +15,9 @@ ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
   case ';':
     sb = s_semicolon;
     break;
+  case '@':
+    sb = s_at;
+    break;
   case '&':
     if(s->str.at(pos+1) == '&'){ // &&
       sb = s_andand;
@@ -170,6 +173,8 @@ std::string symbolDesc(Symbol sb){
     return "&&";
   case s_pipepipe:
     return "||";
+  case s_at:
+    return "@";
   default:
     return "<Unprogrammed Symbol>";
   }

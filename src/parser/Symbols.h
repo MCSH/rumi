@@ -27,4 +27,5 @@ enum Symbol : short {
   s_lte,
   s_andand,
   s_pipepipe,
+  s_at,
 };

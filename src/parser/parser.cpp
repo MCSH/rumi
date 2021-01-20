@@ -36,6 +36,7 @@
 #include "BoolValueParser.h"
 #include "PreOpParser.h"
 #include "ImportParser.h"
+#include "DirectiveParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
@@ -45,6 +46,7 @@ void Parser::init(CompileContext *cc){
   this->registerTopRule(new InterfaceParser());
   this->registerTopRule(new MethodParser());
   this->registerTopRule(new ImportParser());
+  this->registerTopRule(new DirectiveParser());
 
   this->registerExpressionRule(new MethodCallParser());
   this->registerExpressionRule(new MemAccessParser());

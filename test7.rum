@@ -1,0 +1,12 @@
+import test_import
+
+@compile
+compile_test := () -> int{
+  printf("Running in compile time!\n");
+  return 0;
+}
+
+main := () -> int{
+  printf("Hello World!\n");
+  return 0;
+}

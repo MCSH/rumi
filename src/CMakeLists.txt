@@ -13,22 +13,28 @@ message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
 # llvm_map_components_to_libnames(llvm_libs support core irreader mcjit)
-llvm_map_components_to_libnames(llvm_libs
-  core 
-  ExecutionEngine
-  Interpreter
-  MC
-  Support
-  nativecodegen
-  mcjit
-  asmparser
-  objcarcopts
-  scalaropts
-  transformutils
-  irreader
-  x86asmparser
-  codegen
-  )
+# llvm_map_components_to_libnames(llvm_libs
+#   core 
+#   ExecutionEngine
+#   Interpreter
+#   MC
+#   Support
+#   nativecodegen
+#   mcjit
+#   interpreter
+#   asmparser
+#   objcarcopts
+#   scalaropts
+#   transformutils
+#   irreader
+#   x86asmparser
+#   codegen
+#   )
+
+execute_process(COMMAND llvm-config --libs all
+                OUTPUT_VARIABLE llvm_libs)
+
+string(REGEX REPLACE "\n$" "" llvm_libs "${llvm_libs}")
 
 # To include the config file
 configure_file(RumiConfig.h.in RumiConfig.h)
