@@ -2,7 +2,7 @@
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
-add_library(base base.cpp LLContext.cpp)
+add_library(base base.cpp LLContext.cpp CC.cpp Source.cpp)
 
 add_subdirectory(parser)
 add_subdirectory(ast)

@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
   CompileContext cc(argc, argv);
 
   for (Source *s : cc.sources) {
-    cc.debug(Verbosity::LOW) << *s << std::endl;
+    cc.debug(Verbosity::MEDIUM) << *s << std::endl;
   }
 
   cc.debug(Verbosity::MEDIUM) << "Context created." << std::endl;
@@ -52,7 +52,8 @@ int main(int argc, char **argv) {
       s->codegen(&cc);
   }
 
-  cc.llc->module->print(llvm::outs(), nullptr);
+  if(cc.verbosity >= Verbosity::LOW)
+    cc.llc->module->print(llvm::outs(), nullptr);
 
   llvm::verifyModule(*cc.llc->module);
 
