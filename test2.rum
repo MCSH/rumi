@@ -8,8 +8,8 @@ TestS: struct{
   id: int;
 }
 
-TestS.print := () -> unit{
-  printf("<TestS id=%d>\n", self.id);
+TestS.print := (a: int) -> unit{
+  printf("<TestS id=%d , a = %d>\n", self.id, a);
   //printf("Inside TestS Print!\n");
   return ;
 }
@@ -19,7 +19,7 @@ TestS.getId := () -> int{
 }
 
 Printable: interface{
-  print := () -> unit;
+  print := (a: int) -> unit;
 }
 
 main := () -> int {
@@ -42,8 +42,8 @@ main := () -> int {
 
   printf("t.getId() = %d\nt.id=%d\n", tmp, t2);
 
-  i.print();
-  ip.print();
+  i.print(90);
+  ip.print(100);
 
   return 0;
 }
