@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <streambuf>
+#include <vector>
 
 void printInfo() {
   std::cout << "Rumi Version " << Rumi_VERSION_MAJOR << "."
@@ -134,4 +135,36 @@ void ParseState::setToken(std::string name, Token * token){
 
 Token *ParseState::getToken(std::string name){
   return memoizations[name];
+}
+
+std::vector<AST *> *Source::parse(CC *cc){
+  auto ans = new std::vector<AST *>();
+
+  cc->load(this);
+
+  ParseResult t;
+  t = cc->parser.parseTop(this);
+  int epos = 0;
+  while(t){
+    epos = t.token->epos;
+    AST *a = t.token->toAST(cc);
+    if(a) ans->push_back(a);
+    cc->debug(Verbosity::NONE) << t << std::endl;
+    t = cc->parser.parseTop(this, t.token->epos + 1);
+  }
+
+  epos = skipwscomment(&this->str, epos);
+
+  if (epos != this->str.size() - 1) {
+    cc->debug(NONE) << "Couldn't parse file at index " << epos << std::endl;
+  }
+  return ans;
+}
+
+
+std::string CC::pathResolve(std::string path){
+  if(path.find(".rum") == std::string::npos){
+    path += ".rum";
+  }
+  return path;
 }

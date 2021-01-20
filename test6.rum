@@ -1,0 +1,6 @@
+import test_import
+
+main := () -> unit{
+  printf("Hello World!\n");
+  return 0;
+}

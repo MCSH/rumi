@@ -1,0 +1,5 @@
+printInt := (i: int) -> unit;
+printString := (s: string) -> unit;
+malloc := (i: int) -> *any;
+free := (i: *any) -> unit;
+printf := (f: string, a: ...any)->unit;

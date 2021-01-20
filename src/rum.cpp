@@ -36,23 +36,9 @@ int main(int argc, char **argv) {
   std::vector<AST *> asts;
 
   for(Source *s: cc.sources){
-    cc.load(s);
-    ParseResult t;
-    t = cc.parser.parseTop(s);
-    int epos;
-    while(t){
-      epos = t.token->epos;
-      AST *a = t.token->toAST(&cc);
-      if(a) asts.push_back(a);
-      cc.debug(Verbosity::NONE) << t << std::endl;
-      t = cc.parser.parseTop(s, t.token->epos + 1);
-    }
-
-    epos = skipwscomment(&s->str, epos);
-
-    if(epos != s->str.size() - 1){
-      cc.debug(NONE) << "Couldn't parse file at index " << epos << std::endl;
-    }
+    auto s_ast = s->parse(&cc);
+    asts.insert(asts.end(), s_ast->begin(), s_ast->end());
+    delete s_ast;
   }
 
   for(AST *a: asts){

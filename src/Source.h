@@ -26,6 +26,8 @@ public:
   void loadBuff();
   void fetch();
   ParseState *resolveState(int pos);
+
+  std::vector<AST *> *parse(CC *cc);
 };
 
 std::ostream &operator<<(std::ostream &os, const Source &s);

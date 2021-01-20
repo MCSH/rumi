@@ -10,4 +10,5 @@ enum Keyword : short {
   k_interface,
   k_true,
   k_false,
+  k_import,
 };

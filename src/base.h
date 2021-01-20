@@ -42,6 +42,8 @@ public:
 
   void registerNamed(std::string id, Named *n);
   Named *lookup(std::string id);
+
+  std::string pathResolve(std::string path);
 };
 
 using CC = CompileContext;
