@@ -18,6 +18,52 @@ streq := (s1: *u8, s2: *u8) -> bool{
   return false; // unreachable
 }
 
+subset := (s1: *u8, s2: *u8) -> bool{
+  counter := 0;
+  zero : u8 = 0;
+  while(true){
+    if(*(s2+counter) == zero) return true;
+    if(*(s1+counter) == zero) return false;
+    if(*(s1+ counter) != *(s2+counter)){
+      return false;
+    }
+    counter = counter + 1;
+  }
+
+  return false; // unreachable
+}
+
+strlen := (s1: *u8) -> u64{
+  size := 0;
+  zero : u8 = 0;
+  while(1){
+    if((*(s1+size)) == zero)
+      return size;
+    size = size + 1;
+  }
+  return 0; // unreachable
+}
+
+strcat := (s1: *u8, s2: *u8) -> *u8{
+  size := strlen(s1) + strlen(s2) + 1;
+  ans : *u8 = malloc(size * sizeof u8);
+  ptr := 0;
+  ptr2 := 0;
+  zero : u8 = 0;
+  while(*(s1+ptr) != zero){
+    *(ans+ptr) = *(s1+ptr);
+    ptr = ptr + 1;
+  }
+  while(*(s2+ptr2) != zero){
+    *(ans+ptr) = *(s2+ptr2);
+    ptr = ptr + 1;
+    ptr2 = ptr2 + 1;
+  }
+  *(ans+ptr) = zero;
+  return ans;
+}
+
+
 HiParseRule: struct{}
 
 HiParseRule.parse := (c: *Compiler, s: *Source, pos: int)->*ParseResult{
@@ -36,7 +82,7 @@ HiParseRule.parse := (c: *Compiler, s: *Source, pos: int)->*ParseResult{
   return id;
 }
 
-HiParseRule.genAST := (c: *Compiler, token: *Token) -> *AST{
+HiParseRule.genAST := (c: *Compiler, token: *ParseResult) -> *AST{
   fcall := c.ast("fcallstmt");
   printf("Fcall is %d\n", fcall);
   fcall.set("id", "printf");
@@ -44,6 +90,35 @@ HiParseRule.genAST := (c: *Compiler, token: *Token) -> *AST{
   s.set("val", "hello, world! from many levels deep!\n");
   fcall.add("arg", s);
   return fcall;
+}
+
+ComplexRule: struct{}
+
+ComplexRule.genAST := (c: *Compiler, token: *ParseResult) -> *AST{
+  fcall := c.ast("fcallstmt");
+  fcall.set("id", "printf");
+  s := c.ast("string");
+  v :*u8 = token.get("id");
+  v = v + 3;
+  v = strcat(strcat("You defined ", v), "\n");
+  s.set("val", v);
+  fcall.add("arg", s);
+  return fcall;
+}
+
+ComplexRule.parse := (c: *Compiler, s: *Source, pos: int)->*ParseResult{
+  idp := c.getParser("id");
+
+  id := idp.parse(c, s, pos);
+  if(id){
+    ids := (id.get("id")) -> string;
+    if(!subset(ids, "say")){
+      printf("It was %s\n", ids);
+      id = 0;
+    }
+  }
+
+  return id;
 }
 
 @compile
@@ -55,11 +130,13 @@ add_statement := (c: *Compiler) -> int{
 */
 
   c.registerParser("statement", "HiParseRule");
+  c.registerParser("statement", "ComplexRule");
 
   return 0;
 }
 
 main := () -> int{
   hi
+  saySajjad
   return 0;
 }

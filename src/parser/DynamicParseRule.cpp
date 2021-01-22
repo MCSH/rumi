@@ -1,6 +1,7 @@
 #include "DynamicParseRule.h"
 #include "../base.h"
 #include "../LLContext.h"
+#include "Token.h"
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
 
@@ -58,13 +59,13 @@ AST* DynamicParseToken::toAST(CC *cc){
   EB.setErrorStr(&e);
   llvm::ExecutionEngine *EE = EB.create();
 
-  auto genAST = (AST *(*)(void *, CC *, Token *)) EE->getFunctionAddress(fname);
+  auto genAST = (AST *(*)(void *, CC *, ParseResult *)) EE->getFunctionAddress(fname);
 
   if(!genAST){
     cc->debug(NONE) << "Parser " << drp->name << " was not declared properly, missing method genAST" << std::endl;
     exit(1);
   }
-  auto ast = genAST(drp->p, cc, res);
+  auto ast = genAST(drp->p, cc, new ParseResult(res));
   printf("AST is %d\n", ast);
   return (AST *)ast;
 }
