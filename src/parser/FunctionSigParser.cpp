@@ -9,6 +9,14 @@ FunctionSigToken::FunctionSigToken(CC *cc, Source *s, int spos, int epos){
   this->epos = epos;
 }
 
+void *FunctionSigToken::get(std::string key){
+  if(key == "returnType"){
+    return returnType;
+  }
+  // TODO Error?
+  return 0;
+}
+
 FunctionSig *FunctionSigToken::toAST(CC *cc){
   FunctionSig *fs = new FunctionSig();
 

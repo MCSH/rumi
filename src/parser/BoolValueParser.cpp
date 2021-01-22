@@ -11,6 +11,14 @@ BoolToken::BoolToken(CC *cc, Source *s, int spos, int epos, bool truth)
   this->epos = epos;
 }
 
+void *BoolToken::get(std::string key){
+  if(key == "truth"){
+    return (void *)truth;
+  }
+  // TODO Error?
+  return 0;
+}
+
 std::string BoolToken::desc(){
   if(truth){
     return "true";

@@ -12,6 +12,14 @@ ImportToken::ImportToken(std::string importPath, CC *cc, Source *s, int spos, in
   this->epos = epos;
 }
 
+void *ImportToken::get(std::string key){
+  if(key == "path"){
+    return (void *)importPath.c_str();
+  }
+  // TODO Error?
+  return 0;
+}
+
 AST *ImportToken::toAST(CC *cc){
   return new Import(importPath);
 }

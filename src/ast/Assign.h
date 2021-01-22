@@ -12,7 +12,8 @@ class Assign: public Statement{
 
   Assign(Expression *baseExpr, Expression *e);
 
-  bool casting;
+  virtual void set(std::string key, void *value) override;
+  virtual void add(std::string key, void *value) override;
 
   virtual void prepare(CC *cc) override;
   virtual void compile(CC *cc) override;

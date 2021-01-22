@@ -11,6 +11,10 @@ MethodCallStmtToken::MethodCallStmtToken(MethodCallToken *mct)
   this->epos = mct->epos;
 }
 
+void *MethodCallStmtToken::get(std::string key){
+  return mct->get(key);
+}
+
 std::string MethodCallStmtToken::desc(){
   return mct->desc();
 }

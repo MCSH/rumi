@@ -27,9 +27,16 @@ void Directive::prepare(CC *cc){
 
 void Directive::compile(CC *cc){
   f->compile(cc);
-}
 
-void Directive::codegen(CC *cc){
+  cc->debug(LOW) << "Calling codegen from directive on " << cc->asts.size() - cc->ast_gened << std::endl;
+  for(int i = cc->ast_gened + 1; i < cc->asts.size(); i++){
+    AST * a = cc->asts[i];
+    if(Statement *s = dynamic_cast<Statement *>(a)){
+      s->codegen(cc);
+    }
+    cc->ast_gened = i;
+  }
+  
   f->codegen(cc);
 
   std::string e;
@@ -71,4 +78,25 @@ void Directive::codegen(CC *cc){
   }
 
   EE->removeModule(cc->llc->module);
+}
+
+void Directive::codegen(CC *cc){
+}
+
+void Directive::set(std::string key, void *value){
+  if(key == "id"){
+    id = std::string((char *) value);
+    return;
+  }
+
+  if(key == "top"){
+    top = (AST *) value;
+    return;
+  }
+
+  // TODO error?
+}
+
+void Directive::add(std::string key, void *value){
+  // TODO error?
 }

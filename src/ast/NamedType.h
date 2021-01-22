@@ -11,9 +11,12 @@ public:
 
   NamedType(std::string id);
 
-  virtual void* typegen(CC *cc);
-  virtual void compile(CC *cc);
-  virtual void prepare(CC *cc);
+  virtual void set(std::string key, void *value) override;
+  virtual void add(std::string key, void *value) override;
+
+  virtual void* typegen(CC *cc) override;
+  virtual void compile(CC *cc) override;
+  virtual void prepare(CC *cc) override;
 
   virtual bool hasOp(CC *cc, std::string op, Expression *rhs) override;
   virtual void* opgen(CC *cc, Expression *lhs, std::string op, Expression *rhs) override;

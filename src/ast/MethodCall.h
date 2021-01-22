@@ -19,11 +19,14 @@ class MethodCall: public Expression{
   FunctionSig *fs;
   FCall *fcall;
 
-  virtual void compile(CC *cc);
-  virtual void prepare(CC *cc);
-  virtual void* exprgen(CC *cc);
-  virtual Type* type(CC *cc);
-  virtual void *allocagen(CC *cc);
+  virtual void set(std::string key, void *value) override;
+  virtual void add(std::string key, void *value) override;
+
+  virtual void compile(CC *cc) override;
+  virtual void prepare(CC *cc) override;
+  virtual void* exprgen(CC *cc) override;
+  virtual Type* type(CC *cc) override;
+  virtual void *allocagen(CC *cc) override;
 
 private:
   void compileInterface(CC *cc);
@@ -36,7 +39,10 @@ class MethodCallStmt: public Statement{
 
   MethodCallStmt(MethodCall *mc);
 
-  virtual void compile(CC *cc);
-  virtual void prepare(CC *cc);
-  virtual void codegen(CC *cc);
+  virtual void set(std::string key, void *value) override;
+  virtual void add(std::string key, void *value) override;
+
+  virtual void compile(CC *cc) override;
+  virtual void prepare(CC *cc) override;
+  virtual void codegen(CC *cc) override;
 };

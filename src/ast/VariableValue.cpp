@@ -30,3 +30,16 @@ Type *VariableValue::type(CC *cc){
 void *VariableValue::allocagen(CC *cc){
   return cc->lookup(id)->alloca;
 }
+
+void VariableValue::set(std::string key, void *value){
+  if(key == "id"){
+    id = std::string((char *) value);
+    return;
+  }
+
+  // TODO error?
+}
+
+void VariableValue::add(std::string key, void *value){
+  // TODO error?
+}

@@ -3,11 +3,13 @@
 
 #include "AssignParser.h"
 #include "DefineParser.h"
+#include "ExpressionParser.h"
 #include "FunctionTypeParser.h"
 #include "IfParser.h"
 #include "PointerTypeParser.h"
 #include "PrimitiveTypeParser.h"
 #include "SBlockParser.h"
+#include "StatementParser.h"
 #include "WhileParser.h"
 #include "KeywordParser.h"
 #include "IdParser.h"
@@ -37,48 +39,92 @@
 #include "PreOpParser.h"
 #include "ImportParser.h"
 #include "DirectiveParser.h"
+#include "TopParser.h"
 #include <iostream>
 
 void Parser::init(CompileContext *cc){
   this->cc = cc;
+  registerParser("define", new DefineParser());
   this->registerTopRule(new DefineParser());
+  registerParser("struct", new StructParser());
   this->registerTopRule(new StructParser());
+  registerParser("interface", new InterfaceParser());
   this->registerTopRule(new InterfaceParser());
+  registerParser("method", new MethodParser());
   this->registerTopRule(new MethodParser());
+  registerParser("import", new ImportParser());
   this->registerTopRule(new ImportParser());
+  registerParser("directive", new DirectiveParser());
   this->registerTopRule(new DirectiveParser());
 
+  registerParser("methodcall", new MethodCallParser());
   this->registerExpressionRule(new MethodCallParser());
+  registerParser("memaccess", new MemAccessParser());
   this->registerExpressionRule(new MemAccessParser());
+  registerParser("address", new AddressParser());
   this->registerExpressionRule(new AddressParser());
+  registerParser("cast", new CastExpr());
   this->registerExpressionRule(new CastExpr());
+  registerParser("binop", new BinOpParser());
   this->registerExpressionRule(new BinOpParser());
+  registerParser("preop", new PreOpParser());
   this->registerExpressionRule(new PreOpParser());
+  registerParser("number", new NumberParser());
   this->registerExpressionRule(new NumberParser());
+  registerParser("fcall", new FCallParser());
   this->registerExpressionRule(new FCallParser());
+  registerParser("variable", new VariableValueParser());
   this->registerExpressionRule(new VariableValueParser());
+  registerParser("string", new StringParser());
   this->registerExpressionRule(new StringParser());
+  registerParser("ptrval", new PtrValueParser());
   this->registerExpressionRule(new PtrValueParser());
+  registerParser("sizeof", new SizeofParser());
   this->registerExpressionRule(new SizeofParser());
+  registerParser("paren", new ParenParser());
   this->registerExpressionRule(new ParenParser());
+  registerParser("bool", new BoolValueParser());
   this->registerExpressionRule(new BoolValueParser());
 
+  registerParser("function", new FunctionParser());
   this->registerValueRule(new FunctionParser());
+  registerParser("functionSignature", new FunctionSigParser());
   this->registerValueRule(new FunctionSigParser());
 
+  registerParser("fcallstmt", new FCallStmtParser());
   this->registerStatementRule(new FCallStmtParser());
+  registerParser("assign", new AssignParser());
   this->registerStatementRule(new AssignParser());
+  // Already done
   this->registerStatementRule(new DefineParser());
+  registerParser("return", new ReturnParser());
   this->registerStatementRule(new ReturnParser());
+  registerParser("if", new IfParser());
   this->registerStatementRule(new IfParser());
+  registerParser("while", new WhileParser());
   this->registerStatementRule(new WhileParser());
+  registerParser("block", new SBlockParser());
   this->registerStatementRule(new SBlockParser());
+  registerParser("methodcallstmt", new MethodCallStmtParser());
   this->registerStatementRule(new MethodCallStmtParser());
 
+  registerParser("primtiveType", new PrimitiveTypeParser());
   this->registerTypeRule(new PrimitiveTypeParser());
+  registerParser("pointerType", new PointerTypeParser());
   this->registerTypeRule(new PointerTypeParser());
+  registerParser("functionType", new FunctionTypeParser());
   this->registerTypeRule(new FunctionTypeParser());
+  registerParser("namedType", new NamedTypeParser());
   this->registerTypeRule(new NamedTypeParser());
+
+  // main
+  registerParser("expression", new ExpressionParser());
+  registerParser("value", new ValueParser());
+  registerParser("top", new TopParser());
+  registerParser("statement", new StatementParser());
+  registerParser("type", new TypeParser());
+  registerParser("id", new IdParser());
+  // TODO others? keywrod, symbol
 }
 
 bool isalpha(char c){
@@ -310,4 +356,14 @@ Token::~Token(){
 
 int ParseRule::prec(){
   return 10;
+}
+
+ParseRule *Parser::getParserWithKey(std::string key){
+  auto f = rules.find(key);
+  if(f == rules.end()) return 0;
+  return f->second;
+}
+
+void Parser::registerParser(std::string key, ParseRule *pr){
+  rules[key] = pr;
 }

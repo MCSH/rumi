@@ -13,6 +13,14 @@ TypeToken::TypeToken(TypeEnum key, int spos, int epos, CC *cc, Source *s)
   this->s = s;
 }
 
+void *TypeToken::get(std::string key){
+  if(key == "key"){
+    return (void *)desc().c_str();
+  }
+  // TODO Error?
+  return 0;
+}
+
 AST *TypeToken::toAST(CC *cc){
   return new PrimitiveType(key);
 }

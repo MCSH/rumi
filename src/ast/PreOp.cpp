@@ -32,3 +32,21 @@ void *PreOp::allocagen(CC *cc){
   cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
   exit(1);
 }
+
+void PreOp::set(std::string key, void *value){
+  if(key == "value"){
+    value = (Expression *) value;
+    return;
+  }
+
+  if(key == "op"){
+    op = std::string((char *) value);
+    return;
+  }
+
+  // TODO error?
+}
+
+void PreOp::add(std::string key, void *value){
+  // TODO error?
+}

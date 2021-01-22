@@ -6,9 +6,12 @@ class String: public Expression{
   std::string val;
   String(std::string val);
 
-  virtual void compile(CC *cc);
-  virtual void prepare(CC *cc);
-  virtual void* exprgen(CC *cc);
-  virtual Type* type(CC *cc);
-  virtual void *allocagen(CC *cc);
+  virtual void set(std::string key, void *value) override;
+  virtual void add(std::string key, void *value) override;
+
+  virtual void compile(CC *cc) override;
+  virtual void prepare(CC *cc) override;
+  virtual void* exprgen(CC *cc) override;
+  virtual Type* type(CC *cc) override;
+  virtual void *allocagen(CC *cc) override;
 };

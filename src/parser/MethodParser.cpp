@@ -13,6 +13,21 @@ MethodToken::MethodToken(std::string structName, std::string methodName, Token *
   this->epos = epos;
 }
 
+void *MethodToken::get(std::string key){
+  if(key == "methodName"){
+    return (void *)methodName.c_str();
+  }
+  if(key == "structName"){
+    return (void *)structName.c_str();
+  }
+  if(key == "f"){
+    return f;
+  }
+
+  // TODO Error?
+  return 0;
+}
+
 AST* MethodToken::toAST(CC *cc){
   return new Method(structName, methodName, (Function *)f->toAST(cc));
 }

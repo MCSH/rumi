@@ -315,6 +315,9 @@ Compatibility PrimitiveType::compatible(CC *cc, Type *t){
   if(key == pt->key)
     return OK;
 
+  if(pt->key == t_any)
+    return OK; // TODO check
+
   if(isInt(key) && isInt(pt->key)){
     if(key == t_bool){
       switch(pt->key){
@@ -402,6 +405,10 @@ void *PrimitiveType::castgen(CC *cc, Expression *e){
   if(key == pt->key)
     return e->exprgen(cc);
 
+  if(pt->key == t_any){
+    return e->exprgen(cc);
+  }
+
   if(!isInt(key) || !isInt(pt->key)){
     std::cout << "Calling cast on non-integer types" << std::endl;
     exit(1);
@@ -457,4 +464,17 @@ void *PrimitiveType::preopgen(CC *cc, std::string op, Expression *value){
   }
 
   return 0;
+}
+
+void PrimitiveType::set(std::string key, void *value){
+  if(key == "key"){
+    key = (long long)value;
+    return;
+  }
+
+  // TODO error?
+}
+
+void PrimitiveType::add(std::string key, void *value){
+  // TODO error?
 }

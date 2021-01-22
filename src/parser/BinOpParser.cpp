@@ -42,6 +42,26 @@ BinOpToken::BinOpToken(Symbol op, Token *lhs, Token *rhs, CC *cc,
   prec = precSymbol(op);
 }
 
+void *BinOpToken::get(std::string key){
+  if(key == "op"){
+    return (void *)symbolDesc(op).c_str();
+  }
+
+  if(key == "lhs"){
+    return lhs;
+  }
+
+  if(key == "rhs"){
+    return rhs;
+  }
+
+  if(key == "prec"){
+    return (void*)(long long)prec;
+  }
+  // TODO Error?
+  return 0;
+}
+
 AST *BinOpToken::toAST(CC* cc){
   if(BinOpToken *r = dynamic_cast<BinOpToken*>(rhs)){
     // TODO handle the precedence

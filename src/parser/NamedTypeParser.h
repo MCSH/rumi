@@ -6,6 +6,7 @@ class NamedTypeToken: public Token{
  public:
   std::string typeId;
   NamedTypeToken(std::string typeId, CC *cc, Source *s, int spos, int epos);
+  virtual void *get(std::string key) override;
   virtual std::string desc() override;
   virtual AST *toAST(CC *cc) override;
 };

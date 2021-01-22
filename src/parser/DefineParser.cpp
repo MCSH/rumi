@@ -16,6 +16,20 @@ DefineToken::DefineToken(std::string id, Token *type, Token *value, CC *CC, Sour
   this->epos = epos;
 }
 
+void *DefineToken::get(std::string key){
+  if(key == "id"){
+    return (void *)id.c_str();
+  }
+  if(key == "type"){
+    return type;
+  }
+  if(key == "value"){
+    return value;
+  }
+  // TODO Error?
+  return 0;
+}
+
 std::string DefineToken::desc(){
   return "<Define "+ id + (type?" ("+type->desc()+")": "")+">" + (value?": " + value->desc(): "");
 }
@@ -56,14 +70,14 @@ AST *DefineToken::toAST(CC *cc){
       // TODO We have a static function
       auto tmp = fbt->toAST(cc);
 
-      tmp -> setId(id);
+      tmp -> set("id", (void *)id.c_str());
       return tmp;
     }
     if (FunctionSigToken *fst = dynamic_cast<FunctionSigToken *>(value)) {
       // TODO We have a static function
       auto tmp = fst->toAST(cc);
 
-      tmp -> setId(id);
+      tmp -> set("id", (void *)id.c_str());
       return tmp;
     }
   }

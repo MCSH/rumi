@@ -13,6 +13,17 @@ AssignToken::AssignToken(Token *expr, Token *value, CC *cc, Source *s, int pos,
   this->epos = epos;
 }
 
+void *AssignToken::get(std::string key){
+  if(key == "expr"){
+    return expr;
+  }
+  if(key == "value"){
+    return value;
+  }
+  // TODO Error?
+  return 0;
+}
+
 AST *AssignToken::toAST(CC* cc){
   return new Assign((Expression *) expr->toAST(cc), (Expression *)value->toAST(cc));
 }

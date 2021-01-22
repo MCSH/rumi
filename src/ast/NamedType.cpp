@@ -77,3 +77,16 @@ Type *NamedType::preoptyperesolve(CC *cc, std::string op){
 void *NamedType::preopgen(CC *cc, std::string op, Expression *value){
   return resolvedType->preopgen(cc, op, value);
 }
+
+void NamedType::set(std::string key, void *value){
+  if(key == "id"){
+    id = std::string((char *) value);
+    return;
+  }
+
+  // TODO error?
+}
+
+void NamedType::add(std::string key, void *value){
+  // TODO error?
+}

@@ -1,0 +1,65 @@
+import test_import
+import compiler
+// import compiler_parser
+
+streq := (s1: *u8, s2: *u8) -> bool{
+  counter := 0;
+  zero : u8 = 0 -> u8;
+  while(true){
+    if(*(s1+ counter) != *(s2+counter)){
+      return false;
+    }
+    if(*(s1+counter) == zero)
+      return true;
+
+    counter = counter + 1;
+  }
+
+  return false; // unreachable
+}
+
+HiParseRule: struct{}
+
+HiParseRule.parse := (c: *Compiler, s: *Source, pos: int)->*ParseResult{
+  idp := c.getParser("id");
+
+  id := idp.parse(c, s, pos);
+
+
+  if(id){
+    ids := (id.get("id")) -> string;
+    if(!streq(ids, "hi")){
+      id = 0 -> *ParseResult;
+    }
+  }
+
+  return id;
+}
+
+HiParseRule.genAST := (c: *Compiler, token: *Token) -> *AST{
+  fcall := c.ast("fcallstmt");
+  printf("Fcall is %d\n", fcall);
+  fcall.set("id", "printf");
+  s := c.ast("string");
+  s.set("val", "hello, world! from many levels deep!\n");
+  fcall.add("arg", s);
+  return fcall;
+}
+
+@compile
+add_statement := (c: *Compiler) -> int{
+
+/* TODO potentially do this, so we have access to inner things in the parse method
+  h: *HiParseRule = malloc(sizeof HiParseRule);
+  c.registerParser("statement", "HiParseRule", h);
+*/
+
+  c.registerParser("statement", "HiParseRule");
+
+  return 0;
+}
+
+main := () -> int{
+  hi
+  return 0;
+}

@@ -6,6 +6,7 @@ public:
   Symbol sb;
   SymbolToken(Symbol sb, int spos, int epos, CC* cc, Source *s)
     : sb(sb) {this->spos = spos; this->epos = epos; this->cc = cc; this->s =s;}
+  virtual void *get(std::string key) override;
   virtual std::string desc() override;
   virtual ~SymbolToken(){} // TODO
 };

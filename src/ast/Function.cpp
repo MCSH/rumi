@@ -89,6 +89,27 @@ void Function::codegen(CC *cc){
   cc->popContext();
 }
 
-void Function::setId(std::string id){
-  this->id = id;
+void Function::set(std::string key, void *value){
+  if(key == "id"){
+    id = std::string((char*) value);
+    return;
+  }
+  if(key == "returnType"){
+    returnType = (Type *) value;
+    return;
+  }
+
+  // TODO error?
+}
+
+void Function::add(std::string key, void *value){
+  if(key == "statemenht"){
+    statements.push_back((Statement*) value);
+    return;
+  }
+  if(key == "arg"){
+    args.push_back((Arg *) value);
+    return;
+  }
+  // TODO error?
 }

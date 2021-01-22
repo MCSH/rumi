@@ -9,6 +9,13 @@ NamedTypeToken::NamedTypeToken(std::string typeId, CC *cc, Source *s, int spos, 
   this->spos = spos;
   this->epos = epos;
 }
+void *NamedTypeToken::get(std::string key){
+  if(key == "typeId"){
+    return (void *)typeId.c_str();
+  }
+  // TODO Error?
+  return 0;
+}
 
 std::string NamedTypeToken::desc(){
   return typeId;

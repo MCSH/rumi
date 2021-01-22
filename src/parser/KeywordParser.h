@@ -7,6 +7,8 @@ public:
   KeywordToken(Keyword kw, int spos, int epos, CC* cc, Source *s)
     : kw(kw) {this->spos = spos; this->epos = epos; this->cc = cc; this->s =s;}
   virtual std::string desc() override;
+
+  virtual void *get(std::string key) override;
 };
 
 class KeywordParser : public ParseRule {

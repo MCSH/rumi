@@ -13,6 +13,17 @@ WhileToken::WhileToken(Token *value, Token *statement, CC *cc, Source *s, int sp
   this->epos = epos;
 }
 
+void *WhileToken::get(std::string key){
+  if(key == "value"){
+    return value;
+  }
+  if(key == "st"){
+    return s;
+  }
+  // TODO Error?
+  return 0;
+}
+
 AST *WhileToken::toAST(CC *cc){
   return new While((Expression *) value->toAST(cc), (Statement*) statement->toAST(cc));
 }

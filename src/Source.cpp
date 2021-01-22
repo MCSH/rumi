@@ -1,4 +1,5 @@
 #include "Source.h"
+#include "ast/Statement.h"
 #include "base.h"
 #include <fstream>
 
@@ -43,9 +44,7 @@ Token *ParseState::getToken(std::string name){
   return memoizations[name];
 }
 
-std::vector<AST *> *Source::parse(CC *cc){
-  auto ans = new std::vector<AST *>();
-
+void Source::parse(CC *cc){
   cc->load(this);
 
   ParseResult t;
@@ -54,7 +53,18 @@ std::vector<AST *> *Source::parse(CC *cc){
   while(t){
     epos = t.token->epos;
     AST *a = t.token->toAST(cc);
-    if(a) ans->push_back(a);
+    if(a){
+      // ans->push_back(a);
+      cc->asts.push_back(a);
+      a->prepare(cc);
+      a->compile(cc);
+    }
+    if(false && a){
+      a->prepare(cc);
+      a->compile(cc);
+      if (Statement *s = dynamic_cast<Statement *>(a))
+        s->codegen(cc);
+    }
     cc->debug(Verbosity::MEDIUM) << t << std::endl;
     t = cc->parser.parseTop(this, t.token->epos + 1);
   }
@@ -63,6 +73,5 @@ std::vector<AST *> *Source::parse(CC *cc){
     cc->debug(NONE) << "Couldn't parse file at index " << epos << " - " <<  str.size() << std::endl;
     exit(1);
   }
-  return ans;
 }
 

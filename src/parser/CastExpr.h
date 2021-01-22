@@ -10,6 +10,7 @@ class CastToken: public Token{
   Token *exp, *type;
   CastToken(Token *exp, Token *type, CC *cc, Source *s, int spos, int epos);
 
+  virtual void *get(std::string key) override;
   virtual std::string desc() override;
   virtual AST *toAST(CC *cC) override;
 };

@@ -2,6 +2,14 @@
 #include "SymbolParser.h"
 #include "Symbols.h"
 
+void *SymbolToken::get(std::string key){
+  if(key == "symbol"){
+    return (void *)desc().c_str();
+  }
+  // TODO Error?
+  return 0;
+}
+
 ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
   pos = skipws(&s->str, pos);
   if(pos == -1) return 0;

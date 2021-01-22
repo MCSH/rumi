@@ -14,6 +14,18 @@ MemAccessToken::MemAccessToken(Token *expression, std::string id, CC *cc,
   this->epos = epos;
 }
 
+void *MemAccessToken::get(std::string key){
+  if(key == "id"){
+    return (void *)id.c_str();
+  }
+
+  if(key == "expression"){
+    return expression;
+  }
+  // TODO Error?
+  return 0;
+}
+
 AST *MemAccessToken::toAST(CC *cc){
   return new MemAccess((Expression *) expression->toAST(cc), id);
 }

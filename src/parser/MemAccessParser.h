@@ -11,8 +11,9 @@ public:
 
   MemAccessToken(Token *expression, std::string id, CC *cc, Source *s, int spos, int epos);
 
-  std::string desc() override;
-  AST *toAST(CC *cc) override;
+  virtual void *get(std::string key) override;
+  virtual std::string desc() override;
+  virtual AST *toAST(CC *cc) override;
 };
 
 class MemAccessParser: public ParseRule{

@@ -26,6 +26,10 @@ public:
 class CompileContext {
 public:
   std::vector<Source *> sources;
+
+  std::vector<AST *> asts;
+  int ast_gened = -1;
+
   int verbosity;
   Parser parser;
   LLContext *llc;

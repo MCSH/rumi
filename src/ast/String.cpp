@@ -22,3 +22,16 @@ void *String::allocagen(CC *cc){
   cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
   exit(1);
 }
+
+void String::set(std::string key, void *value){
+  if(key == "val"){
+    val = std::string((char *) value);
+    return;
+  }
+
+  // TODO error?
+}
+
+void String::add(std::string key, void *value){
+  // TODO error?
+}

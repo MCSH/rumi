@@ -30,3 +30,16 @@ void *Sizeof::allocagen(CC *cc){
   cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
   exit(1);
 }
+
+void Sizeof::set(std::string key, void *value){
+  if(key == "type"){
+    type_ = (Type *) value;
+    return;
+  }
+
+  // TODO error?
+}
+
+void Sizeof::add(std::string key, void *value){
+  // TODO error?
+}

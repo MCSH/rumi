@@ -26,3 +26,16 @@ void *ConstInt::allocagen(CC *cc){
   cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
   exit(1);
 }
+
+void ConstInt::set(std::string key, void *value){
+  if(key == "value"){
+    this->value = (long long)value;
+    return;
+  }
+
+  // TODO error?
+}
+
+void ConstInt::add(std::string key, void *value){
+  // TODO error?
+}

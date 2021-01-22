@@ -5,10 +5,12 @@
 class Import: public Statement{
 public:
   std::string importPath;
-  std::vector<AST *> asts;
   Source *s;
 
   Import(std::string importPath);
+
+  virtual void set(std::string key, void *value) override;
+  virtual void add(std::string key, void *value) override;
 
   virtual void prepare(CC *cc) override;
   virtual void compile(CC *cc) override;

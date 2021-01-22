@@ -20,8 +20,9 @@ void *MethodCall::exprgenInterface(CC *cc){
   }
   
   auto ptr = (llvm::Value *)e->exprgen(cc);
-  cc->debug(NONE) << "ptr is " << ptr << std::endl;
   auto vtable = cc->llc->builder->CreateStructGEP((llvm::Type *)i->generatedType, ptr, 0);
+
+  vtable = cc->llc->builder->CreateLoad(vtable);
 
   // TODO resolve fptr
   auto mi = i->methodInd(cc, fs->id);
@@ -48,7 +49,7 @@ void *MethodCall::exprgenInterface(CC *cc){
   }
 
   fptr = cc->llc->builder->CreateLoad(fptr);
-  fptr = cc->llc->builder->CreateLoad(fptr);
+  //fptr = cc->llc->builder->CreateLoad(fptr);
 
   return cc->llc->builder->CreateCall(ftype, fptr, params);
 }
@@ -138,6 +139,23 @@ void* MethodCall::allocagen(CC *cc){
   return 0;
 }
 
+// TODO check these
+void MethodCall::set(std::string key, void *value){
+  if(key == "exp"){
+    exp = (MemAccess *) value;
+    return;
+  }
+
+  // TODO error?
+}
+
+void MethodCall::add(std::string key, void *value){
+  if(key == "arg"){
+    args.push_back((Expression *) value);
+  }
+  // TODO error?
+}
+
 MethodCallStmt::MethodCallStmt(MethodCall *mc)
   : mc(mc)
 {}
@@ -150,4 +168,12 @@ void MethodCallStmt::prepare(CC *cc){
 }
 void MethodCallStmt::codegen(CC *cc){
   mc->exprgen(cc);
+}
+
+void MethodCallStmt::set(std::string key, void *value){
+  mc->set(key, value);
+}
+
+void MethodCallStmt::add(std::string key, void *value){
+  mc->add(key, value);
 }

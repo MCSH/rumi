@@ -10,6 +10,14 @@ ParenToken::ParenToken(Token *exp, CC *cc, Source *s, int spos, int epos)
   this->epos = epos;
 }
 
+void *ParenToken::get(std::string key){
+  if(key == "exp"){
+    return exp;
+  }
+  // TODO Error?
+  return 0;
+}
+
 std::string ParenToken::desc(){
   return "("+ exp->desc() + ")";
 }

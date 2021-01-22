@@ -10,6 +10,12 @@ SBlockToken::SBlockToken(CC *cc, Source *s, int spos, int epos){
   this->epos = epos;
 }
 
+void *SBlockToken::get(std::string key){
+  // TODO stmts?
+  // TODO Error?
+  return 0;
+}
+
 AST *SBlockToken::toAST(CC *cc){
   CodeBlock *cb = new CodeBlock();
   for(auto t: stmts){

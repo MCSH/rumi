@@ -25,3 +25,16 @@ void *ConstBool::allocagen(CC *cc){
   cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
   exit(1);
 }
+
+void ConstBool::set(std::string key, void *value){
+  if(key == "truth"){
+    truth = (bool)value;
+    return;
+  }
+
+  // TODO error?
+}
+
+void ConstBool::add(std::string key, void *value){
+  // TODO error?
+}

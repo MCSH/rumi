@@ -8,6 +8,9 @@ class Method: public Statement{
   Function *f;
 
   Method(std::string structName, std::string methodName, Function *f);
+
+  virtual void set(std::string key, void *value) override;
+  virtual void add(std::string key, void *value) override;
   
   virtual void compile(CC *cc) override;
   virtual void prepare(CC *cc) override;

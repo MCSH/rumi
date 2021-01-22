@@ -35,3 +35,26 @@ void *BinOp::allocagen(CC *cc){
   cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
   exit(1);
 }
+
+void BinOp::set(std::string key, void *value){
+  if(key == "lhs"){
+    lhs = (Expression *) value;
+    return;
+  }
+
+  if(key == "rhs"){
+    rhs = (Expression *) value;
+    return;
+  }
+
+  if(key == "op"){
+    op = std::string((char *) value);
+    return;
+  }
+
+  // TODO error?
+}
+
+void BinOp::add(std::string key, void *value){
+  // TODO error?
+}

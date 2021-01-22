@@ -13,6 +13,15 @@ FunctionBodyToken::FunctionBodyToken(CC *cc, Source *s, int pos, int epos){
   this->epos = epos;
 }
 
+void *FunctionBodyToken::get(std::string key){
+  if(key == "returnType"){
+    return rt;
+  }
+  // TODO lists?
+  // TODO Error?
+  return 0;
+}
+
 Function *FunctionBodyToken::toAST(CC *cc){
   Function *f = new Function();
 
@@ -26,7 +35,7 @@ Function *FunctionBodyToken::toAST(CC *cc){
   for(Token *t: statements){
     Statement *s = dynamic_cast<Statement *>(t->toAST(cc));
     if(!s){
-      cc->debug(NONE) << "Statement Token was not a real statement" << *t << std::endl;
+      cc->debug(NONE) << "Statement Token was not a real statement " << *t << std::endl;
       exit(1);
     }
     f->statements.push_back(s);

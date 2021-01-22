@@ -65,10 +65,23 @@ Compatibility PointerType::compatible(CC *cc, Type *t){
   if(PointerType *pt = dynamic_cast<PointerType*>(t)){
     return OK;
   }
+
+  // TODO improve
+  if(PrimitiveType *pt = dynamic_cast<PrimitiveType*>(t)){
+    return ImpCast;
+  }
+  
   return INCOMPATIBLE;
 }
 void *PointerType::castgen(CC *cc, Expression *e){
   // TODO
+
+  // TODO improve
+  if(PrimitiveType *pt = dynamic_cast<PrimitiveType*>(e->type(cc)->baseType(cc))){
+    auto exp = (llvm::Value*)e->exprgen(cc);
+    return cc->llc->builder->CreateIntToPtr(exp, (llvm::Type *)typegen(cc));
+  }
+  
   return e->exprgen(cc);
 }
 
@@ -105,4 +118,17 @@ Type *PointerType::preoptyperesolve(CC *cc, std::string op){
 
 void *PointerType::preopgen(CC *cc, std::string op, Expression *value){
   return 0;
+}
+
+void PointerType::set(std::string key, void *value){
+  if(key == "innerType"){
+    innerType = (Type *) value;
+    return;
+  }
+
+  // TODO error?
+}
+
+void PointerType::add(std::string key, void *value){
+  // TODO error?
 }

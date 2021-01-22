@@ -19,6 +19,14 @@ ParseResult NumberParser::scheme(CC *cc, Source *s, int pos){
   return ans;
 }
 
+void *NumberToken::get(std::string key){
+  if(key == "val"){
+    return (void*)(long long)val;
+  }
+  // TODO Error?
+  return 0;
+}
+
 AST *NumberToken::toAST(CC *cc){
   return new ConstInt(val);
 }

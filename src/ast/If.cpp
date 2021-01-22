@@ -60,3 +60,26 @@ void If::codegen(CC *cc){
   // go to cont
   cc->llc->builder->SetInsertPoint(ifCont);
 }
+
+void If::set(std::string key, void *value){
+  if(key == "condition"){
+    condition = (Expression*) value;
+    return;
+  }
+
+  if(key == "st1"){
+    st1 = (Statement *) value;
+    return;
+  }
+
+  if(key == "st2"){
+    st2 = (Statement *) value;
+    return;
+  }
+
+  // TODO error?
+}
+
+void If::add(std::string key, void *value){
+  // TODO error?
+}

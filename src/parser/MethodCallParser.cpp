@@ -13,6 +13,15 @@ MethodCallToken::MethodCallToken(Token *exp, CC *cc, Source *s, int spos,
   this->epos = epos;
 }
 
+void *MethodCallToken::get(std::string key){
+  if(key == "exp"){
+    return exp;
+  }
+  // TODO args
+  // TODO Error?
+  return 0;
+}
+
 AST *MethodCallToken::toAST(CC *cc){
   MethodCall *m = new MethodCall();
 

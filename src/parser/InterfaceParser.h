@@ -11,6 +11,7 @@ class InterfaceToken: public Token{
 
   InterfaceToken(std::string id, CC *cc, Source *s, int spos, int eops);
 
+  virtual void *get(std::string key) override;
   virtual std::string desc() override;
   virtual AST *toAST(CC *cc) override;
 };

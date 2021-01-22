@@ -14,6 +14,15 @@ InterfaceToken::InterfaceToken(std::string id, CC *cc, Source *s, int spos,
   this->epos = epos;
 }
 
+void *InterfaceToken::get(std::string key){
+  if(key == "id"){
+    return (void *)id.c_str();
+  }
+  // TODO methods?
+  // TODO Error?
+  return 0;
+}
+
 AST *InterfaceToken::toAST(CC *cc){
   // TODO
   Interface *in = new Interface(id);

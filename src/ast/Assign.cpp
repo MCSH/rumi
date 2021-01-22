@@ -49,3 +49,21 @@ void Assign::codegen(CC *cc){
   // create store
   cc->llc->builder->CreateStore(v, (llvm::Value *)baseExpr->allocagen(cc));
 }
+
+void Assign::set(std::string key, void *value){
+  if(key == "base"){
+    baseExpr = (Expression *) value;
+    return;
+  }
+
+  if(key == "exp"){
+    expression = (Expression *) value;
+    return;
+  }
+
+  // TODO error?
+}
+
+void Assign::add(std::string key, void *value){
+  // TODO error?
+}

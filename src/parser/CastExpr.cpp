@@ -13,6 +13,17 @@ CastToken::CastToken(Token *exp, Token *type, CC *cc, Source *s, int spos, int e
   this->epos = epos;
 }
 
+void *CastToken::get(std::string key){
+  if(key == "exp"){
+    return exp;
+  }
+  if(key == "type"){
+    return type;
+  }
+  // TODO Error?
+  return 0;
+}
+
 std::string CastToken::desc(){
   return exp->desc() + " -> " + type->desc();
 }

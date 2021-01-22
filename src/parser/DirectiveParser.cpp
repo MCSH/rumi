@@ -14,6 +14,17 @@ DirectiveToken::DirectiveToken(std::string id, Token *top, CC *cc, Source *s, in
   this->epos = epos;
 }
 
+void *DirectiveToken::get(std::string key){
+  if(key == "id"){
+    return (void *)id.c_str();
+  }
+  if(key == "top"){
+    return top;
+  }
+  // TODO Error?
+  return 0;
+}
+
 AST *DirectiveToken::toAST(CC *cc){
   return new Directive(id, top->toAST(cc));
 }

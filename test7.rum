@@ -6,21 +6,20 @@ test := () -> int{
 }
 
 @compile
-compile_test := (c: *compiler) -> int{
+compile_test := (c: *Compiler) -> int{
   printf("Running in compile time!\n");
   printf("Test() = %d\n", test());
 
   // Compiler exits here with status 100, not finishing the process
   printf("Currently, verbosity is set to %d\n", c.get("verbosity"));
-
-  c.set("verbosity", 1);
-
+  c.set("verbosity", 0);
   printf("Now, it is at %d\n", c.get("verbosity"));
 
-  c.exit(100);
+  // c.exit(100);
 
   return 0;
 }
+
 
 main := () -> int{
   printf("Hello World!\n");

@@ -33,25 +33,25 @@ int main(int argc, char **argv) {
 
   cc.llc = new LLContext();
 
-  std::vector<AST *> asts;
-
   for(Source *s: cc.sources){
-    auto s_ast = s->parse(&cc);
-    asts.insert(asts.end(), s_ast->begin(), s_ast->end());
-    delete s_ast;
+    //auto s_ast =
+    s->parse(&cc);
+    //asts.insert(asts.end(), s_ast->begin(), s_ast->end());
+    //delete s_ast;
   }
 
-  for(AST *a: asts){
-    a->prepare(&cc);
-  }
-  for(AST *a: asts){
-    a->compile(&cc);
-  }
-  for(AST *a: asts){
-    if(Statement *s = dynamic_cast<Statement *>(a))
+  /*
+  for(auto a: asts)
+      a->prepare(&cc);
+  for(auto a: asts)
+      a->compile(&cc);
+  */
+  for(int i = cc.ast_gened + 1; i < cc.asts.size(); i++){
+    AST *a = cc.asts[i];
+    if (Statement *s = dynamic_cast<Statement *>(a))
       s->codegen(&cc);
+    cc.ast_gened = i;
   }
-
   if(cc.verbosity >= Verbosity::LOW)
     cc.llc->module->print(llvm::outs(), nullptr);
 

@@ -1,10 +1,14 @@
 #include "LLContext.h"
+#include "ast/FCall.h"
+#include "ast/String.h"
+#include "ast/ast.h"
 #include "base.h"
 #include "Source.h"
 #include <fstream>
 #include <iostream>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/IR/IRBuilder.h>
+#include "parser/DynamicParseRule.h"
 
 // Used in outputing to nowhere.
 class NullStream : public std::ostream {
@@ -129,6 +133,88 @@ void *getCallback(void *c, char *ckey){
   }
 }
 
+void *astCallback(void *c, char *ckey){
+  CC *cc = (CC *) c;
+  std::string key(ckey);
+
+  if(key == "fcall"){
+    // TODO
+    return (AST *)new FCall();
+  }
+  if(key == "fcallstmt"){
+    return new FCallStmt();
+  }
+
+  if(key == "string"){
+    return (AST*) new String("");
+  }
+  return 0;
+}
+
+void *getParserCallback(void *c, char *ckey){
+  CC *cc = (CC *) c;
+  std::string key(ckey);
+
+  // TODO error handling
+  cc->debug(LOW) << "Getting parser " << key << std::endl;
+  return cc->parser.getParserWithKey(key);
+}
+
+void *registerParserCallback(void *c, char *ckey, char *name){
+  // TODO error handling
+  CC *cc = (CC *) c;
+  std::string key(ckey);
+  std::string parserName(name);
+
+  // top, type, value, statement, expression
+
+  DynamicParseRule *drp = new DynamicParseRule(cc, parserName);
+  
+  if(key == "top"){
+    cc->parser.registerTopRule(drp);
+  } else if(key == "type"){
+    cc->parser.registerTypeRule(drp);
+  } else if(key == "value"){
+    cc->parser.registerValueRule(drp);
+  } else if(key == "statement"){
+    cc->parser.registerStatementRule(drp);
+  } else if(key == "expression"){
+    cc->parser.registerExpressionRule(drp);
+  } else {
+    cc->debug(NONE) << "Unknown parser type in register" << std::endl;
+    exit(1);
+  }
+
+  return 0;
+}
+
+void *parserParseCallback(void *p, void *c, void *s, int pos){
+  // TODO error handling
+  ParseRule *pr = (ParseRule *) p;
+  auto ans = pr->parse((CC*) c, (Source *)s, pos);
+  if(!ans) return 0;
+  ParseResult *parseResult = new ParseResult(ans);
+  return parseResult;
+}
+
+void astSetCallback(void *cast, char *ckey, void *value){
+  // TODO error handling
+  AST *ast = (AST *) cast;
+  ast->set(std::string(ckey), value);
+}
+
+void astAddCallback(void *cast, char *ckey, void *value){
+  // TODO error handling
+  AST *ast = (AST *) cast;
+  ast->add(std::string(ckey), value);
+}
+
+void *parseResultGetCallback(void *cpr, char *ckey){
+  // TODO error handling
+  ParseResult *pr = (ParseResult *) cpr;
+  return pr->token->get(std::string(ckey));
+}
+
 #define REGISTER_CALLBACK(name, replace, cb)                                   \
   {                                                                            \
     llvm::Function *f = EE->FindFunctionNamed(name);                           \
@@ -163,10 +249,19 @@ void *CompileContext::getCompileObj(void *e){
 
   // Initialize compile functions in the module.
 
-  // == compiler$exit := (c: compiler, status: int)-> unit ==
-  REGISTER_CALLBACK ("compiler$exit", "compiler$exit_replace", &exitCallback)
-  REGISTER_CALLBACK ("compiler$set", "compiler$set_replace", &setCallback)
-  REGISTER_CALLBACK ("compiler$get", "compiler$get_replace", &getCallback)
+  REGISTER_CALLBACK("Compiler$exit", "Compiler$exit_replace", &exitCallback);
+  REGISTER_CALLBACK("Compiler$set", "Compiler$set_replace", &setCallback);
+  REGISTER_CALLBACK("Compiler$get", "Compiler$get_replace", &getCallback);
+  REGISTER_CALLBACK("Compiler$ast", "Compiler$ast_replace", &astCallback);
+  REGISTER_CALLBACK("Compiler$getParser", "Compiler$getParser_replace", &getParserCallback);
+  REGISTER_CALLBACK("Compiler$registerParser", "Compiler$registerParser_replace", &registerParserCallback);
+
+  REGISTER_CALLBACK("Parser$parse", "Parser$parse_replace", &parserParseCallback);
+
+  REGISTER_CALLBACK("AST$set", "AST$set_replace", &astSetCallback);
+  REGISTER_CALLBACK("AST$add", "AST$add_replace", &astAddCallback);
+
+  REGISTER_CALLBACK("ParseResult$get", "ParseResult$get_replace", &parseResultGetCallback);
 
   return compileObj;
 }

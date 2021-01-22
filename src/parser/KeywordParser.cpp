@@ -3,6 +3,14 @@
 #include "KeywordParser.h"
 #include "Keywords.h"
 
+void *KeywordToken::get(std::string key){
+  if(key == "id"){
+    return (void *)desc().c_str();
+  }
+  // TODO Error?
+  return 0;
+}
+
 KeywordToken* KeywordParser::findkey(CC *cc, Source *s, int pos){
   int end = extractNextAlphaNumerical(&s->str, pos);
   if(end == -1) return 0;

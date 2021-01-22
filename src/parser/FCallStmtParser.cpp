@@ -10,6 +10,15 @@ FCallStmtToken::FCallStmtToken(std::string id, CC *cc, Source *s, int spos, int 
   this->s = s;
 }
 
+void *FCallStmtToken::get(std::string key){
+  if(key == "id"){
+    return (void *)id.c_str();
+  }
+  // TODO args?
+  // TODO Error?
+  return 0;
+}
+
 FCallStmt *FCallStmtToken::toAST(CC *cc){
   FCallStmt *fs = new FCallStmt();
   FCall *f = &fs->fc;
