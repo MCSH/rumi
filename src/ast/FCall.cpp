@@ -40,23 +40,6 @@ void *FCall::allocagen(CC *cc){
   exit(1);
 }
 
-void FCall::set(std::string key, void *value){
-  if(key == "id"){
-    id = std::string((char *) value);
-    return;
-  }
-
-  // TODO error?
-}
-
-void FCall::add(std::string key, void *value){
-  if(key == "arg"){
-    args.push_back((Expression *)value);
-    return;
-  }
-  // TODO error?
-}
-
 void FCallStmt::compile(CC *cc){
   fc.compile(cc);
   // TODO casting
@@ -66,12 +49,4 @@ void FCallStmt::prepare(CC *cc){
 }
 void FCallStmt::codegen(CC *cc){
   fc.exprgen(cc);
-}
-
-void FCallStmt::set(std::string key, void *value){
-  fc.set(key, value);
-}
-
-void FCallStmt::add(std::string key, void *value){
-  fc.add(key, value);
 }

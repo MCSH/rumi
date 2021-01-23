@@ -139,23 +139,6 @@ void* MethodCall::allocagen(CC *cc){
   return 0;
 }
 
-// TODO check these
-void MethodCall::set(std::string key, void *value){
-  if(key == "exp"){
-    exp = (MemAccess *) value;
-    return;
-  }
-
-  // TODO error?
-}
-
-void MethodCall::add(std::string key, void *value){
-  if(key == "arg"){
-    args.push_back((Expression *) value);
-  }
-  // TODO error?
-}
-
 MethodCallStmt::MethodCallStmt(MethodCall *mc)
   : mc(mc)
 {}
@@ -168,12 +151,4 @@ void MethodCallStmt::prepare(CC *cc){
 }
 void MethodCallStmt::codegen(CC *cc){
   mc->exprgen(cc);
-}
-
-void MethodCallStmt::set(std::string key, void *value){
-  mc->set(key, value);
-}
-
-void MethodCallStmt::add(std::string key, void *value){
-  mc->add(key, value);
 }

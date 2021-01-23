@@ -22,9 +22,6 @@ public:
   Method *resolveMethod(CC *cc, std::string methodId);
   int resolveInterfaceVptrInd(CC *cc, Interface *it);
 
-  virtual void set(std::string key, void *value) override;
-  virtual void add(std::string key, void *value) override;
-
   virtual void* typegen(CC *cc) override;
   virtual void compile(CC *cc) override;
   virtual void prepare(CC *cc) override;

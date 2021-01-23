@@ -229,17 +229,3 @@ Type *Interface::preoptyperesolve(CC *cc, std::string op){
 void *Interface::preopgen(CC *cc, std::string op, Expression *value){
   return 0;
 }
-
-void Interface::set(std::string key, void *value){
-  if(key == "id"){
-    id = std::string((char *) value);
-    return;
-  }
-
-  // TODO error?
-}
-
-void Interface::add(std::string key, void *value){
-  // TODO how do we want to handle this????????
-  // TODO error?
-}

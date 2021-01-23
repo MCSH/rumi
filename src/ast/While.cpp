@@ -46,21 +46,3 @@ void While::codegen(CC *cc){
 
   cc->llc->builder->SetInsertPoint(whileContB);
 }
-
-void While::set(std::string key, void *value){
-  if(key == "condition"){
-    condition = (Expression *) value;
-    return;
-  }
-
-  if(key == "st"){
-    st = (Statement *) value;
-    return;
-  }
-
-  // TODO error?
-}
-
-void While::add(std::string key, void *value){
-  // TODO error?
-}

@@ -40,25 +40,3 @@ Define::Define(std::string id, Expression *e, Type *t)
   , type(t)
 {}
 
-void Define::set(std::string key, void *value){
-  if(key == "id"){
-    id = std::string((char *) value);
-    return;
-  }
-
-  if(key == "expression"){
-    expression = (Expression *) value;
-    return;
-  }
-
-  if(key == "type"){
-    type = (Type *) value;
-    return;
-  }
-
-  // TODO error?
-}
-
-void Define::add(std::string key, void *value){
-  // TODO error?
-}

@@ -176,16 +176,6 @@ void *parserParseCallback(ParseRule *pr, CC *cc, Source *s, int pos){
   return parseResult;
 }
 
-void astSetCallback(AST *ast, char *ckey, void *value){
-  // TODO error handling
-  ast->set(std::string(ckey), value);
-}
-
-void astAddCallback(AST *ast, char *ckey, void *value){
-  // TODO error handling
-  ast->add(std::string(ckey), value);
-}
-
 void *parseResultGetCallback(ParseResult *pr, char *ckey){
   // TODO error handling
   return pr->token->get(CSTRTOSTR(ckey));
@@ -636,6 +626,22 @@ void MethodCallAddArg(MethodCall *mc, int i, Expression  *e){
   mc->args.push_back(e);
 }
 
+MethodCallStmt *createMethodCallStmt(CC *cc){
+  return new MethodCallStmt(new MethodCall());
+}
+MemAccess *MethodCallStmtGetExp(MethodCallStmt *mc){
+  return mc->mc->exp;
+}
+Expression *MethodCallStmtGetArg(MethodCallStmt *mc, int i){
+  return mc->mc->args[i];
+}
+void MethodCallStmtSetExp(MethodCallStmt *mc, MemAccess *m){
+  mc->mc->exp = m;
+}
+void MethodCallStmtAddArg(MethodCallStmt *mc, int i, Expression  *e){
+  mc->mc->args.push_back(e);
+}
+
 // NamedType
 #include "ast/NamedType.h"
 NamedType *createNamedType(CC *cc, char *id){
@@ -851,9 +857,6 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("Compiler$registerParser", "Compiler$registerParser_replace", &registerParserCallback);
 
   REGISTER_CALLBACK("Parser$parse", "Parser$parse_replace", &parserParseCallback);
-
-  REGISTER_CALLBACK("AST$set", "AST$set_replace", &astSetCallback);
-  REGISTER_CALLBACK("AST$add", "AST$add_replace", &astAddCallback);
 
   REGISTER_CALLBACK("ParseResult$get", "ParseResult$get_replace", &parseResultGetCallback);
 
@@ -1113,20 +1116,31 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("Compiler$createMethodCall",
                     "Compiler$createMethodCall_replace",
                     &createMethodCall);
-  REGISTER_CALLBACK("C_MethodCall$setExp", "C_MethodCall$getExp_replace", &MethodCallGetExp);
   REGISTER_CALLBACK("C_MethodCall$getExp", "C_MethodCall$getExp_replace", &MethodCallGetExp);
+  REGISTER_CALLBACK("C_MethodCall$setExp", "C_MethodCall$setExp_replace", &MethodCallSetExp);
   REGISTER_CALLBACK("C_MethodCall$getArg", "C_MethodCall$getArg_replace", &MethodCallGetArg);
   REGISTER_CALLBACK("C_MethodCall$addArg", "C_MethodCall$addArg_replace", &MethodCallAddArg);
 
+  // MethodCallStmt
+  REGISTER_CALLBACK("Compiler$createMethodCallStmt",
+                    "Compiler$createMethodCallStmt_replace",
+                    &createMethodCallStmt);
+  REGISTER_CALLBACK("C_MethodCallStmt$getExp",
+                    "C_MethodCallStmt$getExp_replace", &MethodCallStmtGetExp);
+  REGISTER_CALLBACK("C_MethodCallStmt$setExp",
+                    "C_MethodCallStmt$setExp_replace", &MethodCallStmtSetExp);
+  REGISTER_CALLBACK("C_MethodCallStmt$getArg",
+                    "C_MethodCallStmt$getArg_replace", &MethodCallStmtGetArg);
+  REGISTER_CALLBACK("C_MethodCallStmt$addArg",
+                    "C_MethodCallStmt$addArg_replace", &MethodCallStmtAddArg);
 
   // NamedType
   REGISTER_CALLBACK("Compiler$createNamedType",
-                    "Compiler$createNamedType_replace",
-                    &createNamedType);
+                    "Compiler$createNamedType_replace", &createNamedType);
   REGISTER_CALLBACK("C_NamedType$getId", "C_NamedType$getId_replace",
-                    & NamedTypeGetId);
+                    &NamedTypeGetId);
   REGISTER_CALLBACK("C_NamedType$setId", "C_NamedType$setId_replace",
-                    & NamedTypeSetId);
+                    &NamedTypeSetId);
 
   // PointerType
   REGISTER_CALLBACK("Compiler$createPointerType",

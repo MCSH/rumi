@@ -35,21 +35,3 @@ void *Cast::allocagen(CC *cc){
   cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
   exit(1);
 }
-
-void Cast::set(std::string key, void *value){
-  if(key == "exp"){
-    exp = (Expression *) value;
-    return;
-  }
-
-  if(key == "type"){
-    type_ = (Type *) value;
-    return;
-  }
-
-  // TODO error?
-}
-
-void Cast::add(std::string key, void *value){
-  // TODO error?
-}

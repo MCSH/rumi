@@ -32,7 +32,7 @@ void Method::prepare(CC *cc){
 
   // set name of f
   // struct$method
-  f->set("id", (void*)(structName + "$" + methodName).c_str());
+  f->id = structName + "$" + methodName;
 
   // add self as an argument to f
   Arg *selfArg = new Arg();
@@ -45,27 +45,4 @@ void Method::prepare(CC *cc){
 
 void Method::codegen(CC *cc){
   f->codegen(cc);
-}
-
-void Method::set(std::string key, void *value){
-  if(key == "structName"){
-    structName = std::string((char *) value);
-    return;
-  }
-
-  if(key == "methodName"){
-    methodName = std::string((char *) value);
-    return;
-  }
-
-  if(key == "function"){
-    f = (Function *) value;
-    return;
-  }
-
-  // TODO error?
-}
-
-void Method::add(std::string key, void *value){
-  // TODO error?
 }

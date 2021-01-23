@@ -35,16 +35,3 @@ Type *PtrValue::type(CC *cc){
 void *PtrValue::allocagen(CC *cc){
   return ptr->exprgen(cc);
 }
-
-void PtrValue::set(std::string key, void *value){
-  if(key == "ptr"){
-    ptr = (Expression *) value;
-    return;
-  }
-
-  // TODO error?
-}
-
-void PtrValue::add(std::string key, void *value){
-  // TODO error?
-}

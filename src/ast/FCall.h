@@ -8,9 +8,6 @@ class FCall: public Expression{
   std::string id;
   std::vector<Expression *>args;
 
-  virtual void set(std::string key, void *value) override;
-  virtual void add(std::string key, void *value) override;
-
   virtual void compile(CC *cc) override;
   virtual void prepare(CC *cc) override;
   virtual void* exprgen(CC *cc) override;
@@ -21,9 +18,6 @@ class FCall: public Expression{
 class FCallStmt: public Statement{
  public:
   FCall fc;
-
-  virtual void set(std::string key, void *value) override;
-  virtual void add(std::string key, void *value) override;
 
   virtual void compile(CC *cc) override;
   virtual void prepare(CC *cc) override;

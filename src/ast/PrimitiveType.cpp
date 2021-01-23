@@ -464,16 +464,3 @@ void *PrimitiveType::preopgen(CC *cc, std::string op, Expression *value){
 
   return 0;
 }
-
-void PrimitiveType::set(std::string key, void *value){
-  if(key == "key"){
-    key = (long long)value;
-    return;
-  }
-
-  // TODO error?
-}
-
-void PrimitiveType::add(std::string key, void *value){
-  // TODO error?
-}

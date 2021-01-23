@@ -58,25 +58,3 @@ Type *FunctionType::preoptyperesolve(CC *cc, std::string op){
 void *FunctionType::preopgen(CC *cc, std::string op, Expression *value){
   return 0;
 }
-
-void FunctionType::set(std::string key, void *value){
-  if(key == "vararg"){
-    vararg = (bool) value;
-    return;
-  }
-
-  if(key == "returnType"){
-    returnType = (Type*) value;
-    return;
-  }
-
-  // TODO error?
-}
-
-void FunctionType::add(std::string key, void *value){
-  if(key == "arg"){
-    args.push_back((Type *) value);
-    return;
-  }
-  // TODO error?
-}

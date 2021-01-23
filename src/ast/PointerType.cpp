@@ -119,16 +119,3 @@ Type *PointerType::preoptyperesolve(CC *cc, std::string op){
 void *PointerType::preopgen(CC *cc, std::string op, Expression *value){
   return 0;
 }
-
-void PointerType::set(std::string key, void *value){
-  if(key == "innerType"){
-    innerType = (Type *) value;
-    return;
-  }
-
-  // TODO error?
-}
-
-void PointerType::add(std::string key, void *value){
-  // TODO error?
-}

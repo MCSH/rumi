@@ -27,16 +27,3 @@ void *Address::allocagen(CC *cc){
   cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
   exit(1);
 }
-
-void Address::set(std::string key, void *value){
-  if(key == "exp"){
-    exp = (Expression *) value;
-    return;
-  }
-
-  // TODO error?
-}
-
-void Address::add(std::string key, void *value){
-  // TODO error?
-}

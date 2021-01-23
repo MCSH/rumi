@@ -22,7 +22,7 @@ HiParseRule.parse := (c: *Compiler, s: *Source, pos: int)->*ParseResult{
   return id;
 }
 
-HiParseRule.genAST := (c: *Compiler, token: *ParseResult) -> *AST{
+HiParseRule.genAST := (c: *Compiler, token: *ParseResult) -> *C_AST{
   fcall := c.createFCallStmt();
   fcall.setId("printf");
   s := c.createCString();
@@ -33,7 +33,7 @@ HiParseRule.genAST := (c: *Compiler, token: *ParseResult) -> *AST{
 
 ComplexRule: struct{}
 
-ComplexRule.genAST := (c: *Compiler, token: *ParseResult) -> *AST{
+ComplexRule.genAST := (c: *Compiler, token: *ParseResult) -> *C_AST{
   fcall := c.createFCallStmt();
   fcall.setId("printf");
   s := c.createCString();
@@ -72,7 +72,7 @@ DefPrintRule.parse := (c: *Compiler, s: *Source, pos: int) -> *ParseResult{
   }
   return id;
 }
-DefPrintRule.genAST := (c: *Compiler, token: *ParseResult) -> *AST{
+DefPrintRule.genAST := (c: *Compiler, token: *ParseResult) -> *C_AST{
   m := c.createFunction();
 
   tname : *u8 = token.get("id");

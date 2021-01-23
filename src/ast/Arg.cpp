@@ -24,20 +24,3 @@ void Arg::codegen(CC *cc){
   auto alloca = cc->llc->builder->CreateAlloca((llvm::Type *)type->typegen(cc));
   named -> alloca = alloca;
 }
-
-void Arg::set(std::string key, void *value){
-  if(key == "id"){
-    id = std::string((char *) value);
-    return;
-  }
-  if(key == "type"){
-    type = (Type*) value;
-    return;
-  }
-
-  // TODO error?
-}
-
-void Arg::add(std::string key, void *value){
-  // TODO error?
-}

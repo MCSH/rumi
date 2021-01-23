@@ -7,9 +7,6 @@ class PointerType: public Type{
 
   PointerType(Type *innerType);
 
-  virtual void set(std::string key, void *value) override;
-  virtual void add(std::string key, void *value) override;
-
   virtual void* typegen(CC *cc) override;
   virtual void compile(CC *cc) override;
   virtual void prepare(CC *cc) override;

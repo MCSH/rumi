@@ -82,21 +82,3 @@ void Directive::compile(CC *cc){
 
 void Directive::codegen(CC *cc){
 }
-
-void Directive::set(std::string key, void *value){
-  if(key == "id"){
-    id = std::string((char *) value);
-    return;
-  }
-
-  if(key == "top"){
-    top = (AST *) value;
-    return;
-  }
-
-  // TODO error?
-}
-
-void Directive::add(std::string key, void *value){
-  // TODO error?
-}

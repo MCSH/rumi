@@ -28,15 +28,3 @@ void CodeBlock::codegen(CC *cc){
 
   cc->popContext();
 }
-
-void CodeBlock::set(std::string key, void *value){
-  // TODO error?
-}
-
-void CodeBlock::add(std::string key, void *value){
-  if(key == "statement"){
-    stmts.push_back((Statement*) value);
-    return;
-  }
-  // TODO error?
-}

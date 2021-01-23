@@ -51,30 +51,3 @@ void FunctionSig::codegen(CC *cc){
   named->alloca = f;
 
 }
-
-void FunctionSig::set(std::string key, void *value){
-  if(key == "vararg"){
-    vararg = (bool)value;
-    return;
-  }
-
-  if(key == "returnType"){
-    returnType = (Type *) value;
-    return;
-  }
-
-  if(key == "id"){
-    id = std::string((char *) value);
-    return;
-  }
-
-  // TODO error?
-}
-
-void FunctionSig::add(std::string key, void *value){
-  if(key == "arg"){
-    args.push_back((Arg *) value);
-    return;
-  }
-  // TODO error?
-}

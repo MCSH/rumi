@@ -70,14 +70,14 @@ AST *DefineToken::toAST(CC *cc){
       // TODO We have a static function
       auto tmp = fbt->toAST(cc);
 
-      tmp -> set("id", (void *)id.c_str());
+      tmp->id = id;
       return tmp;
     }
     if (FunctionSigToken *fst = dynamic_cast<FunctionSigToken *>(value)) {
       // TODO We have a static function
       auto tmp = fst->toAST(cc);
 
-      tmp -> set("id", (void *)id.c_str());
+      tmp->id = id;
       return tmp;
     }
   }

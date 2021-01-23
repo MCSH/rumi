@@ -163,20 +163,3 @@ Type *StructType::preoptyperesolve(CC *cc, std::string op){
 void *StructType::preopgen(CC *cc, std::string op, Expression *value){
   return 0;
 }
-
-void StructType::set(std::string key, void *value){
-  if(key == "id"){
-    id = std::string((char*) value);
-    return;
-  }
-
-  // TODO error?
-}
-
-void StructType::add(std::string key, void *value){
-  if(key == "member"){
-    members.push_back((Define *) value);
-    return;
-  }
-  // TODO error?
-}

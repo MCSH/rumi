@@ -22,17 +22,3 @@ void Return::codegen(CC *cc){
     cc->llc->builder->CreateRet((llvm::Value *)value->exprgen(cc));
   }
 }
-
-void Return::set(std::string key, void *value){
-  if(key == "value"){
-    if(!value) value = 0;
-    else value = (Expression *) value;
-    return;
-  }
-
-  // TODO error?
-}
-
-void Return::add(std::string key, void *value){
-  // TODO error?
-}

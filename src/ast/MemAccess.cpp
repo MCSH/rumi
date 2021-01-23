@@ -33,21 +33,3 @@ Type *MemAccess::type(CC *cc){
 void *MemAccess::allocagen(CC *cc){
   return exp->type(cc)->memalloca(cc, exp, id);
 }
-
-void MemAccess::set(std::string key, void *value){
-  if(key == "exp"){
-    exp = (Expression *) value;
-    return;
-  }
-
-  if(key == "id"){
-    id = std::string((char *) value);
-    return;
-  }
-
-  // TODO error?
-}
-
-void MemAccess::add(std::string key, void *value){
-  // TODO error?
-}
