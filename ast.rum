@@ -145,6 +145,10 @@ C_MemAccess.getExp := () -> *C_Expression{}
 C_MemAccess.setId := (id: string) -> unit{}
 C_MemAccess.setExp := (exp: *C_Expression) -> unit{}
 
+C_Method: struct{}
+Compiler.createMethod := (structName: string, methodName: string, f: C_Function)-> *C_Method{}
+// TODO
+
 C_NamedType: struct{}
 Compiler.createNamedType := (id: string) -> *C_NamedType{}
 C_NamedType.getId := () -> string{}
@@ -194,7 +198,8 @@ C_Struct.getId := () -> string{}
 C_Struct.getMember := (i: int) -> *C_Define{}
 C_Struct.setId := (id: string) -> unit{}
 C_Struct.addMember := (d: *C_Define) -> unit{}
-// TODO adding methods?
+C_Struct.addMethod := (c: *Compiler, m: *C_Method) -> unit{} // Don't need to call directly if you are returning method as an AST
+Compiler.getStruct := (id: string) -> *C_Struct{}
 // TODO interfaces and structs
 
 C_VariableValue: struct{}

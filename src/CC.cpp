@@ -1,4 +1,5 @@
 #include "LLContext.h"
+#include "ast/Named.h"
 #include "ast/ast.h"
 #include "base.h"
 #include "Source.h"
@@ -592,6 +593,14 @@ void MemAccessSetExp(MemAccess *m, Expression *e){
   m->exp = e;
 }
 
+// Method
+#include "ast/Method.h"
+Method *createMethod(CC *cc, char *sname, char *mname, Function *f){
+  return new Method(CSTRTOSTR(sname), CSTRTOSTR(mname), f);
+}
+
+// TODO MethodCall
+
 // NamedType
 #include "ast/NamedType.h"
 NamedType *createNamedType(CC *cc, char *id){
@@ -719,6 +728,15 @@ void StructSetId(StructType *st, char *id){
 
 void StructAddMember(StructType *st, Define *d){
   st->members.push_back(d);
+}
+void StructAddMethod(StructType *st, CC *cc, Method *m){
+  st->addMethod(cc, m);
+}
+
+StructType *CompilerGetStruct(CC *cc, char *id){
+  Named *n = cc->lookup(CSTRTOSTR(id));
+  if(!n) return 0;
+  return dynamic_cast<StructType*>(n->type);
 }
 
 // VariableValue
@@ -1045,6 +1063,11 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("C_MemAccess$setExp", "C_MemAccess$setExp_replace",
                     & MemAccessSetExp);
 
+  // Method
+  REGISTER_CALLBACK("Compiler$createMethod",
+                    "Compiler$createMethod_replace",
+                    & createMethod)
+
   // NamedType
   REGISTER_CALLBACK("Compiler$createNamedType",
                     "Compiler$createNamedType_replace",
@@ -1126,6 +1149,10 @@ void *CompileContext::getCompileObj(void *e){
                     & StructSetId);
   REGISTER_CALLBACK("C_Struct$addMember", "C_Struct$addMember_replace",
                     & StructAddMember);
+  REGISTER_CALLBACK("C_Struct$addMethod", "C_Struct$addMethod_replace",
+                    & StructAddMethod);
+  REGISTER_CALLBACK("Compiler$getStruct", "Compiler$getStruct_replace",
+                    &CompilerGetStruct);
   // TODO adding methods?
   // TODO interfaces and structs
 

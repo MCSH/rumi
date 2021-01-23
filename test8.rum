@@ -78,14 +78,17 @@ DefPrintRule.genAST := (c: *Compiler, token: *ParseResult) -> *AST{
   tname : *u8 = token.get("id");
   tname = tname + 8; 
 
-  m.setId(strcat(tname, "_print"));
+  m.setId(strcat(tname, "$print"));
   printf("Set the name of fucntion to %s\n", m.getId());
   m.setReturntype(c.createPrimitiveType("unit"));
+  /*
   a := c.createArg();
   a.setId("self");
   t := c.createNamedType(tname);
+  t = c.createPointerType(t);
   a.setType(t);
   m.addArg(a);
+  */
 
   ps := c.createFCallStmt();
   ps.setId("printf");
@@ -99,7 +102,11 @@ DefPrintRule.genAST := (c: *Compiler, token: *ParseResult) -> *AST{
   rs := c.createReturn(0);
   m.addStmt(rs);
 
-  return m;
+  method := c.createMethod(tname, "print", m);
+
+  printf("Method is %d\n", method);
+
+  return method;
 }
 
 @compile
@@ -132,7 +139,8 @@ main := () -> int{
   t : T;
   t. id = 5;
 
-  T_print(t);
+  //T_print(t);
+  t.print();
 
   return 0;
 }
