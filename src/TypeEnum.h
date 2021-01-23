@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 enum TypeEnum{
   t_int,
@@ -18,3 +19,7 @@ enum TypeEnum{
   t_void,
   t_bool,
 };
+
+std::string typeEnumToString(TypeEnum key);
+
+TypeEnum typeEnumFromString(std::string key);

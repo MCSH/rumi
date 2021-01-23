@@ -419,7 +419,6 @@ void *PrimitiveType::castgen(CC *cc, Expression *e){
     return cc->llc->builder->CreateICmpNE((llvm::Value*)e->exprgen(cc), zeroConst);
   }
 
-  std::cout << "Cast integer was invoked" << std::endl;
   return cc->llc->builder->CreateIntCast((llvm::Value*)e->exprgen(cc), (llvm::Type *)typegen(cc), isSigned(pt->key));
 }
 

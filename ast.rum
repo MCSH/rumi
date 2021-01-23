@@ -1,0 +1,210 @@
+import compiler
+
+C_Expression: struct{}
+C_Type: struct{}
+C_Statement: struct{}
+C_AST: struct{}
+
+C_Address: struct{}
+
+Compiler.createAddress := (exp: *C_Expression) -> *C_Address{}
+C_Address.getExp := () -> *C_Expression{}
+C_Address.setExp := (exp: *C_Expression) -> unit{}
+
+C_Arg: struct{}
+Compiler.createArg := () -> *C_Arg{}
+C_Arg.getId := () -> string{}
+C_Arg.getType := () -> *C_Type{}
+C_Arg.setId := (id: string) -> unit{}
+C_Arg.setType := (t: *C_Type) -> unit{}
+
+C_Assign: struct{}
+Compiler.createAssign := (base: *C_Expression, exp: *C_Expression) -> *C_Assign{}
+C_Assign.getBase := () -> *C_Expression{}
+C_Assign.getExp := () -> *C_Expression{}
+C_Assign.setBase := (base: *C_Expression) -> unit{}
+C_Assign.setExp := (exp: *C_Expression) -> unit{}
+
+C_BinOp: struct{}
+Compiler.createBinOp := (lhs: *C_Expression, op: string, rhs: *C_Expression) -> *C_BinOp{}
+C_BinOp.getLhs := () -> *C_Expression{}
+C_BinOp.getRhs := () -> *C_Expression{}
+C_BinOp.getOp := () -> string{}
+C_BinOp.setLHS := (lhs: *C_Expression) -> unit{}
+C_BinOp.setRHS := (rhs: *C_Expression) -> unit{}
+C_BinOp.setOp := (op: string) -> unit{}
+
+C_Cast: struct{}
+Compiler.createCast := (exp: *C_Expression, t: *C_Type) -> *C_Cast{}
+C_Cast.getType := () -> *C_Type{}
+C_Cast.getExp := () -> *C_Expression{}
+C_Cast.setType := (t: *C_Type) -> unit{}
+C_Cast.setExp := (exp: *C_Expression) -> unit{}
+
+C_CodeBlock: struct{}
+Compiler.createCodeBlock := () -> *C_CodeBlock{}
+C_CodeBlock.addStmt := (s: *C_Statement) -> unit{}
+C_CodeBlock.getStmt := (i: int) -> *C_Statement{}
+
+C_ConstBool: struct{}
+Compiler.createConstBool := (b: bool) -> *C_ConstBool{}
+C_ConstBool.get := () -> bool{}
+C_ConstBool.set := (b: bool) -> unit{}
+
+C_ConstInt: struct{}
+Compiler.createConstInt := (b: int) -> *C_ConstInt{}
+C_ConstInt.get := () -> int{}
+C_ConstInt.set := (b: int) -> unit{}
+
+C_Define: struct{}
+Compiler.createDefine := (id: string, exp: *C_Expression, t: *C_Type) -> *C_Define{}
+C_Define.getId := () -> string{}
+C_Define.getType := () -> *C_Type{}
+C_Define.getExp := () -> *C_Expression{}
+C_Define.setId := (id: string) -> unit{}
+C_Define.setType := (t: *C_Type) -> unit{}
+C_Define.setExp := (exp: *C_Expression) -> unit{}
+
+C_Directive: struct{}
+Compiler.createDirective := (id: string, ast: *C_AST) -> C_Directive{}
+C_Directive.getId := () -> string{}
+C_Directive.getAST := () -> *C_AST{}
+C_Directive.setId := (id: string) -> unit{}
+C_Directive.setAST := (ast: *C_AST) -> unit{}
+
+C_FCall: struct{}
+Compiler.createFCall := () -> *C_FCall{}
+C_FCall.getId := () -> string{}
+C_FCall.getArg := (i: int) -> *C_Expression{}
+C_FCall.setId := (id: string) -> unit{}
+C_FCall.addArg := (exp: *C_Expression) -> unit{}
+
+C_FCallStmt: struct{}
+Compiler.createFCallStmt := () -> *C_FCallStmt{}
+C_FCallStmt.getId := () -> string{}
+C_FCallStmt.getArg := (i: int) -> *C_Expression{}
+C_FCallStmt.setId := (id: string) -> unit{}
+C_FCallStmt.addArg := (exp: *C_Expression) -> unit{}
+
+C_Function: struct{}
+Compiler.createFunction := () -> *C_Function{}
+C_Function.getId := () -> string{}
+C_Function.getReturntype := () -> *C_Type{}
+C_Function.getStmt := (i: int) -> *C_Statement{}
+C_Function.getArg := (i: int) -> *C_Arg{}
+C_Function.setId := (id: string) -> unit{}
+C_Function.setReturntype := (t: *C_Type) -> unit{}
+C_Function.addStmt := (stmt: *C_Statement) -> unit{}
+C_Function.addArg := (arg: *C_Arg) -> unit{}
+
+C_FunctionSig: struct{}
+Compiler.createFunctionSig := () -> *C_FunctionSig{}
+C_FunctionSig.getId := () -> string{}
+C_FunctionSig.getReturntype := () -> *C_Type{}
+C_FunctionSig.getArg := (i: int) -> *C_Arg{}
+C_FunctionSig.isVararg := () -> bool{}
+C_FunctionSig.setId := (id: string) -> unit{}
+C_FunctionSig.setReturntype := (t: *C_Type) -> unit{}
+C_FunctionSig.addArg := (arg: *C_Arg) -> unit{}
+C_FunctionSig.setVararg := (b: bool) -> unit{}
+
+C_FunctionType: struct{}
+Compiler.createFunctionType := () -> *C_FunctionType{}
+C_FunctionType.getReturntype := () -> *C_Type{}
+C_FunctionType.getArg := (i: int) -> *C_Type{}
+C_FunctionType.isVararg := () -> bool{}
+C_FunctionType.setReturntype := (t: *C_Type) -> unit{}
+C_FunctionType.addArg := (arg: *C_Type) -> unit{}
+C_FunctionType.setVararg := (b: bool) -> unit{}
+
+C_If: struct{}
+Compiler.createIf := (exp: *C_Expression, st1: *C_Statement, st2: *C_Statement) -> *C_If{}
+C_If.getExp := () -> *C_Expression{}
+C_If.getSt1 := () -> *C_Statement{}
+C_If.getSt2 := () -> *C_Statement{}
+C_If.setExp := (e: *C_Expression) -> unit{}
+C_If.setSt1 := (st: *C_Statement) -> unit{}
+C_If.setSt2 := (st: *C_Statement) -> unit{}
+
+C_Import : struct{}
+Compiler.createImport := (path: string) -> unit{}
+C_Import.getPath := () -> string{}
+C_Import.setPath := (s: string) -> unit{}
+
+C_Interface: struct{}
+Compiler.createInterface := (id: string) -> unit{}
+C_Interface.getId := () -> string{}
+C_Interface.getMethod := (key: string) -> *C_FunctionSig{}
+C_Interface.setId := (id: string) -> unit{}
+C_Interface.setMethod := (key: string, fs: *C_FunctionSig) -> unit{}
+
+C_MemAccess: struct{}
+Compiler.createMemAccess := (exp: *C_Expression, id: string) -> *C_MemAccess{}
+C_MemAccess.getId := () -> string{}
+C_MemAccess.getExp := () -> *C_Expression{}
+C_MemAccess.setId := (id: string) -> unit{}
+C_MemAccess.setExp := (exp: *C_Expression) -> unit{}
+
+C_NamedType: struct{}
+Compiler.createNamedType := (id: string) -> *C_NamedType{}
+C_NamedType.getId := () -> string{}
+C_NamedType.setId := (id: string) -> unit{}
+
+C_PointerType: struct{}
+Compiler.createPointerType := (t: *C_Type) -> *C_PointerType{}
+C_PointerType.getType := () -> *C_Type{}
+C_PointerType.setType := (t: *C_Type) -> unit{}
+
+C_PreOp: struct{}
+Compiler.createPreOp := (op: string, exp: *C_Expression) -> *C_PreOp{}
+C_PreOp.getOp := () -> string{}
+C_PreOp.getExp := () -> *C_Expression{}
+C_PreOp.setOp := (op: string) -> unit{}
+C_PreOp.setExp := (exp: *C_Expression) -> unit{}
+
+// TODO enums?
+C_PrimitiveType: struct{}
+Compiler.createPrimitiveType := (key: string) -> *C_PrimitiveType{}
+C_PrimitiveType.getKey := () -> string{}
+C_PrimitiveType.setKey := (key: string) -> unit{}
+
+C_PtrValue: struct{}
+Compiler.createPtrValue := (exp: *C_Expression) -> *C_PtrValue{}
+C_PtrValue.getPtr := () -> *C_Expression{}
+C_PtrValue.setPtr := (exp: *C_Expression) -> unit{}
+
+C_Return: struct{}
+Compiler.createReturn := (exp: *C_Expression) -> *C_Return{}
+C_Return.getExp := () -> *C_Expression{}
+C_Return.setExp := (exp: *C_Expression) -> unit{}
+
+C_Sizeof: struct{}
+Compiler.createSizeof := (type: *C_Type) -> *C_Sizeof{}
+C_Sizeof.getType := () -> *C_Type{}
+C_Sizeof.setType := (type: *C_Type) -> unit{}
+
+C_CString: struct{}
+Compiler.createCString := () -> *C_CString{}
+C_CString.getValue := () -> string{}
+C_CString.setValue := (s: string) -> unit{}
+
+C_Struct: struct{}
+Compiler.createStruct := (id: string) -> *C_Struct{}
+C_Struct.getId := () -> string{}
+C_Struct.getMember := (i: int) -> *C_Define{}
+C_Struct.setId := (id: string) -> unit{}
+C_Struct.addMember := (d: *C_Define) -> unit{}
+// TODO adding methods?
+// TODO interfaces and structs
+
+C_VariableValue: struct{}
+Compiler.createVariableValue := (id: string) -> *C_VariableValue{}
+C_VariableValue.getId := () -> string{}
+C_VariableValue.setId := (id: string) -> unit{}
+
+C_While: struct{}
+Compiler.createWhile := (cond: *C_Expression, stmt: *C_Statement) -> *C_While{}
+C_While.getCond := () -> *C_Expression{}
+C_While.getStmt := () -> *C_Statement{}
+C_While.setCond := (cond: *C_Expression) -> unit{}
+C_While.setStmt := (stmt: *C_Statement) -> unit{}

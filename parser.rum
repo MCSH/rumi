@@ -1,16 +1,12 @@
-Compiler: struct{}
-Compiler.exit := (i: int) -> unit{}
-Compiler.set := (s: string, v: any) -> unit{}
-Compiler.get := (s: string) -> any{}
+import compiler
 
-
-// compiler_parser TODO
 Source: struct{}
 Parser: struct{}
 ParseResult: struct{}
 AST: struct{}
 Token: struct{}
 
+Compiler.ast := (k: string) -> *AST{}
 Compiler.getParser := (k: string) -> *Parser{}
 Compiler.registerParser := (k: string, p: string) -> unit{}
 

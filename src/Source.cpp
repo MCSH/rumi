@@ -45,6 +45,10 @@ Token *ParseState::getToken(std::string name){
 }
 
 void Source::parse(CC *cc){
+  if(cc->loaded.find(this->name) != cc->loaded.end()){
+    return; // Already loaded this file
+  }
+  cc->loaded.insert(this->name);
   cc->load(this);
 
   ParseResult t;

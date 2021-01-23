@@ -1,67 +1,7 @@
 import test_import
 import compiler
+import ast
 // import compiler_parser
-
-streq := (s1: *u8, s2: *u8) -> bool{
-  counter := 0;
-  zero : u8 = 0 -> u8;
-  while(true){
-    if(*(s1+ counter) != *(s2+counter)){
-      return false;
-    }
-    if(*(s1+counter) == zero)
-      return true;
-
-    counter = counter + 1;
-  }
-
-  return false; // unreachable
-}
-
-subset := (s1: *u8, s2: *u8) -> bool{
-  counter := 0;
-  zero : u8 = 0;
-  while(true){
-    if(*(s2+counter) == zero) return true;
-    if(*(s1+counter) == zero) return false;
-    if(*(s1+ counter) != *(s2+counter)){
-      return false;
-    }
-    counter = counter + 1;
-  }
-
-  return false; // unreachable
-}
-
-strlen := (s1: *u8) -> u64{
-  size := 0;
-  zero : u8 = 0;
-  while(1){
-    if((*(s1+size)) == zero)
-      return size;
-    size = size + 1;
-  }
-  return 0; // unreachable
-}
-
-strcat := (s1: *u8, s2: *u8) -> *u8{
-  size := strlen(s1) + strlen(s2) + 1;
-  ans : *u8 = malloc(size * sizeof u8);
-  ptr := 0;
-  ptr2 := 0;
-  zero : u8 = 0;
-  while(*(s1+ptr) != zero){
-    *(ans+ptr) = *(s1+ptr);
-    ptr = ptr + 1;
-  }
-  while(*(s2+ptr2) != zero){
-    *(ans+ptr) = *(s2+ptr2);
-    ptr = ptr + 1;
-    ptr2 = ptr2 + 1;
-  }
-  *(ans+ptr) = zero;
-  return ans;
-}
 
 
 HiParseRule: struct{}
@@ -83,26 +23,25 @@ HiParseRule.parse := (c: *Compiler, s: *Source, pos: int)->*ParseResult{
 }
 
 HiParseRule.genAST := (c: *Compiler, token: *ParseResult) -> *AST{
-  fcall := c.ast("fcallstmt");
-  printf("Fcall is %d\n", fcall);
-  fcall.set("id", "printf");
-  s := c.ast("string");
-  s.set("val", "hello, world! from many levels deep!\n");
-  fcall.add("arg", s);
+  fcall := c.createFCallStmt();
+  fcall.setId("printf");
+  s := c.createCString();
+  s.setValue("hello, world! from many levels deep!\n");
+  fcall.addArg(s);
   return fcall;
 }
 
 ComplexRule: struct{}
 
 ComplexRule.genAST := (c: *Compiler, token: *ParseResult) -> *AST{
-  fcall := c.ast("fcallstmt");
-  fcall.set("id", "printf");
-  s := c.ast("string");
+  fcall := c.createFCallStmt();
+  fcall.setId("printf");
+  s := c.createCString();
   v :*u8 = token.get("id");
   v = v + 3;
   v = strcat(strcat("You defined ", v), "\n");
-  s.set("val", v);
-  fcall.add("arg", s);
+  s.setValue(v);
+  fcall.addArg(s);
   return fcall;
 }
 
@@ -113,12 +52,54 @@ ComplexRule.parse := (c: *Compiler, s: *Source, pos: int)->*ParseResult{
   if(id){
     ids := (id.get("id")) -> string;
     if(!subset(ids, "say")){
-      printf("It was %s\n", ids);
       id = 0;
     }
   }
 
   return id;
+}
+
+DefPrintRule: struct{}
+DefPrintRule.parse := (c: *Compiler, s: *Source, pos: int) -> *ParseResult{
+  idp := c.getParser("id");
+
+  id := idp.parse(c, s, pos);
+  if(id){
+    ids := (id.get("id"))->string;
+    if(!subset(ids, "DefPrint")){
+      id = 0;
+    }
+  }
+  return id;
+}
+DefPrintRule.genAST := (c: *Compiler, token: *ParseResult) -> *AST{
+  m := c.createFunction();
+
+  tname : *u8 = token.get("id");
+  tname = tname + 8; 
+
+  m.setId(strcat(tname, "_print"));
+  printf("Set the name of fucntion to %s\n", m.getId());
+  m.setReturntype(c.createPrimitiveType("unit"));
+  a := c.createArg();
+  a.setId("self");
+  t := c.createNamedType(tname);
+  a.setType(t);
+  m.addArg(a);
+
+  ps := c.createFCallStmt();
+  ps.setId("printf");
+  cs := c.createCString();
+  cs.setValue(strcat("< ", strcat(tname, ".id = %d>\n")));
+  ps.addArg(cs);
+  v_self := c.createVariableValue("self");
+  ma := c.createMemAccess(v_self, "id");
+  ps.addArg(ma);
+  m.addStmt(ps);
+  rs := c.createReturn(0);
+  m.addStmt(rs);
+
+  return m;
 }
 
 @compile
@@ -132,11 +113,26 @@ add_statement := (c: *Compiler) -> int{
   c.registerParser("statement", "HiParseRule");
   c.registerParser("statement", "ComplexRule");
 
+  c.registerParser("top", "DefPrintRule");
+
   return 0;
 }
+
+T: struct{
+  id: int;
+}
+
+DefPrintT
 
 main := () -> int{
   hi
   saySajjad
+  sayRumi
+
+  t : T;
+  t. id = 5;
+
+  T_print(t);
+
   return 0;
 }

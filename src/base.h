@@ -2,6 +2,7 @@
 
 #include "parser/parser.h"
 #include <map>
+#include <set>
 #include <ostream>
 
 void printInfo();
@@ -26,6 +27,7 @@ public:
 class CompileContext {
 public:
   std::vector<Source *> sources;
+  std::set<std::string> loaded;
 
   std::vector<AST *> asts;
   int ast_gened = -1;

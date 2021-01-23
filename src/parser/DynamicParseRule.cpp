@@ -66,7 +66,6 @@ AST* DynamicParseToken::toAST(CC *cc){
     exit(1);
   }
   auto ast = genAST(drp->p, cc, new ParseResult(res));
-  printf("AST is %d\n", ast);
   return (AST *)ast;
 }
 
