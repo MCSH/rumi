@@ -168,11 +168,19 @@ void *registerParserCallback(CC *cc, char *ckey, char *name){
   return 0;
 }
 
-void *parserParseCallback(ParseRule *pr, CC *cc, Source *s, int pos){
+ParseResult *ParserParse(ParseRule *pr, CC *cc, Source *s, int pos){
   // TODO error handling
   auto ans = pr->parse(cc, s, pos);
   if(!ans) return 0;
   ParseResult *parseResult = new ParseResult(ans);
+  return parseResult;
+}
+
+ParseResult *ParserParseAfter(ParseRule *pr, ParseResult *p){
+  if(!p) return 0;
+  auto ans = *p >> *pr;
+  if(!ans) return 0;
+  ParseResult *parseResult = new ParseResult(((TupleToken *) ans.token)->t2);
   return parseResult;
 }
 
@@ -856,7 +864,10 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("Compiler$getParser", "Compiler$getParser_replace", &getParserCallback);
   REGISTER_CALLBACK("Compiler$registerParser", "Compiler$registerParser_replace", &registerParserCallback);
 
-  REGISTER_CALLBACK("Parser$parse", "Parser$parse_replace", &parserParseCallback);
+  // Parser
+
+  REGISTER_CALLBACK("Parser$parse", "Parser$parse_replace", &ParserParse);
+  REGISTER_CALLBACK("Parser$parseAfter", "Parser$parseAfter_replace", &ParserParseAfter);
 
   REGISTER_CALLBACK("ParseResult$get", "ParseResult$get_replace", &parseResultGetCallback);
 

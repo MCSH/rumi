@@ -38,7 +38,7 @@ ComplexRule.genAST := (c: *Compiler, token: *ParseResult) -> *C_AST{
   fcall.setId("printf");
   s := c.createCString();
   v :*u8 = token.get("id");
-  v = v + 3;
+  //v = v + 3;
   v = strcat(strcat("You defined ", v), "\n");
   s.setValue(v);
   fcall.addArg(s);
@@ -48,14 +48,15 @@ ComplexRule.genAST := (c: *Compiler, token: *ParseResult) -> *C_AST{
 ComplexRule.parse := (c: *Compiler, s: *Source, pos: int)->*ParseResult{
   idp := c.getParser("id");
 
-  id := idp.parse(c, s, pos);
+  hikeyword := idp.parse(c, s, pos);
+  id := idp.parseAfter(hikeyword);
+
   if(id){
-    ids := (id.get("id")) -> string;
-    if(!subset(ids, "say")){
+    hik := (hikeyword.get("id"))->string;
+    if(!streq("say", hik)){
       id = 0;
     }
   }
-
   return id;
 }
 
@@ -63,32 +64,26 @@ DefPrintRule: struct{}
 DefPrintRule.parse := (c: *Compiler, s: *Source, pos: int) -> *ParseResult{
   idp := c.getParser("id");
 
-  id := idp.parse(c, s, pos);
+  kw := idp.parse(c, s, pos);
+  id := idp.parseAfter(kw);
+
   if(id){
-    ids := (id.get("id"))->string;
-    if(!subset(ids, "DefPrint")){
+    k := (kw.get("id"))->string;
+    if(!streq(k, "DefPrint")){
       id = 0;
     }
   }
+
   return id;
 }
 DefPrintRule.genAST := (c: *Compiler, token: *ParseResult) -> *C_AST{
   m := c.createFunction();
 
   tname : *u8 = token.get("id");
-  tname = tname + 8; 
 
   m.setId(strcat(tname, "$print"));
   printf("Set the name of fucntion to %s\n", m.getId());
   m.setReturntype(c.createPrimitiveType("unit"));
-  /*
-  a := c.createArg();
-  a.setId("self");
-  t := c.createNamedType(tname);
-  t = c.createPointerType(t);
-  a.setType(t);
-  m.addArg(a);
-  */
 
   ps := c.createFCallStmt();
   ps.setId("printf");
@@ -129,12 +124,12 @@ T: struct{
   id: int;
 }
 
-DefPrintT
+DefPrint T
 
 main := () -> int{
   hi
-  saySajjad
-  sayRumi
+  say Sajjad
+  say Rumi
 
   t : T;
   t. id = 5;
