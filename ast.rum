@@ -147,7 +147,20 @@ C_MemAccess.setExp := (exp: *C_Expression) -> unit{}
 
 C_Method: struct{}
 Compiler.createMethod := (structName: string, methodName: string, f: C_Function)-> *C_Method{}
-// TODO
+C_Method.getStructName := () -> string{}
+C_Method.getMethodName := () -> string{}
+C_Method.getFunction := () -> *C_Function{}
+C_Method.setStructName:= (name: string) -> unit{}
+C_Method.setMethodName:= (name: string) -> unit{}
+C_Method.setFunction := (f: *C_Function) -> unit{}
+
+C_MethodCall: struct{}
+Compiler.createMethodCall := () -> *C_MethodCall{}
+C_MethodCall.getExp := () -> *C_MemAccess{}
+C_MethodCall.getArg := (i: int) -> *C_Expression{}
+C_MethodCall.setExp := (m: *C_MemAccess) -> unit{}
+C_MethodCall.addArg := (i: int, e: *C_Expression) -> unit{}
+
 
 C_NamedType: struct{}
 Compiler.createNamedType := (id: string) -> *C_NamedType{}

@@ -598,8 +598,43 @@ void MemAccessSetExp(MemAccess *m, Expression *e){
 Method *createMethod(CC *cc, char *sname, char *mname, Function *f){
   return new Method(CSTRTOSTR(sname), CSTRTOSTR(mname), f);
 }
+char *MethodGetStructName(Method *m){
+  return STRTOCSTR(m->structName);
+}
+char *MethodGetMethodName(Method *m){
+  return STRTOCSTR(m->methodName);
+}
+Function *MethodGetFunction(Method *m){
+  return m->f;
+}
 
-// TODO MethodCall
+void MethodSetStructName(Method *m, char *name){
+  m->structName = CSTRTOSTR(name);
+}
+void MethodSetMethodName(Method *m, char *name){
+  m->methodName = CSTRTOSTR(name);
+}
+void MethodSetFunction(Method *m, Function *f){
+  m->f = f;
+}
+
+// MethodCall
+#include "ast/MethodCall.h"
+MethodCall *createMethodCall(CC *cc){
+  return new MethodCall();
+}
+MemAccess *MethodCallGetExp(MethodCall *mc){
+  return mc->exp;
+}
+Expression *MethodCallGetArg(MethodCall *mc, int i){
+  return mc->args[i];
+}
+void MethodCallSetExp(MethodCall *mc, MemAccess *m){
+  mc->exp = m;
+}
+void MethodCallAddArg(MethodCall *mc, int i, Expression  *e){
+  mc->args.push_back(e);
+}
 
 // NamedType
 #include "ast/NamedType.h"
@@ -1066,7 +1101,23 @@ void *CompileContext::getCompileObj(void *e){
   // Method
   REGISTER_CALLBACK("Compiler$createMethod",
                     "Compiler$createMethod_replace",
-                    & createMethod)
+                    & createMethod);
+  REGISTER_CALLBACK("C_Method$getStructName", "C_Method$getStructName", &MethodGetStructName);
+  REGISTER_CALLBACK("C_Method$getMethodName", "C_Method$getMethodName", &MethodGetMethodName);
+  REGISTER_CALLBACK("C_Method$getFunction", "C_Method$getFunction", &MethodGetFunction);
+  REGISTER_CALLBACK("C_Method$setStructName", "C_Method$setStructName", &MethodSetStructName);
+  REGISTER_CALLBACK("C_Method$setMethodName", "C_Method$setMethodName", &MethodSetMethodName);
+  REGISTER_CALLBACK("C_Method$setFunction", "C_Method$setFunction", &MethodSetFunction);
+
+  // MethodCall
+  REGISTER_CALLBACK("Compiler$createMethodCall",
+                    "Compiler$createMethodCall_replace",
+                    &createMethodCall);
+  REGISTER_CALLBACK("C_MethodCall$setExp", "C_MethodCall$getExp_replace", &MethodCallGetExp);
+  REGISTER_CALLBACK("C_MethodCall$getExp", "C_MethodCall$getExp_replace", &MethodCallGetExp);
+  REGISTER_CALLBACK("C_MethodCall$getArg", "C_MethodCall$getArg_replace", &MethodCallGetArg);
+  REGISTER_CALLBACK("C_MethodCall$addArg", "C_MethodCall$addArg_replace", &MethodCallAddArg);
+
 
   // NamedType
   REGISTER_CALLBACK("Compiler$createNamedType",
