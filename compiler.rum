@@ -10,7 +10,6 @@ Parser: struct{}
 ParseResult: struct{}
 Token: struct{}
 
-Compiler.getParser := (k: string) -> *Parser{}
 Compiler.registerParser := (k: string, p: string) -> unit{}
 
 Parser.parse := (c: *Compiler, s: *Source, pos: int) -> *ParseResult{}

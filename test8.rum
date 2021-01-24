@@ -1,16 +1,16 @@
 import test_import
 import compiler
 import ast
+import parser
 // import compiler_parser
 
 
 HiParseRule: struct{}
 
 HiParseRule.parse := (c: *Compiler, s: *Source, pos: int)->*ParseResult{
-  idp := c.getParser("id");
+  idp := c.getIdParser();
 
-  id := idp.parse(c, s, pos);
-
+  id := (idp.parse(c, s, pos)) -> *ParseResult;
 
   if(id){
     ids := (id.get("id")) -> string;
@@ -46,10 +46,10 @@ ComplexRule.genAST := (c: *Compiler, token: *ParseResult) -> *C_AST{
 }
 
 ComplexRule.parse := (c: *Compiler, s: *Source, pos: int)->*ParseResult{
-  idp := c.getParser("id");
+  idp := c.getIdParser();
 
-  hikeyword := idp.parse(c, s, pos);
-  id := idp.parseAfter(hikeyword);
+  hikeyword := (idp.parse(c, s, pos)) ->*ParseResult;
+  id := (idp.parseAfter(hikeyword)) -> *ParseResult;
 
   if(id){
     hik := (hikeyword.get("id"))->string;
@@ -62,10 +62,10 @@ ComplexRule.parse := (c: *Compiler, s: *Source, pos: int)->*ParseResult{
 
 DefPrintRule: struct{}
 DefPrintRule.parse := (c: *Compiler, s: *Source, pos: int) -> *ParseResult{
-  idp := c.getParser("id");
+  idp := c.getIdParser();
 
-  kw := idp.parse(c, s, pos);
-  id := idp.parseAfter(kw);
+  kw := (idp.parse(c, s, pos)) -> *ParseResult;
+  id := (idp.parseAfter(kw)) -> *ParseResult;
 
   if(id){
     k := (kw.get("id"))->string;
@@ -82,24 +82,70 @@ DefPrintRule.genAST := (c: *Compiler, token: *ParseResult) -> *C_AST{
   tname : *u8 = token.get("id");
 
   m.setId(strcat(tname, "$print"));
-  printf("Set the name of fucntion to %s\n", m.getId());
   m.setReturntype(c.createPrimitiveType("unit"));
+
+  st := c.getStruct(tname);
 
   ps := c.createFCallStmt();
   ps.setId("printf");
   cs := c.createCString();
-  cs.setValue(strcat("< ", strcat(tname, ".id = %d>\n")));
+  cs.setValue(strcat("> ", tname));
   ps.addArg(cs);
-  v_self := c.createVariableValue("self");
-  ma := c.createMemAccess(v_self, "id");
-  ps.addArg(ma);
   m.addStmt(ps);
+
+  i := 0;
+  while(st.getMember(i)){
+    mem := st.getMember(i);
+    printf("Member %d has name %s\n", i, mem.getId());
+    i = i + 1;
+
+    if(streq(mem.getId(), "name")){
+        ps := c.createFCallStmt();
+        ps.setId("printf");
+        cs := c.createCString();
+        cs.setValue("\n  - %s : %s");
+        ps.addArg(cs); // printf("....")
+
+        cs2 := c.createCString();
+        cs2.setValue(mem.getId());
+        ps.addArg(cs2); // printf("....", "...")
+
+        v_self := c.createVariableValue("self");
+        ma := c.createMemAccess(v_self, mem.getId());
+        ps.addArg(ma);
+
+        m.addStmt(ps);
+    } else {
+        ps := c.createFCallStmt();
+        ps.setId("printf");
+        cs := c.createCString();
+        cs.setValue("\n  - %s : %d");
+        ps.addArg(cs); // printf("....")
+
+        cs2 := c.createCString();
+        cs2.setValue(mem.getId());
+        ps.addArg(cs2); // printf("....", "...")
+
+        v_self := c.createVariableValue("self");
+        ma := c.createMemAccess(v_self, mem.getId());
+        ps.addArg(ma);
+
+        m.addStmt(ps);
+    }
+  }
+
+  ps2 := c.createFCallStmt();
+  ps2.setId("printf");
+  cs2 := c.createCString();
+  cs2.setValue("\n");
+  ps2.addArg(cs2);
+
+  m.addStmt(ps2);
+
   rs := c.createReturn(0);
   m.addStmt(rs);
 
   method := c.createMethod(tname, "print", m);
-
-  printf("Method is %d\n", method);
 
   return method;
 }
@@ -122,6 +168,9 @@ add_statement := (c: *Compiler) -> int{
 
 T: struct{
   id: int;
+  name: string;
+  age: int;
+  num2: int;
 }
 
 DefPrint T
@@ -133,8 +182,10 @@ main := () -> int{
 
   t : T;
   t. id = 5;
+  t.age = 10000;
+  t.num2 = 19;
+  t.name = "Sajjad";
 
-  //T_print(t);
   t.print();
 
   return 0;
