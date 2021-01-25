@@ -11,14 +11,6 @@ SizeofToken::SizeofToken(Token *type, CC *cc, Source *s, int spos, int epos)
   this->epos = epos;
 }
 
-void *SizeofToken::get(std::string key){
-  if(key == "type"){
-    return type;
-  }
-  // TODO Error?
-  return 0;
-}
-
 std::string SizeofToken::desc(){
   return "sizeof " + type->desc();
 }

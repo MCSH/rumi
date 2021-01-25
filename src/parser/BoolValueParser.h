@@ -7,7 +7,6 @@ public:
   bool truth;
   BoolToken(CC *cc, Source *s, int spos, int epos, bool truth);
 
-  virtual void *get(std::string key) override;
   virtual std::string desc() override;
   virtual AST *toAST(CC *cc) override;
 };

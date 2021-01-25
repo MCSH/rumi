@@ -16,8 +16,6 @@ public:
   virtual AST* toAST(CC *cc){return 0;}
 
   virtual ~Token() = 0;
-
-  virtual void *get(std::string key) = 0;
 };
 
 std::ostream &operator<<(std::ostream &os, Token &s);

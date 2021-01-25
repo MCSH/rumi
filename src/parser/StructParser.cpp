@@ -10,15 +10,6 @@ StructToken::StructToken(CC *cc, Source *s, int spos, int epos){
   this->epos = epos;
 }
 
-void *StructToken::get(std::string key){
-  if(key == "id"){
-    return (void *)id.c_str();
-  }
-  // TODO members?
-  // TODO Error?
-  return 0;
-}
-
 std::string StructToken::desc(){
   std::string membersS = "";
   for(auto d: members)

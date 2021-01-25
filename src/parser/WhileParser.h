@@ -8,7 +8,6 @@ class WhileToken: public Token{
 public:
   Token *value, *statement;
   WhileToken(Token *value, Token *statement, CC *cc, Source *s, int pos, int epos);
-  virtual void *get(std::string key) override;
   virtual std::string desc() override;
   virtual AST *toAST(CC *cc) override;
 };

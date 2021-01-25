@@ -8,7 +8,6 @@ class SizeofToken: public Token{
 
   SizeofToken(Token *type, CC *cc, Source *s, int spos, int epos);
 
-  virtual void *get(std::string key) override;
   virtual std::string desc() override;
   virtual AST *toAST(CC *cc) override;
 };

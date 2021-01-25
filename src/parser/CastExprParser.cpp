@@ -1,9 +1,9 @@
-#include "CastExpr.h"
+#include "CastExprParser.h"
 #include "Symbols.h"
 #include "../Source.h"
 #include "../ast/Cast.h"
 
-CastToken::CastToken(Token *exp, Token *type, CC *cc, Source *s, int spos, int epos)
+CastExprToken::CastExprToken(Token *exp, Token *type, CC *cc, Source *s, int spos, int epos)
  : exp(exp)
  , type(type)
 {
@@ -13,33 +13,22 @@ CastToken::CastToken(Token *exp, Token *type, CC *cc, Source *s, int spos, int e
   this->epos = epos;
 }
 
-void *CastToken::get(std::string key){
-  if(key == "exp"){
-    return exp;
-  }
-  if(key == "type"){
-    return type;
-  }
-  // TODO Error?
-  return 0;
-}
-
-std::string CastToken::desc(){
+std::string CastExprToken::desc(){
   return exp->desc() + " -> " + type->desc();
 }
 
-AST *CastToken::toAST(CC *cc){
+AST *CastExprToken::toAST(CC *cc){
   return new Cast((Expression *)exp->toAST(cc), (Type *)type->toAST(cc));
 }
 
-ParseResult CastExpr::innerscheme(CC *cc, Source *s, int pos){
+ParseResult CastExprParser::innerscheme(CC *cc, Source *s, int pos){
   auto v = exp.parse(cc, s, pos);
   auto ans = v >> asp >> tp;
   if(!ans) return ans;
-  return ParseResult(new CastToken(v.token, ((TupleToken*) ans.token)->t2, cc, s, ans.token->spos, ans.token->epos));
+  return ParseResult(new CastExprToken(v.token, ((TupleToken*) ans.token)->t2, cc, s, ans.token->spos, ans.token->epos));
 }
 
-ParseResult CastExpr::scheme(CC *cc, Source *s, int pos){
+ParseResult CastExprParser::scheme(CC *cc, Source *s, int pos){
   ParseState *ps = s->resolveState(pos);
   if(ps->hasParser("cast")) return ps->getToken("cast"); // recursive
   ps->setToken("cast", 0);
@@ -51,6 +40,6 @@ ParseResult CastExpr::scheme(CC *cc, Source *s, int pos){
 }
 
 
-CastExpr::CastExpr()
+CastExprParser::CastExprParser()
   : asp(s_to)
 {}

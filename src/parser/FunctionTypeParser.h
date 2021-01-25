@@ -9,7 +9,6 @@ public:
   Token *rt = 0;
   FunctionTypeToken(CC *cc, Source *s, int pos, int epos);
   virtual std::string desc() override;
-  virtual void *get(std::string key) override;
 };
 
 class FunctionTypeParser: public ParseRule{

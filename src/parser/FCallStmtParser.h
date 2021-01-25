@@ -10,7 +10,6 @@ public:
   std::vector<Token *> args;
   FCallStmtToken(std::string id, CC *cc, Source *s, int spos, int epos);
   virtual ~FCallStmtToken(){} // TODO
-  virtual void *get(std::string key) override;
   virtual std::string desc() override;
   virtual FCallStmt *toAST(CC *cc) override;
 };

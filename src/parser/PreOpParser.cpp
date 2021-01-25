@@ -12,17 +12,6 @@ PreOpToken::PreOpToken(CC *cc, Source *s, int spos, int epos, std::string op, To
   this->epos = epos;
 }
 
-void *PreOpToken::get(std::string key){
-  if(key == "op"){
-    return (void *)op.c_str();
-  }
-  if(key == "value"){
-    return value;
-  }
-  // TODO Error?
-  return 0;
-}
-
 std::string PreOpToken::desc(){
   return op + value->desc();
 }

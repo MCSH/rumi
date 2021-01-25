@@ -13,15 +13,6 @@ FunctionBodyToken::FunctionBodyToken(CC *cc, Source *s, int pos, int epos){
   this->epos = epos;
 }
 
-void *FunctionBodyToken::get(std::string key){
-  if(key == "returnType"){
-    return rt;
-  }
-  // TODO lists?
-  // TODO Error?
-  return 0;
-}
-
 Function *FunctionBodyToken::toAST(CC *cc){
   Function *f = new Function();
 

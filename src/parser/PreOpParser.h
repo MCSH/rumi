@@ -9,7 +9,6 @@ public:
 
   PreOpToken(CC *cc, Source *s, int spos, int epos, std::string op, Token *value);
 
-  virtual void *get(std::string key) override;
   virtual std::string desc() override;
   virtual AST *toAST(CC *cc) override;
 };

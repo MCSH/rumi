@@ -11,14 +11,6 @@ StringToken::StringToken(std::string value, CC *cc, Source *s, int spos, int epo
   this->epos = epos;
 }
 
-void *StringToken::get(std::string key){
-  if(key == "value"){
-    return (void *)value.c_str();
-  }
-  // TODO Error?
-  return 0;
-}
-
 AST *StringToken::toAST(CC *cc){
   return new String(value);
 }

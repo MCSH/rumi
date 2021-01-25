@@ -8,15 +8,6 @@ FunctionTypeToken::FunctionTypeToken(CC *cc, Source *s, int pos, int epos){
   this->epos = epos;
 }
 
-void *FunctionTypeToken::get(std::string key){
-  if(key == "returnType"){
-    return rt;
-  }
-  // TODO args?
-  // TODO Error?
-  return 0;
-}
-
 std::string FunctionTypeToken::desc(){
   std::string ans = "(";
   int len = args.size();

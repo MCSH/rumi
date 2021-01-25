@@ -11,14 +11,6 @@ PtrValueToken::PtrValueToken(Token *exp, CC *cc, Source *s, int spos, int epos)
   this->epos = epos;
 }
 
-void *PtrValueToken::get(std::string key){
-  if(key == "exp"){
-    return exp;
-  }
-  // TODO Error?
-  return 0;
-}
-
 std::string PtrValueToken::desc(){
   return "*" + exp->desc();
 }

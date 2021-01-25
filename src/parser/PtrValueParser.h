@@ -10,7 +10,6 @@ class PtrValueToken: public Token{
 
   PtrValueToken(Token *exp, CC *cc, Source *s, int spos, int epos);
 
-  virtual void *get(std::string key) override;
   virtual std::string desc() override;
   virtual AST *toAST(CC *cc) override;
 };

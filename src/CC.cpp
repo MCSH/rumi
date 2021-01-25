@@ -133,14 +133,6 @@ void *getCallback(CC *cc, char *ckey){
   }
 }
 
-void *getParserCallback(CC *cc, char *ckey){
-  std::string key(ckey);
-
-  // TODO error handling
-  cc->debug(LOW) << "Getting parser " << key << std::endl;
-  return cc->parser.getParserWithKey(key);
-}
-
 void *registerParserCallback(CC *cc, char *ckey, char *name){
   // TODO error handling
   std::string key(ckey);
@@ -182,12 +174,6 @@ ParseResult *ParserParseAfter(ParseRule *pr, ParseResult *p){
   if(!ans) return 0;
   ParseResult *parseResult = new ParseResult(((TupleToken *) ans.token)->t2);
   return parseResult;
-}
-
-void *parseResultGetCallback(ParseResult *pr, char *ckey){
-  // TODO error handling
-  if(!pr) return 0;
-  return pr->token->get(CSTRTOSTR(ckey));
 }
 
 // ========== AST ==========
@@ -377,7 +363,7 @@ void DirectiveSetAST(Directive *d,AST *a){
 
 // FCall
 #include "ast/FCall.h"
-FCall *createFCall(void *c){
+FCall *createFCall(CC *cc){
   return new FCall();
 }
 
@@ -405,7 +391,7 @@ void FCallAddArg(void *fc, Expression *exp){
 // FCallStmt
 
 
-FCallStmt *createFCallStmt(void *c){
+FCallStmt *createFCallStmt(CC *cc){
   return new FCallStmt();
 }
 
@@ -936,12 +922,12 @@ bool CP_BoolValueParser_ParseResultGetTruth(ParseResult *p){
   return bt->truth;
 }
 
-#include "parser/CastExpr.h"
-CastExpr *CompilerGetCastExpr(CC *cc) { return new CastExpr(); }
-ParseResult *CP_CastExprParse(CastExpr *p, CC *cc, Source *s, int pos) {
+#include "parser/CastExprParser.h"
+CastExprParser *CompilerGetCastExprParser(CC *cc) { return new CastExprParser(); }
+ParseResult *CP_CastExprParserParse(CastExprParser *p, CC *cc, Source *s, int pos) {
   auto ans = p->parse(cc, s, pos); return ans?new ParseResult(ans):0;
 }
-ParseResult *CP_CastExprParseAfter(CastExpr *p, ParseResult *pr) {
+ParseResult *CP_CastExprParserParseAfter(CastExprParser *p, ParseResult *pr) {
   if (!pr)
     return 0;
   auto ans = *pr >> *p;
@@ -950,15 +936,14 @@ ParseResult *CP_CastExprParseAfter(CastExpr *p, ParseResult *pr) {
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
-
-ParseResult *CP_CastExpr_ParseResultGetExp(ParseResult *p){
+ParseResult *CP_CastExprParser_ParseResultGetExp(ParseResult *p){
   if(!p) return 0;
-  CastToken *c = (CastToken*) p->token;
+  CastExprToken *c = (CastExprToken*) p->token;
   return new ParseResult(c->exp);
 }
-ParseResult *CP_CastExpr_ParseResultGetType(ParseResult *p){
+ParseResult *CP_CastExprParser_ParseResultGetType(ParseResult *p){
   if(!p) return 0;
-  CastToken *c = (CastToken*) p->token;
+  CastExprToken *c = (CastExprToken*) p->token;
   return new ParseResult(c->type);
 }
 
@@ -984,11 +969,13 @@ char *CP_DefineParser_ParseResultGetId(ParseResult *p){
 ParseResult *CP_DefineParser_ParseResultGetType(ParseResult *p){
   if(!p) return 0;
   DefineToken *d = (DefineToken*)p->token;
+  if(!d->type) return 0;
   return new ParseResult(d->type);
 }
 ParseResult *CP_DefineParser_ParseResultGetValue(ParseResult *p){
   if(!p) return 0;
   DefineToken *d = (DefineToken*)p->token;
+  if(!d->value) return 0;
   return new ParseResult(d->value);
 }
 
@@ -1114,6 +1101,7 @@ ParseResult *CP_FunctionParserParseAfter(FunctionParser *p, ParseResult *pr) {
 ParseResult *CP_FunctionParser_ParseResultGetReturnType(ParseResult *p){
   if(!p) return 0;
   auto t = (FunctionBodyToken *) p->token;
+  if(!t->rt) return 0;
   return new ParseResult(t->rt);
 }
 ParseResult *CP_FunctionParser_ParseResultGetArg(ParseResult *p, int i){
@@ -1150,6 +1138,7 @@ ParseResult *CP_FunctionSigParserParseAfter(FunctionSigParser *p,
 ParseResult *CP_FunctionSigParser_ParseResultGetReturnType(ParseResult *p){
   if(!p) return 0;
   auto a = (FunctionSigToken *) p->token;
+  if(!a->returnType) return 0;
   return new ParseResult(a->returnType);
 }
 ParseResult *CP_FunctionSigParser_ParseResultGetArg(ParseResult *p, int i){
@@ -1180,6 +1169,7 @@ ParseResult *CP_FunctionTypeParserParseAfter(FunctionTypeParser *p,
 ParseResult *CP_FunctionTypeParser_ParseResultGetReturnType(ParseResult *p){
   if(!p) return 0;
   auto t = (FunctionTypeToken *) p->token;
+  if(!t->rt) return 0;
   return new ParseResult(t->rt);
 }
 ParseResult *CP_FunctionTypeParser_ParseResultGetArg(ParseResult *p, int i){
@@ -1236,6 +1226,7 @@ ParseResult *CP_IfParser_ParseResultGetSt1(ParseResult *p){
 ParseResult *CP_IfParser_ParseResultGetSt2(ParseResult *p){
   if(!p) return 0;
   auto t = (IfToken *) p->token;
+  if(!t->st2) return 0;
   return new ParseResult(t->st2);
 }
 
@@ -1306,7 +1297,7 @@ ParseResult *CP_KeywordParserParseAfter(KeywordParser *p, ParseResult *pr) {
 char *CP_KeywordParser_ParseResultGetKeyword(ParseResult *p){
   if(!p) return 0;
   auto t = (KeywordToken *) p->token;
-  return STRTOCSTR(t->desc()); // TODO
+  return STRTOCSTR(t->desc());
 }
 
 #include "parser/MemAccessParser.h"
@@ -1562,7 +1553,7 @@ ParseResult *CP_PrimitiveTypeParserParseAfter(PrimitiveTypeParser *p,
 char *CP_PrimitiveTypeParser_ParseResultGetKey(ParseResult *p){
   if(!p) return 0;
   auto t = (TypeToken *) p->token;
-  return STRTOCSTR(t->desc()); // TODO fix this
+  return STRTOCSTR(t->desc());
 }
 
 #include "parser/PtrValueParser.h"
@@ -1731,7 +1722,7 @@ ParseResult *CP_SymbolParserParseAfter(SymbolParser *p, ParseResult *pr) {
 char *CP_SymbolParser_ParseResultGetSymbol(ParseResult *p){
   if(!p) return 0;
   auto t = (SymbolToken *) p->token;
-  return STRTOCSTR(t->desc()); // TODO check
+  return STRTOCSTR(t->desc());
 }
 
 #include "parser/TopParser.h"
@@ -1828,10 +1819,6 @@ ParseResult *CP_WhileParser_ParseResultGetStmt(ParseResult *p){
   return new ParseResult(t->statement);
 }
 
-// TODO ensure CC is in all creates.
-// TODO check all integers and long ong
-// TODO ensure p->token is used everywhere.
-
 #define REGISTER_CALLBACK(name, replace, cb)                                   \
   {                                                                            \
     llvm::Function *f = EE->FindFunctionNamed(name);                           \
@@ -1871,15 +1858,12 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("Compiler$exit", "Compiler$exit_replace", &exitCallback);
   REGISTER_CALLBACK("Compiler$set", "Compiler$set_replace", &setCallback);
   REGISTER_CALLBACK("Compiler$get", "Compiler$get_replace", &getCallback);
-  REGISTER_CALLBACK("Compiler$getParser", "Compiler$getParser_replace", &getParserCallback);
   REGISTER_CALLBACK("Compiler$registerParser", "Compiler$registerParser_replace", &registerParserCallback);
 
   // Parser
 
   REGISTER_CALLBACK("Parser$parse", "Parser$parse_replace", &ParserParse);
   REGISTER_CALLBACK("Parser$parseAfter", "Parser$parseAfter_replace", &ParserParseAfter);
-
-  REGISTER_CALLBACK("ParseResult$get", "ParseResult$get_replace", &parseResultGetCallback);
 
   // Address
   REGISTER_CALLBACK("Compiler$createAddress", "Compiler$createAddress_replace",
@@ -2182,7 +2166,6 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("C_PreOp$setExp", "C_PreOp$setExp_replace",
                     & PreOpSetExp);
 
-  // TODO enums?
   // PrimitiveType
   REGISTER_CALLBACK("Compiler$createPrimitiveType",
                     "Compiler$createPrimitiveType_replace",
@@ -2237,8 +2220,6 @@ void *CompileContext::getCompileObj(void *e){
                     &StructAddMethod);
   REGISTER_CALLBACK("Compiler$getStruct", "Compiler$getStruct_replace",
                     &CompilerGetStruct);
-  // TODO adding methods?
-  // TODO interfaces and structs
 
   // VariableValue
   REGISTER_CALLBACK("Compiler$createVariableValue",
@@ -2322,18 +2303,18 @@ void *CompileContext::getCompileObj(void *e){
                     "CP_BoolValueParser_ParseResult$getTruth_replace",
                     &CP_BoolValueParser_ParseResultGetTruth);
 
-  REGISTER_CALLBACK("Compiler$getCastExpr", "Compiler$getCastExpr_replace",
-                    &CompilerGetCastExpr);
-  REGISTER_CALLBACK("CP_CastExpr$parse", "CP_CastExpr$parse_replace",
-                    &CP_CastExprParse);
-  REGISTER_CALLBACK("CP_CastExpr$parseAfter", "CP_CastExpr$parseAfter_replace",
-                    &CP_CastExprParseAfter);
-  REGISTER_CALLBACK("CP_CastExpr_ParseResult$getExp",
-                    "CP_CastExpr_ParseResult$getExp_replace",
-                    &CP_CastExpr_ParseResultGetExp);
-  REGISTER_CALLBACK("CP_CastExpr_ParseResult$getType",
-                    "CP_CastExpr_ParseResult$getType_replace",
-                    &CP_CastExpr_ParseResultGetType);
+  REGISTER_CALLBACK("Compiler$getCastExprParser", "Compiler$getCastExprParser_replace",
+                    &CompilerGetCastExprParser);
+  REGISTER_CALLBACK("CP_CastExprParser$parse", "CP_CastExprParser$parse_replace",
+                    &CP_CastExprParserParse);
+  REGISTER_CALLBACK("CP_CastExprParser$parseAfter", "CP_CastExprParser$parseAfter_replace",
+                    &CP_CastExprParserParseAfter);
+  REGISTER_CALLBACK("CP_CastExprParser_ParseResult$getExp",
+                    "CP_CastExprParser_ParseResult$getExp_replace",
+                    &CP_CastExprParser_ParseResultGetExp);
+  REGISTER_CALLBACK("CP_CastExprParser_ParseResult$getType",
+                    "CP_CastExprParser_ParseResult$getType_replace",
+                    &CP_CastExprParser_ParseResultGetType);
 
   REGISTER_CALLBACK("Compiler$getDefineParser",
                     "Compiler$getDefineParser_replace",

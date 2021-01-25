@@ -9,7 +9,6 @@ public:
   std::string id;
   std::vector<Token *> args;
   FCallToken(std::string id, CC *cc, Source *s, int spos, int epos);
-  virtual void *get(std::string key) override;
   virtual ~FCallToken(){} // TODO
   virtual std::string desc() override;
   virtual FCall *toAST(CC *cc) override;

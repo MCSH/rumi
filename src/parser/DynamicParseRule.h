@@ -24,6 +24,4 @@ public:
 
   virtual std::string desc() override;
   virtual AST* toAST(CC *cc) override;
-
-  virtual void *get(std::string key) override;
 };

@@ -12,14 +12,6 @@ PointerTypeToken::PointerTypeToken(Token *innerType, CC *cc, Source *s, int pos,
   this->epos = epos;
 }
 
-void *PointerTypeToken::get(std::string key){
-  if(key == "innerType"){
-    return innerType;
-  }
-  // TODO Error?
-  return 0;
-}
-
 AST *PointerTypeToken::toAST(CC *cc){
   return new PointerType((Type*) innerType->toAST(cc));
 }

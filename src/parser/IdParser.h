@@ -7,7 +7,6 @@ class IdToken: public Token{
 public:
   std::string id;
   IdToken(CC *cc, Source *s, int spos, int epos, std::string val);
-  virtual void *get(std::string key) override;
   virtual std::string desc() override;
   virtual AST *toAST(CC *cc) override;
   virtual ~IdToken();

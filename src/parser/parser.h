@@ -9,7 +9,6 @@ public:
   TupleToken(Token *t1, Token *t2);
   virtual ~TupleToken();
   virtual std::string desc() override;
-  virtual void *get(std::string key) override{return 0;}; // TODO
 };
 
 class ParseRule {
@@ -26,8 +25,6 @@ private:
   std::vector<ParseRule *> expressionRules;
   std::vector<ParseRule *> valueRules;
   std::vector<ParseRule *> statementRules;
-
-  std::map<std::string, ParseRule *>rules;
   
   CC *cc;
 
@@ -43,9 +40,6 @@ public:
   ParseResult parseExpression(Source *s, int pos, int prec);
   ParseResult parseValue(Source *s, int pos = 0);
   ParseResult parseStatement(Source *s, int pos = 0);
-
-  ParseRule *getParserWithKey(std::string key);
-  void registerParser(std::string key, ParseRule *);
 };
 
 int skipws(std::string *w, int pos);

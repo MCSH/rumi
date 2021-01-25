@@ -5,21 +5,20 @@
 #include "ExpressionParser.h"
 #include "TypeParser.h"
 
-class CastToken: public Token{
+class CastExprToken: public Token{
  public:
   Token *exp, *type;
-  CastToken(Token *exp, Token *type, CC *cc, Source *s, int spos, int epos);
+  CastExprToken(Token *exp, Token *type, CC *cc, Source *s, int spos, int epos);
 
-  virtual void *get(std::string key) override;
   virtual std::string desc() override;
   virtual AST *toAST(CC *cC) override;
 };
 
-class CastExpr: public ParseRule{
+class CastExprParser: public ParseRule{
  public:
   virtual ParseResult scheme(CC *cc, Source *s, int pos);
   ParseResult innerscheme(CC *cc, Source *s, int pos);
-  CastExpr();
+  CastExprParser();
 private:
   SymbolParser asp;
   ExpressionParser exp;

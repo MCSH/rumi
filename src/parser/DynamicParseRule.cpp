@@ -68,8 +68,3 @@ AST* DynamicParseToken::toAST(CC *cc){
   auto ast = genAST(drp->p, cc, new ParseResult(res));
   return (AST *)ast;
 }
-
-void *DynamicParseToken::get(std::string key){
-  // TODO
-  return 0;
-}

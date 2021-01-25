@@ -6,7 +6,6 @@ class NumberToken: public Token{
 public:
   int val;
   NumberToken(CC *cc, Source *s, int spos, int epos, int val);
-  virtual void *get(std::string key) override;
   virtual std::string desc() override;
   virtual AST *toAST(CC *cc) override;
 };

@@ -14,20 +14,6 @@ IfToken::IfToken(Token *value, Token *st1, Token *st2, CC *cc, Source *s, int sp
   this->epos = epos;
 }
 
-void *IfToken::get(std::string key){
-  if(key == "value"){
-    return value;
-  }
-  if(key == "st1"){
-    return st1;
-  }
-  if(key == "st2"){
-    return st2;
-  }
-  // TODO Error?
-  return 0;
-}
-
 AST *IfToken::toAST(CC *cc){
   return new If((Expression*)value->toAST(cc), (Statement*)st1->toAST(cc), st2?(Statement*)st2->toAST(cc):0);
 }

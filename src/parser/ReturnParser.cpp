@@ -14,14 +14,6 @@ ReturnToken::ReturnToken(Token *value, CC *cc, Source *s, int spos, int epos)
   this->epos = epos;
 }
 
-void *ReturnToken::get(std::string key){
-  if(key == "value"){
-    return value;
-  }
-  // TODO Error?
-  return 0;
-}
-
 AST *ReturnToken::toAST(CC *cc){
   if(!value){
     return new Return(0);

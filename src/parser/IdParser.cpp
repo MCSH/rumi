@@ -24,14 +24,6 @@ IdToken::IdToken(CC *cc, Source *s, int spos, int epos, std::string val){
   this->id = val;
 }
 
-void *IdToken::get(std::string key){
-  if(key == "id"){
-    return (void *)id.c_str();
-  }
-  // TODO Error?
-  return 0;
-}
-
 std::string IdToken::desc(){
   return "Id<" + id + ">";
 }

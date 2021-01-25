@@ -15,7 +15,6 @@ class FunctionBodyToken: public Token{
   std::vector<DefineToken*> args;
   Token *rt = 0;
   FunctionBodyToken(CC *cc, Source *s, int pos, int epos);
-  virtual void *get(std::string key) override;
   virtual std::string desc() override;
   virtual Function *toAST(CC *cc) override;
 };

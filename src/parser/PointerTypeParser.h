@@ -7,7 +7,6 @@ class PointerTypeToken: public Token{
 public:
   Token *innerType;
   PointerTypeToken(Token *innerType, CC *cc, Source *s, int pos, int epos);
-  virtual void *get(std::string key) override;
   virtual std::string desc() override;
   virtual AST *toAST(CC *cc) override;
 };

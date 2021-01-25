@@ -12,14 +12,6 @@ AddressToken::AddressToken(Token *exp, CC *cc, Source *s, int spos, int epos)
   this->epos = epos;
 }
 
-void *AddressToken::get(std::string key){
-  if(key == "exp"){
-    return exp;
-  }
-  // TODO Error?
-  return 0;
-}
-
 AST *AddressToken::toAST(CC *cc){
   return new Address((Expression *) exp->toAST(cc));
 }
