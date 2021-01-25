@@ -8,11 +8,8 @@ Compiler.get := (s: string) -> any{}
 Source: struct{}
 Parser: struct{}
 ParseResult: struct{}
-Token: struct{}
 
 Compiler.registerParser := (k: string, p: string) -> unit{}
 
 Parser.parse := (c: *Compiler, s: *Source, pos: int) -> *ParseResult{}
 Parser.parseAfter := (pr: *ParseResult) -> *ParseResult{}
-
-ParseResult.get := (key: string) -> any{}

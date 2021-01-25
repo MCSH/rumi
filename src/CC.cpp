@@ -847,6 +847,11 @@ ParseResult *CP_AddressParserParseAfter(AddressParser *p, ParseResult *pr){
   Token * a = ((TupleToken*) ans.token)->t2;
   return new ParseResult(a);
 }
+ParseResult *CP_AddressParser_ParseResultGetExp(ParseResult *p){
+  if(!p) return 0;
+  AddressToken *at = (AddressToken *)p->token;
+  return new ParseResult(at->exp);
+}
 
 #include "parser/AssignParser.h"
 AssignParser *CompilerGetAssignParser(CC *cc) { return new AssignParser(); }
@@ -862,6 +867,16 @@ ParseResult *CP_AssignParserParseAfter(AssignParser *p, ParseResult *pr) {
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+ParseResult *CP_AssignParser_ParseResultGetExp(ParseResult *p){
+  if(!p) return 0;
+  AssignToken *at = (AssignToken *) p->token;
+  return new ParseResult(at->expr);
+}
+ParseResult *CP_AssignParser_ParseResultGetValue(ParseResult *p){
+  if(!p) return 0;
+  AssignToken *at = (AssignToken *) p->token;
+  return new ParseResult(at->value);
+}
 
 #include "parser/BinOpParser.h"
 BinOpParser *CompilerGetBinOpParser(CC *cc) { return new BinOpParser(); }
@@ -876,6 +891,26 @@ ParseResult *CP_BinOpParserParseAfter(BinOpParser *p, ParseResult *pr) {
     return 0;
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
+}
+char *CP_BinOpParser_ParseResultGetOp(ParseResult *p){
+  if(!p) return 0;
+  BinOpToken *bo = (BinOpToken *) p->token;
+  return STRTOCSTR(symbolDesc(bo->op));
+}
+ParseResult *CP_BinOpParser_ParseResultGetlhs(ParseResult *p){
+  if(!p) return 0;
+  BinOpToken *bo = (BinOpToken *) p->token;
+  return new ParseResult(bo->lhs);
+}
+ParseResult *CP_BinOpParser_ParseResultGetrhs(ParseResult *p){
+  if(!p) return 0;
+  BinOpToken *bo = (BinOpToken *) p->token;
+  return new ParseResult(bo->rhs);
+}
+int CP_BinOpParser_ParseResultGetprec(ParseResult *p){
+  if(!p) return 0;
+  BinOpToken *bo = (BinOpToken *) p->token;
+  return bo->prec;
 }
 
 #include "parser/BoolValueParser.h"
@@ -895,6 +930,11 @@ ParseResult *CP_BoolValueParserParseAfter(BoolValueParser *p, ParseResult *pr) {
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+bool CP_BoolValueParser_ParseResultGetTruth(ParseResult *p){
+  if(!p) return 0;
+  BoolToken *bt = (BoolToken *) p->token;
+  return bt->truth;
+}
 
 #include "parser/CastExpr.h"
 CastExpr *CompilerGetCastExpr(CC *cc) { return new CastExpr(); }
@@ -911,6 +951,17 @@ ParseResult *CP_CastExprParseAfter(CastExpr *p, ParseResult *pr) {
   return new ParseResult(a);
 }
 
+ParseResult *CP_CastExpr_ParseResultGetExp(ParseResult *p){
+  if(!p) return 0;
+  CastToken *c = (CastToken*) p->token;
+  return new ParseResult(c->exp);
+}
+ParseResult *CP_CastExpr_ParseResultGetType(ParseResult *p){
+  if(!p) return 0;
+  CastToken *c = (CastToken*) p->token;
+  return new ParseResult(c->type);
+}
+
 #include "parser/DefineParser.h"
 DefineParser *CompilerGetDefineParser(CC *cc) { return new DefineParser(); }
 ParseResult *CP_DefineParserParse(DefineParser *p, CC *cc, Source *s, int pos) {
@@ -924,6 +975,21 @@ ParseResult *CP_DefineParserParseAfter(DefineParser *p, ParseResult *pr) {
     return 0;
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
+}
+char *CP_DefineParser_ParseResultGetId(ParseResult *p){
+  if(!p) return 0;
+  DefineToken *d = (DefineToken*)p->token;
+  return STRTOCSTR(d->id);
+}
+ParseResult *CP_DefineParser_ParseResultGetType(ParseResult *p){
+  if(!p) return 0;
+  DefineToken *d = (DefineToken*)p->token;
+  return new ParseResult(d->type);
+}
+ParseResult *CP_DefineParser_ParseResultGetValue(ParseResult *p){
+  if(!p) return 0;
+  DefineToken *d = (DefineToken*)p->token;
+  return new ParseResult(d->value);
 }
 
 #include "parser/DirectiveParser.h"
@@ -942,6 +1008,16 @@ ParseResult *CP_DirectiveParserParseAfter(DirectiveParser *p, ParseResult *pr) {
     return 0;
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
+}
+char *CP_DirectiveParser_ParseResultGetId(ParseResult *p){
+  if(!p) return 0;
+  auto t = (DirectiveToken*) p->token;
+  return STRTOCSTR(t->id);
+}
+ParseResult *CP_DirectiveParser_ParseResultGetTop(ParseResult *p){
+  if(!p) return 0;
+  auto t = (DirectiveToken*) p->token;
+  return new ParseResult(t->top);
 }
 
 #include "parser/ExpressionParser.h"
@@ -977,6 +1053,17 @@ ParseResult *CP_FCallParserParseAfter(FCallParser *p, ParseResult *pr) {
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+char *CP_FCallParser_ParseResultGetId(ParseResult *p){
+  if(!p) return 0;
+  auto t = (FCallToken *) p->token;
+  return STRTOCSTR(t->id);
+}
+ParseResult *CP_FCallParser_ParseResultGetArg(ParseResult *p, int i){
+  if(!p) return 0;
+  auto t = (FCallToken *) p->token;
+  if(i >= t->args.size()) return 0;
+  return new ParseResult(t->args[i]);
+}
 
 #include "parser/FCallStmtParser.h"
 FCallStmtParser *CompilerGetFCallStmtParser(CC *cc) {
@@ -995,6 +1082,17 @@ ParseResult *CP_FCallStmtParserParseAfter(FCallStmtParser *p, ParseResult *pr) {
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+char *CP_FCallStmtParser_ParseResultGetId(ParseResult *p){
+  if(!p) return 0;
+  auto t = (FCallStmtToken *) p->token;
+  return STRTOCSTR(t->id);
+}
+ParseResult *CP_FCallStmtParser_ParseResultGetArg(ParseResult *p, int i){
+  if(!p) return 0;
+  auto t = (FCallStmtToken *) p->token;
+  if(i >= t->args.size()) return 0;
+  return new ParseResult(t->args[i]);
+}
 
 #include "parser/FunctionParser.h"
 FunctionParser *CompilerGetFunctionParser(CC *cc) {
@@ -1012,6 +1110,23 @@ ParseResult *CP_FunctionParserParseAfter(FunctionParser *p, ParseResult *pr) {
     return 0;
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
+}
+ParseResult *CP_FunctionParser_ParseResultGetReturnType(ParseResult *p){
+  if(!p) return 0;
+  auto t = (FunctionBodyToken *) p->token;
+  return new ParseResult(t->rt);
+}
+ParseResult *CP_FunctionParser_ParseResultGetArg(ParseResult *p, int i){
+  if(!p) return 0;
+  auto t = (FunctionBodyToken*) p->token;
+  if(i >= t->args.size()) return 0;
+  return new ParseResult(t->args[i]);
+}
+ParseResult *CP_FunctionParser_ParseResultGetStmt(ParseResult *p, int i){
+  if(!p) return 0;
+  auto t = (FunctionBodyToken*) p->token;
+  if(i >= t->statements.size()) return 0;
+  return new ParseResult(t->statements[i]);
 }
 
 #include "parser/FunctionSigParser.h"
@@ -1032,6 +1147,17 @@ ParseResult *CP_FunctionSigParserParseAfter(FunctionSigParser *p,
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+ParseResult *CP_FunctionSigParser_ParseResultGetReturnType(ParseResult *p){
+  if(!p) return 0;
+  auto a = (FunctionSigToken *) p->token;
+  return new ParseResult(a->returnType);
+}
+ParseResult *CP_FunctionSigParser_ParseResultGetArg(ParseResult *p, int i){
+  if(!p) return 0;
+  auto a = (FunctionSigToken *) p->token;
+  if(i >= a->args.size()) return 0;
+  return new ParseResult(a->args[i]);
+}
 
 #include "parser/FunctionTypeParser.h"
 FunctionTypeParser *CompilerGetFunctionTypeParser(CC *cc) {
@@ -1051,6 +1177,17 @@ ParseResult *CP_FunctionTypeParserParseAfter(FunctionTypeParser *p,
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+ParseResult *CP_FunctionTypeParser_ParseResultGetReturnType(ParseResult *p){
+  if(!p) return 0;
+  auto t = (FunctionTypeToken *) p->token;
+  return new ParseResult(t->rt);
+}
+ParseResult *CP_FunctionTypeParser_ParseResultGetArg(ParseResult *p, int i){
+  if(!p) return 0;
+  auto t = (FunctionTypeToken *) p->token;
+  if(i >= t->args.size()) return 0;
+  return new ParseResult(t->args[i]);
+}
 
 #include "parser/IdParser.h"
 IdParser *CompilerGetIdParser(CC *cc) { return new IdParser(); }
@@ -1065,6 +1202,11 @@ ParseResult *CP_IdParserParseAfter(IdParser *p, ParseResult *pr) {
     return 0;
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
+}
+char *CP_IdParser_ParseResultGetId(ParseResult *p){
+  if(!p) return 0;
+  auto t = (IdToken *) p->token;
+  return STRTOCSTR(t->id);
 }
 
 #include "parser/IfParser.h"
@@ -1081,6 +1223,21 @@ ParseResult *CP_IfParserParseAfter(IfParser *p, ParseResult *pr) {
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+ParseResult *CP_IfParser_ParseResultGetValue(ParseResult *p){
+  if(!p) return 0;
+  auto t = (IfToken *) p->token;
+  return new ParseResult(t->value);
+}
+ParseResult *CP_IfParser_ParseResultGetSt1(ParseResult *p){
+  if(!p) return 0;
+  auto t = (IfToken *) p->token;
+  return new ParseResult(t->st1);
+}
+ParseResult *CP_IfParser_ParseResultGetSt2(ParseResult *p){
+  if(!p) return 0;
+  auto t = (IfToken *) p->token;
+  return new ParseResult(t->st2);
+}
 
 #include "parser/ImportParser.h"
 ImportParser *CompilerGetImportParser(CC *cc) { return new ImportParser(); }
@@ -1095,6 +1252,11 @@ ParseResult *CP_ImportParserParseAfter(ImportParser *p, ParseResult *pr) {
     return 0;
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
+}
+char *CP_ImportParser_ParseResultGetPath(ParseResult *p){
+  if(!p) return 0;
+  auto t = (ImportToken *) p->token;
+  return STRTOCSTR(t->importPath);
 }
 
 #include "parser/InterfaceParser.h"
@@ -1114,6 +1276,17 @@ ParseResult *CP_InterfaceParserParseAfter(InterfaceParser *p, ParseResult *pr) {
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+char *CP_InterfaceParser_ParseResultGetId(ParseResult *p){
+  if(!p) return 0;
+  auto t = (InterfaceToken *) p->token;
+  return STRTOCSTR(t->id);
+}
+ParseResult *CP_InterfaceParser_ParseResultGetMethod(ParseResult *p, int i){
+  if(!p) return 0;
+  auto t = (InterfaceToken *) p->token;
+  if(i >= t->methods.size()) return 0;
+  return new ParseResult(t->methods[i]);
+}
 
 #include "parser/KeywordParser.h"
 KeywordParser *CompilerGetKeywordParser(CC *cc) { return new KeywordParser(); }
@@ -1129,6 +1302,11 @@ ParseResult *CP_KeywordParserParseAfter(KeywordParser *p, ParseResult *pr) {
     return 0;
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
+}
+char *CP_KeywordParser_ParseResultGetKeyword(ParseResult *p){
+  if(!p) return 0;
+  auto t = (KeywordToken *) p->token;
+  return STRTOCSTR(t->desc()); // TODO
 }
 
 #include "parser/MemAccessParser.h"
@@ -1147,6 +1325,16 @@ ParseResult *CP_MemAccessParserParseAfter(MemAccessParser *p, ParseResult *pr) {
     return 0;
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
+}
+char *CP_MemAccessParser_ParseResultGetId(ParseResult *p){
+  if(!p) return 0;
+  auto t = (MemAccessToken *) p->token;
+  return STRTOCSTR(t->id);
+}
+ParseResult *CP_MemAccessParser_ParseResultGetExp(ParseResult *p){
+  if(!p) return 0;
+  auto t = (MemAccessToken *) p->token;
+  return new ParseResult(t->expression);
 }
 
 #include "parser/MethodCallParser.h"
@@ -1167,6 +1355,17 @@ ParseResult *CP_MethodCallParserParseAfter(MethodCallParser *p,
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+ParseResult *CP_MethodCallParser_ParseResultGetExp(ParseResult *p){
+  if(!p) return 0;
+  auto t = (MethodCallToken *) p->token;
+  return new ParseResult(t->exp);
+}
+ParseResult *CP_MethodCallParser_ParseResultGetArg(ParseResult *p, int i){
+  if(!p) return 0;
+  auto t = (MethodCallToken *) p->token;
+  if(i >= t->args.size()) return 0;
+  return new ParseResult(t->args[i]);
+}
 
 #include "parser/MethodCallStmtParser.h"
 MethodCallStmtParser *CompilerGetMethodCallStmtParser(CC *cc) {
@@ -1186,6 +1385,19 @@ ParseResult *CP_MethodCallStmtParserParseAfter(MethodCallStmtParser *p,
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+ParseResult *CP_MethodCallStmtParser_ParseResultGetExp(ParseResult *p){
+  if(!p) return 0;
+  auto tt = (MethodCallStmtToken *) p->token;
+  auto t = (MethodCallToken*) tt->mct;
+  return new ParseResult(t->exp);
+}
+ParseResult *CP_MethodCallStmtParser_ParseResultGetArg(ParseResult *p, int i){
+  if(!p) return 0;
+  auto tt = (MethodCallStmtToken *) p->token;
+  auto t = (MethodCallToken*) tt->mct;
+  if(i >= t->args.size()) return 0;
+  return new ParseResult(t->args[i]);
+}
 
 #include "parser/MethodParser.h"
 MethodParser *CompilerGetMethodParser(CC *cc) { return new MethodParser(); }
@@ -1200,6 +1412,21 @@ ParseResult *CP_MethodParserParseAfter(MethodParser *p, ParseResult *pr) {
     return 0;
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
+}
+char *CP_MethodParser_ParseResultGetStructName(ParseResult *p){
+  if(!p) return 0;
+  auto t = (MethodToken *) p->token;
+  return STRTOCSTR(t->structName);
+}
+char *CP_MethodParser_ParseResultGetMethodName(ParseResult *p){
+  if(!p) return 0;
+  auto t = (MethodToken *) p->token;
+  return STRTOCSTR(t->methodName);
+}
+ParseResult *CP_MethodParser_ParseResultGetf(ParseResult *p){
+  if(!p) return 0;
+  auto t = (MethodToken *) p->token;
+  return new ParseResult(t->f);
 }
 
 #include "parser/NamedTypeParser.h"
@@ -1219,6 +1446,11 @@ ParseResult *CP_NamedTypeParserParseAfter(NamedTypeParser *p, ParseResult *pr) {
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+char *CP_NamedTypeParser_ParseResultGetId(ParseResult *p){
+  if(!p) return 0;
+  auto t = (NamedTypeToken *) p->token;
+  return STRTOCSTR(t->typeId);
+}
 
 #include "parser/NumberParser.h"
 NumberParser *CompilerGetNumberParser(CC *cc) { return new NumberParser(); }
@@ -1234,6 +1466,11 @@ ParseResult *CP_NumberParserParseAfter(NumberParser *p, ParseResult *pr) {
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+int CP_NumberParser_ParseResultGetValue(ParseResult *p){
+  if(!p) return 0;
+  auto t = (NumberToken *) p->token;
+  return t->val;
+}
 
 #include "parser/ParenParser.h"
 ParenParser *CompilerGetParenParser(CC *cc) { return new ParenParser(); }
@@ -1248,6 +1485,11 @@ ParseResult *CP_ParenParserParseAfter(ParenParser *p, ParseResult *pr) {
     return 0;
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
+}
+ParseResult *CP_ParenParser_ParseResultGetExp(ParseResult *p){
+  if(!p) return 0;
+  auto t = (ParenToken *) p->token;
+  return new ParseResult(t->exp);
 }
 
 #include "parser/PointerTypeParser.h"
@@ -1268,6 +1510,11 @@ ParseResult *CP_PointerTypeParserParseAfter(PointerTypeParser *p,
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+ParseResult *CP_PointerTypeParser_ParseResultGetInnerType(ParseResult *p){
+  if(!p) return 0;
+  auto t = (PointerTypeToken *) p->token;
+  return new ParseResult(t->innerType);
+}
 
 #include "parser/PreOpParser.h"
 PreOpParser *CompilerGetPreOpParser(CC *cc) { return new PreOpParser(); }
@@ -1282,6 +1529,16 @@ ParseResult *CP_PreOpParserParseAfter(PreOpParser *p, ParseResult *pr) {
     return 0;
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
+}
+char *CP_PreOpParser_ParseResultGetOp(ParseResult *p){
+  if(!p) return 0;
+  auto t = (PreOpToken *) p->token;
+  return STRTOCSTR(t->op);
+}
+ParseResult *CP_PreOpParser_ParseResultGetValue(ParseResult *p){
+  if(!p) return 0;
+  auto t = (PreOpToken *) p->token;
+  return new ParseResult(t->value);
 }
 
 #include "parser/PrimitiveTypeParser.h"
@@ -1302,6 +1559,11 @@ ParseResult *CP_PrimitiveTypeParserParseAfter(PrimitiveTypeParser *p,
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+char *CP_PrimitiveTypeParser_ParseResultGetKey(ParseResult *p){
+  if(!p) return 0;
+  auto t = (TypeToken *) p->token;
+  return STRTOCSTR(t->desc()); // TODO fix this
+}
 
 #include "parser/PtrValueParser.h"
 PtrValueParser *CompilerGetPtrValueParser(CC *cc) {
@@ -1320,6 +1582,11 @@ ParseResult *CP_PtrValueParserParseAfter(PtrValueParser *p, ParseResult *pr) {
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+ParseResult *CP_PtrValueParser_ParseResultGetExp(ParseResult *p){
+  if(!p) return 0;
+  auto t = (PtrValueToken *) p->token;
+  return new ParseResult(t->exp);
+}
 
 #include "parser/ReturnParser.h"
 ReturnParser *CompilerGetReturnParser(CC *cc) { return new ReturnParser(); }
@@ -1334,6 +1601,12 @@ ParseResult *CP_ReturnParserParseAfter(ReturnParser *p, ParseResult *pr) {
     return 0;
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
+}
+ParseResult *CP_ReturnParser_ParseResultGetValue(ParseResult *p){
+  if(!p) return 0;
+  auto t = (ReturnToken *) p->token;
+  if(!t->value) return 0;
+  return new ParseResult(t->value);
 }
 
 #include "parser/SBlockParser.h"
@@ -1350,6 +1623,12 @@ ParseResult *CP_SBlockParserParseAfter(SBlockParser *p, ParseResult *pr) {
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+ParseResult *CP_SBlockParser_ParseResultGetStmt(ParseResult *p, int i){
+  if(!p) return 0;
+  auto t = (SBlockToken *) p->token;
+  if(i >= t->stmts.size()) return 0;
+  return new ParseResult(t->stmts[i]);
+}
 
 #include "parser/SizeofParser.h"
 SizeofParser *CompilerGetSizeofParser(CC *cc) { return new SizeofParser(); }
@@ -1364,6 +1643,11 @@ ParseResult *CP_SizeofParserParseAfter(SizeofParser *p, ParseResult *pr) {
     return 0;
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
+}
+ParseResult *CP_SizeofParser_ParseResultGetType(ParseResult *p){
+  if(!p) return 0;
+  auto t = (SizeofToken *) p->token;
+  return new ParseResult(t->type);
 }
 
 #include "parser/StatementParser.h"
@@ -1398,6 +1682,11 @@ ParseResult *CP_StringParserParseAfter(StringParser *p, ParseResult *pr) {
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+char *CP_StringParser_ParseResultGetValue(ParseResult *p){
+  if(!p) return 0;
+  auto t = (StringToken *) p->token;
+  return STRTOCSTR(t->value);
+}
 
 #include "parser/StructParser.h"
 StructParser *CompilerGetStructParser(CC *cc) { return new StructParser(); }
@@ -1413,6 +1702,17 @@ ParseResult *CP_StructParserParseAfter(StructParser *p, ParseResult *pr) {
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+char *CP_StructParser_ParseResultGetId(ParseResult *p){
+  if(!p) return 0;
+  auto t = (StructToken *) p->token;
+  return STRTOCSTR(t->id);
+}
+ParseResult *CP_StructParser_ParseResultGetMember(ParseResult *p, int i){
+  if(!p) return 0;
+  auto t = (StructToken *) p->token;
+  if(i >= t->members.size()) return 0;
+  return new ParseResult(t->members[i]);
+}
 
 #include "parser/SymbolParser.h"
 SymbolParser *CompilerGetSymbolParser(CC *cc) { return new SymbolParser(); }
@@ -1427,6 +1727,11 @@ ParseResult *CP_SymbolParserParseAfter(SymbolParser *p, ParseResult *pr) {
     return 0;
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
+}
+char *CP_SymbolParser_ParseResultGetSymbol(ParseResult *p){
+  if(!p) return 0;
+  auto t = (SymbolToken *) p->token;
+  return STRTOCSTR(t->desc()); // TODO check
 }
 
 #include "parser/TopParser.h"
@@ -1492,6 +1797,11 @@ ParseResult *CP_VariableValueParserParseAfter(VariableValueParser *p,
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+char * CP_VariableValueParser_ParseResultGetValue(ParseResult *p){
+  if(!p) return 0;
+  auto t = (IdToken *) p->token;
+  return STRTOCSTR(t->id);
+}
 
 #include "parser/WhileParser.h"
 WhileParser *CompilerGetWhileParser(CC *cc) { return new WhileParser(); }
@@ -1507,9 +1817,20 @@ ParseResult *CP_WhileParserParseAfter(WhileParser *p, ParseResult *pr) {
   Token *a = ((TupleToken *)ans.token)->t2;
   return new ParseResult(a);
 }
+ParseResult *CP_WhileParser_ParseResultGetCond(ParseResult *p){
+  if(!p) return 0;
+  auto t = (WhileToken *) p->token;
+  return new ParseResult(t->value);
+}
+ParseResult *CP_WhileParser_ParseResultGetStmt(ParseResult *p){
+  if(!p) return 0;
+  auto t = (WhileToken *) p->token;
+  return new ParseResult(t->statement);
+}
 
 // TODO ensure CC is in all creates.
 // TODO check all integers and long ong
+// TODO ensure p->token is used everywhere.
 
 #define REGISTER_CALLBACK(name, replace, cb)                                   \
   {                                                                            \
@@ -1883,39 +2204,37 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("Compiler$createReturn", "Compiler$createReturn_replace",
                     &createReturn);
   REGISTER_CALLBACK("C_Return$getExp", "C_Return$getExp_replace",
-                    & ReturnGetExp);
+                    &ReturnGetExp);
   REGISTER_CALLBACK("C_Return$setExp", "C_Return$setExp_replace",
-                    & ReturnSetExp);
+                    &ReturnSetExp);
 
   // Sizeof
   REGISTER_CALLBACK("Compiler$createSizeof", "Compiler$createSizeof_replace",
                     &createSizeof);
   REGISTER_CALLBACK("C_Sizeof$getType", "C_Sizeof$getType_replace",
-                    & SizeofGetType);
+                    &SizeofGetType);
   REGISTER_CALLBACK("C_Sizeof$setType", "C_Sizeof$setType_replace",
-                    & SizeofSetType);
+                    &SizeofSetType);
 
   // CString
   REGISTER_CALLBACK("Compiler$createCString", "Compiler$createCString_replace",
                     &createCString);
   REGISTER_CALLBACK("C_CString$getValue", "C_CString$getValue_replace",
-                    & CStringGetValue);
+                    &CStringGetValue);
   REGISTER_CALLBACK("C_CString$setValue", "C_CString$setValue_replace",
-                    & CStringSetValue);
+                    &CStringSetValue);
 
   // Struct
   REGISTER_CALLBACK("Compiler$createStruct", "Compiler$createStruct_replace",
                     &createStruct);
-  REGISTER_CALLBACK("C_Struct$getId", "C_Struct$getId_replace",
-                    & StructGetId);
+  REGISTER_CALLBACK("C_Struct$getId", "C_Struct$getId_replace", &StructGetId);
   REGISTER_CALLBACK("C_Struct$getMember", "C_Struct$getMember_replace",
-                    & StructGetMember);
-  REGISTER_CALLBACK("C_Struct$setId", "C_Struct$setId_replace",
-                    & StructSetId);
+                    &StructGetMember);
+  REGISTER_CALLBACK("C_Struct$setId", "C_Struct$setId_replace", &StructSetId);
   REGISTER_CALLBACK("C_Struct$addMember", "C_Struct$addMember_replace",
-                    & StructAddMember);
+                    &StructAddMember);
   REGISTER_CALLBACK("C_Struct$addMethod", "C_Struct$addMethod_replace",
-                    & StructAddMethod);
+                    &StructAddMethod);
   REGISTER_CALLBACK("Compiler$getStruct", "Compiler$getStruct_replace",
                     &CompilerGetStruct);
   // TODO adding methods?
@@ -1926,53 +2245,69 @@ void *CompileContext::getCompileObj(void *e){
                     "Compiler$createVariableValue_replace",
                     &createVariableValue);
   REGISTER_CALLBACK("C_VariableValue$getId", "C_VariableValue$getId_replace",
-                    & VariableValueGetId);
+                    &VariableValueGetId);
   REGISTER_CALLBACK("C_VariableValue$setId", "C_VariableValue$setId_replace",
-                    & VariableValueSetId);
+                    &VariableValueSetId);
 
   // While
   REGISTER_CALLBACK("Compiler$createWhile", "Compiler$createWhile_replace",
                     &createWhile);
   REGISTER_CALLBACK("C_While$getCond", "C_While$getCond_replace",
-                    & WhileGetCond);
+                    &WhileGetCond);
   REGISTER_CALLBACK("C_While$getStmt", "C_While$getStmt_replace",
-                    & WhileGetStmt);
+                    &WhileGetStmt);
   REGISTER_CALLBACK("C_While$setCond", "C_While$setCond_replace",
-                    & WhileSetCond);
+                    &WhileSetCond);
   REGISTER_CALLBACK("C_While$setStmt", "C_While$setStmt_replace",
-                    & WhileSetStmt);
+                    &WhileSetStmt);
 
   // ============== Parser
   REGISTER_CALLBACK("Compiler$getAddressParser",
                     "Compiler$getAddressParser_replace",
                     &CompilerGetAddressParser);
-  REGISTER_CALLBACK("CP_AddressParser$parse",
-                    "CP_AddressParser$parse_replace",
+  REGISTER_CALLBACK("CP_AddressParser$parse", "CP_AddressParser$parse_replace",
                     &CP_AddressParserParse);
   REGISTER_CALLBACK("CP_AddressParser$parseAfter",
                     "CP_AddressParser$parseAfter_replace",
                     &CP_AddressParserParseAfter);
-
+  REGISTER_CALLBACK("CP_AddressParser_ParseResult$getExp",
+                    "CP_AddressParser_ParseResult$getExp_replace",
+                    &CP_AddressParser_ParseResultGetExp);
 
   REGISTER_CALLBACK("Compiler$getAssignParser",
                     "Compiler$getAssignParser_replace",
                     &CompilerGetAssignParser);
-  REGISTER_CALLBACK("CP_AssignParser$parse",
-                    "CP_AssignParser$parse_replace",
+  REGISTER_CALLBACK("CP_AssignParser$parse", "CP_AssignParser$parse_replace",
                     &CP_AssignParserParse);
   REGISTER_CALLBACK("CP_AssignParser$parseAfter",
                     "CP_AssignParser$parseAfter_replace",
                     &CP_AssignParserParseAfter);
+  REGISTER_CALLBACK("CP_AssignParser_ParseResult$getExp",
+                    "CP_AssignParser_ParseResult$getExp_replace",
+                    &CP_AssignParser_ParseResultGetExp);
+  REGISTER_CALLBACK("CP_AssignParser_ParseResult$getValue",
+                    "CP_AssignParser_ParseResult$getValue_replace",
+                    &CP_AssignParser_ParseResultGetValue);
 
   REGISTER_CALLBACK("Compiler$getBinOpParser",
-                    "Compiler$getBinOpParser_replace",
-                    &CompilerGetBinOpParser);
-  REGISTER_CALLBACK("CP_BinOpParser$parse",
-                    "CP_BinOpParser$parse_replace",
+                    "Compiler$getBinOpParser_replace", &CompilerGetBinOpParser);
+  REGISTER_CALLBACK("CP_BinOpParser$parse", "CP_BinOpParser$parse_replace",
                     &CP_BinOpParserParse);
   REGISTER_CALLBACK("CP_BinOpParser$parseAfter",
                     "CP_BinOpParser$parseAfter_replace",
                     &CP_BinOpParserParseAfter);
+  REGISTER_CALLBACK("CP_BinOpParser_ParseResult$getOp",
+                    "CP_BinOpParser_ParseResult$getOp_replace",
+                    &CP_BinOpParser_ParseResultGetOp);
+  REGISTER_CALLBACK("CP_BinOpParser_ParseResult$getlhs",
+                    "CP_BinOpParser_ParseResult$getlhs_replace",
+                    &CP_BinOpParser_ParseResultGetlhs);
+  REGISTER_CALLBACK("CP_BinOpParser_ParseResult$getrhs",
+                    "CP_BinOpParser_ParseResult$getrhs_replace",
+                    &CP_BinOpParser_ParseResultGetrhs);
+  REGISTER_CALLBACK("CP_BinOpParser_ParseResult$getprec",
+                    "CP_BinOpParser_ParseResult$getprec_replace",
+                    &CP_BinOpParser_ParseResultGetprec);
 
   REGISTER_CALLBACK("Compiler$getBoolValueParser",
                     "Compiler$getBoolValueParser_replace",
@@ -1983,26 +2318,40 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("CP_BoolValueParser$parseAfter",
                     "CP_BoolValueParser$parseAfter_replace",
                     &CP_BoolValueParserParseAfter);
+  REGISTER_CALLBACK("CP_BoolValueParser_ParseResult$getTruth",
+                    "CP_BoolValueParser_ParseResult$getTruth_replace",
+                    &CP_BoolValueParser_ParseResultGetTruth);
 
-  REGISTER_CALLBACK("Compiler$getCastExpr",
-                    "Compiler$getCastExpr_replace",
+  REGISTER_CALLBACK("Compiler$getCastExpr", "Compiler$getCastExpr_replace",
                     &CompilerGetCastExpr);
-  REGISTER_CALLBACK("CP_CastExpr$parse",
-                    "CP_CastExpr$parse_replace",
+  REGISTER_CALLBACK("CP_CastExpr$parse", "CP_CastExpr$parse_replace",
                     &CP_CastExprParse);
-  REGISTER_CALLBACK("CP_CastExpr$parseAfter",
-                    "CP_CastExpr$parseAfter_replace",
+  REGISTER_CALLBACK("CP_CastExpr$parseAfter", "CP_CastExpr$parseAfter_replace",
                     &CP_CastExprParseAfter);
+  REGISTER_CALLBACK("CP_CastExpr_ParseResult$getExp",
+                    "CP_CastExpr_ParseResult$getExp_replace",
+                    &CP_CastExpr_ParseResultGetExp);
+  REGISTER_CALLBACK("CP_CastExpr_ParseResult$getType",
+                    "CP_CastExpr_ParseResult$getType_replace",
+                    &CP_CastExpr_ParseResultGetType);
 
   REGISTER_CALLBACK("Compiler$getDefineParser",
                     "Compiler$getDefineParser_replace",
                     &CompilerGetDefineParser);
-  REGISTER_CALLBACK("CP_DefineParser$parse",
-                    "CP_DefineParser$parse_replace",
+  REGISTER_CALLBACK("CP_DefineParser$parse", "CP_DefineParser$parse_replace",
                     &CP_DefineParserParse);
   REGISTER_CALLBACK("CP_DefineParser$parseAfter",
                     "CP_DefineParser$parseAfter_replace",
                     &CP_DefineParserParseAfter);
+  REGISTER_CALLBACK("CP_DefineParser_ParseResult$getId",
+                    "CP_DefineParser_ParseResult$getId_replace",
+                    &CP_DefineParser_ParseResultGetId);
+  REGISTER_CALLBACK("CP_DefineParser_ParseResult$getType",
+                    "CP_DefineParser_ParseResult$getType_replace",
+                    &CP_DefineParser_ParseResultGetType);
+  REGISTER_CALLBACK("CP_DefineParser_ParseResult$getValue",
+                    "CP_DefineParser_ParseResult$getValue_replace",
+                    &CP_DefineParser_ParseResultGetValue);
 
   REGISTER_CALLBACK("Compiler$getDirectiveParser",
                     "Compiler$getDirectiveParser_replace",
@@ -2013,6 +2362,12 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("CP_DirectiveParser$parseAfter",
                     "CP_DirectiveParser$parseAfter_replace",
                     &CP_DirectiveParserParseAfter);
+  REGISTER_CALLBACK("CP_DirectiveParser_ParseResult$getId",
+                    "CP_DirectiveParser_ParseResult$getId_replace",
+                    &CP_DirectiveParser_ParseResultGetId);
+  REGISTER_CALLBACK("CP_DirectiveParser_ParseResult$getTop",
+                    "CP_DirectiveParser_ParseResult$getTop_replace",
+                    &CP_DirectiveParser_ParseResultGetTop);
 
   REGISTER_CALLBACK("Compiler$getExpressionParser",
                     "Compiler$getExpressionParser_replace",
@@ -2025,14 +2380,18 @@ void *CompileContext::getCompileObj(void *e){
                     &CP_ExpressionParserParseAfter);
 
   REGISTER_CALLBACK("Compiler$getFCallParser",
-                    "Compiler$getFCallParser_replace",
-                    &CompilerGetFCallParser);
-  REGISTER_CALLBACK("CP_FCallParser$parse",
-                    "CP_FCallParser$parse_replace",
+                    "Compiler$getFCallParser_replace", &CompilerGetFCallParser);
+  REGISTER_CALLBACK("CP_FCallParser$parse", "CP_FCallParser$parse_replace",
                     &CP_FCallParserParse);
   REGISTER_CALLBACK("CP_FCallParser$parseAfter",
                     "CP_FCallParser$parseAfter_replace",
                     &CP_FCallParserParseAfter);
+  REGISTER_CALLBACK("CP_FCallParser_ParseResult$getId",
+                    "CP_FCallParser_ParseResult$getId_replace",
+                    &CP_FCallParser_ParseResultGetId);
+  REGISTER_CALLBACK("CP_FCallParser_ParseResult$getArg",
+                    "CP_FCallParser_ParseResult$getArg_replace",
+                    &CP_FCallParser_ParseResultGetArg);
 
   REGISTER_CALLBACK("Compiler$getFCallStmtParser",
                     "Compiler$getFCallStmtParser_replace",
@@ -2043,16 +2402,30 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("CP_FCallStmtParser$parseAfter",
                     "CP_FCallStmtParser$parseAfter_replace",
                     &CP_FCallStmtParserParseAfter);
+  REGISTER_CALLBACK("CP_FCallStmtParser_ParseResult$getId",
+                    "CP_FCallStmtParser_ParseResult$getId_replace",
+                    &CP_FCallStmtParser_ParseResultGetId);
+  REGISTER_CALLBACK("CP_FCallStmtParser_ParseResult$getArg",
+                    "CP_FCallStmtParser_ParseResult$getArg_replace",
+                    &CP_FCallStmtParser_ParseResultGetArg);
 
   REGISTER_CALLBACK("Compiler$getFunctionParser",
                     "Compiler$getFunctionParser_replace",
                     &CompilerGetFunctionParser);
   REGISTER_CALLBACK("CP_FunctionParser$parse",
-                    "CP_FunctionParser$parse_replace",
-                    &CP_FunctionParserParse);
+                    "CP_FunctionParser$parse_replace", &CP_FunctionParserParse);
   REGISTER_CALLBACK("CP_FunctionParser$parseAfter",
                     "CP_FunctionParser$parseAfter_replace",
                     &CP_FunctionParserParseAfter);
+  REGISTER_CALLBACK("CP_FunctionParser_ParseResult$getReturnType",
+                    "CP_FunctionParser_ParseResult$getReturnType_replace",
+                    &CP_FunctionParser_ParseResultGetReturnType);
+  REGISTER_CALLBACK("CP_FunctionParser_ParseResult$getArg",
+                    "CP_FunctionParser_ParseResult$getArg_replace",
+                    &CP_FunctionParser_ParseResultGetArg);
+  REGISTER_CALLBACK("CP_FunctionParser_ParseResult$getStmt",
+                    "CP_FunctionParser_ParseResult$getStmt_replace",
+                    &CP_FunctionParser_ParseResultGetStmt);
 
   REGISTER_CALLBACK("Compiler$getFunctionSigParser",
                     "Compiler$getFunctionSigParser_replace",
@@ -2063,6 +2436,12 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("CP_FunctionSigParser$parseAfter",
                     "CP_FunctionSigParser$parseAfter_replace",
                     &CP_FunctionSigParserParseAfter);
+  REGISTER_CALLBACK("CP_FunctionSigParser_ParseResult$getReturnType",
+                    "CP_FunctionSigParser_ParseResult$getReturnType_replace",
+                    & CP_FunctionSigParser_ParseResultGetReturnType);
+  REGISTER_CALLBACK("CP_FunctionSigParser_ParseResult$getArg",
+                    "CP_FunctionSigParser_ParseResult$getArg_replace",
+                    & CP_FunctionSigParser_ParseResultGetArg);
 
   REGISTER_CALLBACK("Compiler$getFunctionTypeParser",
                     "Compiler$getFunctionTypeParser_replace",
@@ -2073,36 +2452,58 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("CP_FunctionTypeParser$parseAfter",
                     "CP_FunctionTypeParser$parseAfter_replace",
                     &CP_FunctionTypeParserParseAfter);
+  REGISTER_CALLBACK("CP_FunctionTypeParser_ParseResult$getReturnType",
+                    "CP_FunctionTypeParser_ParseResult$getReturnType_replace",
+                    & CP_FunctionTypeParser_ParseResultGetReturnType);
+  REGISTER_CALLBACK("CP_FunctionTypeParser_ParseResult$getArg",
+                    "CP_FunctionTypeParser_ParseResult$getArg_replace",
+                    & CP_FunctionTypeParser_ParseResultGetArg);
 
-  REGISTER_CALLBACK("Compiler$getIdParser",
-                    "Compiler$getIdParser_replace",
+  REGISTER_CALLBACK("Compiler$getIdParser", "Compiler$getIdParser_replace",
                     &CompilerGetIdParser);
-  REGISTER_CALLBACK("CP_IdParser$parse",
-                    "CP_IdParser$parse_replace",
+  REGISTER_CALLBACK("CP_IdParser$parse", "CP_IdParser$parse_replace",
                     &CP_IdParserParse);
-  REGISTER_CALLBACK("CP_IdParser$parseAfter",
-                    "CP_IdParser$parseAfter_replace",
+  REGISTER_CALLBACK("CP_IdParser$parseAfter", "CP_IdParser$parseAfter_replace",
                     &CP_IdParserParseAfter);
+  REGISTER_CALLBACK("CP_IdParser_ParseResult$getId",
+                    "CP_IdParser_ParseResult$getId_replace",
+                    & CP_IdParser_ParseResultGetId);
 
-  REGISTER_CALLBACK("Compiler$getIfParser",
-                    "Compiler$getIfParser_replace",
+  REGISTER_CALLBACK("Compiler$getIfParser", "Compiler$getIfParser_replace",
                     &CompilerGetIfParser);
-  REGISTER_CALLBACK("CP_IfParser$parse",
-                    "CP_IfParser$parse_replace",
+  REGISTER_CALLBACK("CP_IfParser$parse", "CP_IfParser$parse_replace",
                     &CP_IfParserParse);
-  REGISTER_CALLBACK("CP_IfParser$parseAfter",
-                    "CP_IfParser$parseAfter_replace",
+  REGISTER_CALLBACK("CP_IfParser$parseAfter", "CP_IfParser$parseAfter_replace",
                     &CP_IfParserParseAfter);
+  REGISTER_CALLBACK("CP_IfParser_ParseResult$getValue"
+                    ,
+                    "CP_IfParser_ParseResult$getValue_replace"
+                    ,
+                    & CP_IfParser_ParseResultGetValue);
+  REGISTER_CALLBACK("CP_IfParser_ParseResult$getSt1"
+                    ,
+                    "CP_IfParser_ParseResult$getSt1_replace"
+                    ,
+                    & CP_IfParser_ParseResultGetSt1);
+  REGISTER_CALLBACK("CP_IfParser_ParseResult$getSt2"
+                    ,
+                    "CP_IfParser_ParseResult$getSt2_replace"
+                    ,
+                    & CP_IfParser_ParseResultGetSt2);
 
   REGISTER_CALLBACK("Compiler$getImportParser",
                     "Compiler$getImportParser_replace",
                     &CompilerGetImportParser);
-  REGISTER_CALLBACK("CP_ImportParser$parse",
-                    "CP_ImportParser$parse_replace",
+  REGISTER_CALLBACK("CP_ImportParser$parse", "CP_ImportParser$parse_replace",
                     &CP_ImportParserParse);
   REGISTER_CALLBACK("CP_ImportParser$parseAfter",
                     "CP_ImportParser$parseAfter_replace",
                     &CP_ImportParserParseAfter);
+  REGISTER_CALLBACK("CP_ImportParser_ParseResult$getPath"
+                    ,
+                    "CP_ImportParser_ParseResult$getPath_replace"
+                    ,
+                    & CP_ImportParser_ParseResultGetPath);
 
   REGISTER_CALLBACK("Compiler$getInterfaceParser",
                     "Compiler$getInterfaceParser_replace",
@@ -2113,16 +2514,30 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("CP_InterfaceParser$parseAfter",
                     "CP_InterfaceParser$parseAfter_replace",
                     &CP_InterfaceParserParseAfter);
+  REGISTER_CALLBACK("CP_InterfaceParser_ParseResult$getId"
+                    ,
+                    "CP_InterfaceParser_ParseResult$getId_replace"
+                    ,
+                    & CP_InterfaceParser_ParseResultGetId);
+  REGISTER_CALLBACK("CP_InterfaceParser_ParseResult$getMethod"
+                    ,
+                    "CP_InterfaceParser_ParseResult$getMethod_replace"
+                    ,
+                    & CP_InterfaceParser_ParseResultGetMethod);
 
   REGISTER_CALLBACK("Compiler$getKeywordParser",
                     "Compiler$getKeywordParser_replace",
                     &CompilerGetKeywordParser);
-  REGISTER_CALLBACK("CP_KeywordParser$parse",
-                    "CP_KeywordParser$parse_replace",
+  REGISTER_CALLBACK("CP_KeywordParser$parse", "CP_KeywordParser$parse_replace",
                     &CP_KeywordParserParse);
   REGISTER_CALLBACK("CP_KeywordParser$parseAfter",
                     "CP_KeywordParser$parseAfter_replace",
                     &CP_KeywordParserParseAfter);
+  REGISTER_CALLBACK("CP_KeywordParser_ParseResult$getKeyword"
+                    ,
+                    "CP_KeywordParser_ParseResult$getKeyword_replace"
+                    ,
+                    & CP_KeywordParser_ParseResultGetKeyword);
 
   REGISTER_CALLBACK("Compiler$getMemAccessParser",
                     "Compiler$getMemAccessParser_replace",
@@ -2133,6 +2548,16 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("CP_MemAccessParser$parseAfter",
                     "CP_MemAccessParser$parseAfter_replace",
                     &CP_MemAccessParserParseAfter);
+  REGISTER_CALLBACK("CP_MemAccessParser_ParseResult$getId"
+                    ,
+                    "CP_MemAccessParser_ParseResult$getId_replace"
+                    ,
+                    & CP_MemAccessParser_ParseResultGetId);
+  REGISTER_CALLBACK("CP_MemAccessParser_ParseResult$getExp"
+                    ,
+                    "CP_MemAccessParser_ParseResult$getExp_replace"
+                    ,
+                    & CP_MemAccessParser_ParseResultGetExp);
 
   REGISTER_CALLBACK("Compiler$getMethodCallParser",
                     "Compiler$getMethodCallParser_replace",
@@ -2143,6 +2568,16 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("CP_MethodCallParser$parseAfter",
                     "CP_MethodCallParser$parseAfter_replace",
                     &CP_MethodCallParserParseAfter);
+  REGISTER_CALLBACK("CP_MethodCallParser_ParseResult$getExp"
+                    ,
+                    "CP_MethodCallParser_ParseResult$getExp_replace"
+                    ,
+                    & CP_MethodCallParser_ParseResultGetExp);
+  REGISTER_CALLBACK("CP_MethodCallParser_ParseResult$getArg"
+                    ,
+                    "CP_MethodCallParser_ParseResult$getArg_replace"
+                    ,
+                    & CP_MethodCallParser_ParseResultGetArg);
 
   REGISTER_CALLBACK("Compiler$getMethodCallStmtParser",
                     "Compiler$getMethodCallStmtParser_replace",
@@ -2153,16 +2588,38 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("CP_MethodCallStmtParser$parseAfter",
                     "CP_MethodCallStmtParser$parseAfter_replace",
                     &CP_MethodCallStmtParserParseAfter);
+  REGISTER_CALLBACK("CP_MethodCallStmtParser_ParseResult$getExp" ,
+                    "CP_MethodCallStmtParser_ParseResult$getExp_replace" ,
+                    & CP_MethodCallStmtParser_ParseResultGetExp);
+  REGISTER_CALLBACK("CP_MethodCallStmtParser_ParseResult$getArg"
+                    ,
+                    "CP_MethodCallStmtParser_ParseResult$getArg_replace"
+                    ,
+                    & CP_MethodCallStmtParser_ParseResultGetArg);
 
   REGISTER_CALLBACK("Compiler$getMethodParser",
                     "Compiler$getMethodParser_replace",
                     &CompilerGetMethodParser);
-  REGISTER_CALLBACK("CP_MethodParser$parse",
-                    "CP_MethodParser$parse_replace",
+  REGISTER_CALLBACK("CP_MethodParser$parse", "CP_MethodParser$parse_replace",
                     &CP_MethodParserParse);
   REGISTER_CALLBACK("CP_MethodParser$parseAfter",
                     "CP_MethodParser$parseAfter_replace",
                     &CP_MethodParserParseAfter);
+  REGISTER_CALLBACK("CP_MethodParser_ParseResult$getStructName"
+                    ,
+                    "CP_MethodParser_ParseResult$getStructName_replace"
+                    ,
+                    & CP_MethodParser_ParseResultGetStructName);
+  REGISTER_CALLBACK("CP_MethodParser_ParseResult$getMethodName"
+                    ,
+                    "CP_MethodParser_ParseResult$getMethodName_replace"
+                    ,
+                    & CP_MethodParser_ParseResultGetMethodName);
+  REGISTER_CALLBACK("CP_MethodParser_ParseResult$getf"
+                    ,
+                    "CP_MethodParser_ParseResult$getf_replace"
+                    ,
+                    & CP_MethodParser_ParseResultGetf);
 
   REGISTER_CALLBACK("Compiler$getNamedTypeParser",
                     "Compiler$getNamedTypeParser_replace",
@@ -2173,26 +2630,38 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("CP_NamedTypeParser$parseAfter",
                     "CP_NamedTypeParser$parseAfter_replace",
                     &CP_NamedTypeParserParseAfter);
+  REGISTER_CALLBACK("CP_NamedTypeParser_ParseResult$getId"
+                    ,
+                    "CP_NamedTypeParser_ParseResult$getId_replace"
+                    ,
+                    & CP_NamedTypeParser_ParseResultGetId);
 
   REGISTER_CALLBACK("Compiler$getNumberParser",
                     "Compiler$getNumberParser_replace",
                     &CompilerGetNumberParser);
-  REGISTER_CALLBACK("CP_NumberParser$parse",
-                    "CP_NumberParser$parse_replace",
+  REGISTER_CALLBACK("CP_NumberParser$parse", "CP_NumberParser$parse_replace",
                     &CP_NumberParserParse);
   REGISTER_CALLBACK("CP_NumberParser$parseAfter",
                     "CP_NumberParser$parseAfter_replace",
                     &CP_NumberParserParseAfter);
+  REGISTER_CALLBACK("CP_NumberParser_ParseResult$getValue"
+                    ,
+                    "CP_NumberParser_ParseResult$getValue_replace"
+                    ,
+                    & CP_NumberParser_ParseResultGetValue);
 
   REGISTER_CALLBACK("Compiler$getParenParser",
-                    "Compiler$getParenParser_replace",
-                    &CompilerGetParenParser);
-  REGISTER_CALLBACK("CP_ParenParser$parse",
-                    "CP_ParenParser$parse_replace",
+                    "Compiler$getParenParser_replace", &CompilerGetParenParser);
+  REGISTER_CALLBACK("CP_ParenParser$parse", "CP_ParenParser$parse_replace",
                     &CP_ParenParserParse);
   REGISTER_CALLBACK("CP_ParenParser$parseAfter",
                     "CP_ParenParser$parseAfter_replace",
                     &CP_ParenParserParseAfter);
+  REGISTER_CALLBACK("CP_ParenParser_ParseResult$getExp"
+                    ,
+                    "CP_ParenParser_ParseResult$getExp_replace"
+                    ,
+                    & CP_ParenParser_ParseResultGetExp);
 
   REGISTER_CALLBACK("Compiler$getPointerTypeParser",
                     "Compiler$getPointerTypeParser_replace",
@@ -2203,16 +2672,29 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("CP_PointerTypeParser$parseAfter",
                     "CP_PointerTypeParser$parseAfter_replace",
                     &CP_PointerTypeParserParseAfter);
+  REGISTER_CALLBACK("CP_PointerTypeParser_ParseResult$getInnerType"
+                    ,
+                    "CP_PointerTypeParser_ParseResult$getInnerType_replace"
+                    ,
+                    & CP_PointerTypeParser_ParseResultGetInnerType);
 
   REGISTER_CALLBACK("Compiler$getPreOpParser",
-                    "Compiler$getPreOpParser_replace",
-                    &CompilerGetPreOpParser);
-  REGISTER_CALLBACK("CP_PreOpParser$parse",
-                    "CP_PreOpParser$parse_replace",
+                    "Compiler$getPreOpParser_replace", &CompilerGetPreOpParser);
+  REGISTER_CALLBACK("CP_PreOpParser$parse", "CP_PreOpParser$parse_replace",
                     &CP_PreOpParserParse);
   REGISTER_CALLBACK("CP_PreOpParser$parseAfter",
                     "CP_PreOpParser$parseAfter_replace",
                     &CP_PreOpParserParseAfter);
+  REGISTER_CALLBACK("CP_PreOpParser_ParseResult$getOp"
+                    ,
+                    "CP_PreOpParser_ParseResult$getOp_replace"
+                    ,
+                    & CP_PreOpParser_ParseResultGetOp);
+  REGISTER_CALLBACK("CP_PreOpParser_ParseResult$getValue"
+                    ,
+                    "CP_PreOpParser_ParseResult$getValue_replace"
+                    ,
+                    & CP_PreOpParser_ParseResultGetValue);
 
   REGISTER_CALLBACK("Compiler$getPrimitiveTypeParser",
                     "Compiler$getPrimitiveTypeParser_replace",
@@ -2223,46 +2705,67 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("CP_PrimitiveTypeParser$parseAfter",
                     "CP_PrimitiveTypeParser$parseAfter_replace",
                     &CP_PrimitiveTypeParserParseAfter);
+  REGISTER_CALLBACK("CP_PrimitiveTypeParser_ParseResult$getKey"
+                    ,
+                    "CP_PrimitiveTypeParser_ParseResult$getKey_replace"
+                    ,
+                    & CP_PrimitiveTypeParser_ParseResultGetKey);
 
   REGISTER_CALLBACK("Compiler$getPtrValueParser",
                     "Compiler$getPtrValueParser_replace",
                     &CompilerGetPtrValueParser);
   REGISTER_CALLBACK("CP_PtrValueParser$parse",
-                    "CP_PtrValueParser$parse_replace",
-                    &CP_PtrValueParserParse);
+                    "CP_PtrValueParser$parse_replace", &CP_PtrValueParserParse);
   REGISTER_CALLBACK("CP_PtrValueParser$parseAfter",
                     "CP_PtrValueParser$parseAfter_replace",
                     &CP_PtrValueParserParseAfter);
+  REGISTER_CALLBACK("CP_PtrValueParser_ParseResult$getExp"
+                    ,
+                    "CP_PtrValueParser_ParseResult$getExp_replace"
+                    ,
+                    & CP_PtrValueParser_ParseResultGetExp);
 
   REGISTER_CALLBACK("Compiler$getReturnParser",
                     "Compiler$getReturnParser_replace",
                     &CompilerGetReturnParser);
-  REGISTER_CALLBACK("CP_ReturnParser$parse",
-                    "CP_ReturnParser$parse_replace",
+  REGISTER_CALLBACK("CP_ReturnParser$parse", "CP_ReturnParser$parse_replace",
                     &CP_ReturnParserParse);
   REGISTER_CALLBACK("CP_ReturnParser$parseAfter",
                     "CP_ReturnParser$parseAfter_replace",
                     &CP_ReturnParserParseAfter);
+  REGISTER_CALLBACK("CP_ReturnParser_ParseResult$getValue"
+                    ,
+                    "CP_ReturnParser_ParseResult$getValue_replace"
+                    ,
+                    & CP_ReturnParser_ParseResultGetValue);
 
   REGISTER_CALLBACK("Compiler$getSBlockParser",
                     "Compiler$getSBlockParser_replace",
                     &CompilerGetSBlockParser);
-  REGISTER_CALLBACK("CP_SBlockParser$parse",
-                    "CP_SBlockParser$parse_replace",
+  REGISTER_CALLBACK("CP_SBlockParser$parse", "CP_SBlockParser$parse_replace",
                     &CP_SBlockParserParse);
   REGISTER_CALLBACK("CP_SBlockParser$parseAfter",
                     "CP_SBlockParser$parseAfter_replace",
                     &CP_SBlockParserParseAfter);
+  REGISTER_CALLBACK("CP_SBlockParser_ParseResult$getStmt"
+                    ,
+                    "CP_SBlockParser_ParseResult$getStmt_replace"
+                    ,
+                    & CP_SBlockParser_ParseResultGetStmt);
 
   REGISTER_CALLBACK("Compiler$getSizeofParser",
                     "Compiler$getSizeofParser_replace",
                     &CompilerGetSizeofParser);
-  REGISTER_CALLBACK("CP_SizeofParser$parse",
-                    "CP_SizeofParser$parse_replace",
+  REGISTER_CALLBACK("CP_SizeofParser$parse", "CP_SizeofParser$parse_replace",
                     &CP_SizeofParserParse);
   REGISTER_CALLBACK("CP_SizeofParser$parseAfter",
                     "CP_SizeofParser$parseAfter_replace",
                     &CP_SizeofParserParseAfter);
+  REGISTER_CALLBACK("CP_SizeofParser_ParseResult$getType"
+                    ,
+                    "CP_SizeofParser_ParseResult$getType_replace"
+                    ,
+                    & CP_SizeofParser_ParseResultGetType);
 
   REGISTER_CALLBACK("Compiler$getStatementParser",
                     "Compiler$getStatementParser_replace",
@@ -2277,58 +2780,68 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("Compiler$getStringParser",
                     "Compiler$getStringParser_replace",
                     &CompilerGetStringParser);
-  REGISTER_CALLBACK("CP_StringParser$parse",
-                    "CP_StringParser$parse_replace",
+  REGISTER_CALLBACK("CP_StringParser$parse", "CP_StringParser$parse_replace",
                     &CP_StringParserParse);
   REGISTER_CALLBACK("CP_StringParser$parseAfter",
                     "CP_StringParser$parseAfter_replace",
                     &CP_StringParserParseAfter);
+  REGISTER_CALLBACK("CP_StringParser_ParseResult$getValue"
+                    ,
+                    "CP_StringParser_ParseResult$getValue_replace"
+                    ,
+                    & CP_StringParser_ParseResultGetValue);
 
   REGISTER_CALLBACK("Compiler$getStructParser",
                     "Compiler$getStructParser_replace",
                     &CompilerGetStructParser);
-  REGISTER_CALLBACK("CP_StructParser$parse",
-                    "CP_StructParser$parse_replace",
+  REGISTER_CALLBACK("CP_StructParser$parse", "CP_StructParser$parse_replace",
                     &CP_StructParserParse);
   REGISTER_CALLBACK("CP_StructParser$parseAfter",
                     "CP_StructParser$parseAfter_replace",
                     &CP_StructParserParseAfter);
+  REGISTER_CALLBACK("CP_StructParser_ParseResult$getId"
+                    ,
+                    "CP_StructParser_ParseResult$getId_replace"
+                    ,
+                    & CP_StructParser_ParseResultGetId);
+  REGISTER_CALLBACK("CP_StructParser_ParseResult$getMember"
+                    ,
+                    "CP_StructParser_ParseResult$getMember_replace"
+                    ,
+                    & CP_StructParser_ParseResultGetMember);
 
   REGISTER_CALLBACK("Compiler$getSymbolParser",
                     "Compiler$getSymbolParser_replace",
                     &CompilerGetSymbolParser);
-  REGISTER_CALLBACK("CP_SymbolParser$parse",
-                    "CP_SymbolParser$parse_replace",
+  REGISTER_CALLBACK("CP_SymbolParser$parse", "CP_SymbolParser$parse_replace",
                     &CP_SymbolParserParse);
   REGISTER_CALLBACK("CP_SymbolParser$parseAfter",
                     "CP_SymbolParser$parseAfter_replace",
                     &CP_SymbolParserParseAfter);
+  REGISTER_CALLBACK("CP_SymbolParser_ParseResult$getSymbol"
+                    ,
+                    "CP_SymbolParser_ParseResult$getSymbol_replace"
+                    ,
+                    & CP_SymbolParser_ParseResultGetSymbol);
 
-  REGISTER_CALLBACK("Compiler$getTopParser",
-                    "Compiler$getTopParser_replace",
+  REGISTER_CALLBACK("Compiler$getTopParser", "Compiler$getTopParser_replace",
                     &CompilerGetTopParser);
-  REGISTER_CALLBACK("CP_TopParser$parse",
-                    "CP_TopParser$parse_replace",
+  REGISTER_CALLBACK("CP_TopParser$parse", "CP_TopParser$parse_replace",
                     &CP_TopParserParse);
   REGISTER_CALLBACK("CP_TopParser$parseAfter",
-                    "CP_TopParser$parseAfter_replace",
-                    &CP_TopParserParseAfter);
+                    "CP_TopParser$parseAfter_replace", &CP_TopParserParseAfter);
 
-  REGISTER_CALLBACK("Compiler$getTypeParser",
-                    "Compiler$getTypeParser_replace",
+  REGISTER_CALLBACK("Compiler$getTypeParser", "Compiler$getTypeParser_replace",
                     &CompilerGetTypeParser);
-  REGISTER_CALLBACK("CP_TypeParser$parse",
-                    "CP_TypeParser$parse_replace",
+  REGISTER_CALLBACK("CP_TypeParser$parse", "CP_TypeParser$parse_replace",
                     &CP_TypeParserParse);
   REGISTER_CALLBACK("CP_TypeParser$parseAfter",
                     "CP_TypeParser$parseAfter_replace",
                     &CP_TypeParserParseAfter);
 
   REGISTER_CALLBACK("Compiler$getValueParser",
-                    "Compiler$getValueParser_replace",
-                    &CompilerGetValueParser);
-  REGISTER_CALLBACK("CP_ValueParser$parse",
-                    "CP_ValueParser$parse_replace",
+                    "Compiler$getValueParser_replace", &CompilerGetValueParser);
+  REGISTER_CALLBACK("CP_ValueParser$parse", "CP_ValueParser$parse_replace",
                     &CP_ValueParserParse);
   REGISTER_CALLBACK("CP_ValueParser$parseAfter",
                     "CP_ValueParser$parseAfter_replace",
@@ -2343,15 +2856,29 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("CP_VariableValueParser$parseAfter",
                     "CP_VariableValueParser$parseAfter_replace",
                     &CP_VariableValueParserParseAfter);
+  REGISTER_CALLBACK("CP_VariableValueParser_ParseResult$getValue"
+                    ,
+                    "CP_VariableValueParser_ParseResult$getValue_replace"
+                    ,
+                    & CP_VariableValueParser_ParseResultGetValue);
 
   REGISTER_CALLBACK("Compiler$getWhileParser",
-                    "Compiler$getWhileParser_replace",
-                    &CompilerGetWhileParser);
-  REGISTER_CALLBACK("CP_WhileParser$parse",
-                    "CP_WhileParser$parse_replace",
+                    "Compiler$getWhileParser_replace", &CompilerGetWhileParser);
+  REGISTER_CALLBACK("CP_WhileParser$parse", "CP_WhileParser$parse_replace",
                     &CP_WhileParserParse);
   REGISTER_CALLBACK("CP_WhileParser$parseAfter",
                     "CP_WhileParser$parseAfter_replace",
                     &CP_WhileParserParseAfter);
+  REGISTER_CALLBACK("CP_WhileParser_ParseResult$getCond"
+                    ,
+                    "CP_WhileParser_ParseResult$getCond_replace"
+                    ,
+                    & CP_WhileParser_ParseResultGetCond);
+  REGISTER_CALLBACK("CP_WhileParser_ParseResult$getStmt"
+                    ,
+                    "CP_WhileParser_ParseResult$getStmt_replace"
+                    ,
+                    & CP_WhileParser_ParseResultGetStmt);
+
   return compileObj;
 }

@@ -10,10 +10,10 @@ HiParseRule: struct{}
 HiParseRule.parse := (c: *Compiler, s: *Source, pos: int)->*ParseResult{
   idp := c.getIdParser();
 
-  id := (idp.parse(c, s, pos)) -> *ParseResult;
+  id := idp.parse(c, s, pos);
 
   if(id){
-    ids := (id.get("id")) -> string;
+    ids := id.getId();
     if(!streq(ids, "hi")){
       id = 0 -> *ParseResult;
     }
@@ -37,7 +37,8 @@ ComplexRule.genAST := (c: *Compiler, token: *ParseResult) -> *C_AST{
   fcall := c.createFCallStmt();
   fcall.setId("printf");
   s := c.createCString();
-  v :*u8 = token.get("id");
+  id :*CP_IdParser_ParseResult = token;
+  v :*u8 = id.getId();
   //v = v + 3;
   v = strcat(strcat("You defined ", v), "\n");
   s.setValue(v);
@@ -48,11 +49,11 @@ ComplexRule.genAST := (c: *Compiler, token: *ParseResult) -> *C_AST{
 ComplexRule.parse := (c: *Compiler, s: *Source, pos: int)->*ParseResult{
   idp := c.getIdParser();
 
-  hikeyword := (idp.parse(c, s, pos)) ->*ParseResult;
-  id := (idp.parseAfter(hikeyword)) -> *ParseResult;
+  hikeyword := idp.parse(c, s, pos);
+  id := idp.parseAfter(hikeyword);
 
   if(id){
-    hik := (hikeyword.get("id"))->string;
+    hik := hikeyword.getId();
     if(!streq("say", hik)){
       id = 0;
     }
@@ -64,11 +65,11 @@ DefPrintRule: struct{}
 DefPrintRule.parse := (c: *Compiler, s: *Source, pos: int) -> *ParseResult{
   idp := c.getIdParser();
 
-  kw := (idp.parse(c, s, pos)) -> *ParseResult;
-  id := (idp.parseAfter(kw)) -> *ParseResult;
+  kw := idp.parse(c, s, pos);
+  id := idp.parseAfter(kw);
 
   if(id){
-    k := (kw.get("id"))->string;
+    k := kw.getId();
     if(!streq(k, "DefPrint")){
       id = 0;
     }
@@ -79,7 +80,8 @@ DefPrintRule.parse := (c: *Compiler, s: *Source, pos: int) -> *ParseResult{
 DefPrintRule.genAST := (c: *Compiler, token: *ParseResult) -> *C_AST{
   m := c.createFunction();
 
-  tname : *u8 = token.get("id");
+  tid : *CP_IdParser_ParseResult = token;
+  tname : *u8 = tid.getId();
 
   m.setId(strcat(tname, "$print"));
   m.setReturntype(c.createPrimitiveType("unit"));
@@ -171,6 +173,7 @@ T: struct{
   name: string;
   age: int;
   num2: int;
+  ok: int;
 }
 
 DefPrint T
@@ -185,6 +188,7 @@ main := () -> int{
   t.age = 10000;
   t.num2 = 19;
   t.name = "Sajjad";
+  t.ok = 90;
 
   t.print();
 

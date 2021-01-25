@@ -4,42 +4,58 @@ import compiler
 
 CP_AddressParser: struct{}
 CP_AddressParser_ParseResult: struct{}
+CP_AddressParser_ParseResult.getExp := () -> *ParseResult{}
 Compiler.getAddressParser := () -> *CP_AddressParser{}
 CP_AddressParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_AddressParser_ParseResult{}
 CP_AddressParser.parseAfter := (p:*ParseResult)-> *CP_AddressParser_ParseResult{}
 
 CP_AssignParser: struct{}
 CP_AssignParser_ParseResult: struct{}
+CP_AssignParser_ParseResult.getExp := () -> *ParseResult{}
+CP_AssignParser_ParseResult.getValue := () -> *ParseResult{}
 Compiler.getAssignParser := () -> *CP_AssignParser{}
 CP_AssignParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_AssignParser_ParseResult{}
 CP_AssignParser.parseAfter := (p:*ParseResult)-> *CP_AssignParser_ParseResult{}
 
 CP_BinOpParser: struct{}
 CP_BinOpParser_ParseResult: struct{}
+CP_BinOpParser_ParseResult.getOp := () -> string{}
+CP_BinOpParser_ParseResult.getlhs := () -> *ParseResult{}
+CP_BinOpParser_ParseResult.getrhs := () -> *ParseResult{}
+CP_BinOpParser_ParseResult.getprec := () -> int{}
 Compiler.getBinOpParser := () -> *CP_BinOpParser{}
 CP_BinOpParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_BinOpParser_ParseResult{}
 CP_BinOpParser.parseAfter := (p:*ParseResult)-> *CP_BinOpParser_ParseResult{}
 
 CP_BoolValueParser: struct{}
 CP_BoolValueParser_ParseResult: struct{}
+CP_BoolValueParser_ParseResult.getTruth := () -> bool{}
 Compiler.getBoolValueParser := () -> *CP_BoolValueParser{}
 CP_BoolValueParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_BoolValueParser_ParseResult{}
 CP_BoolValueParser.parseAfter := (p:*ParseResult)-> *CP_BoolValueParser_ParseResult{}
 
+ // TODO Add parser to these names
 CP_CastExpr: struct{}
 CP_CastExpr_ParseResult: struct{}
+CP_CastExpr_ParseResult.getExp := () -> *ParseResult{}
+CP_CastExpr_ParseResult.getType := () -> *ParseResult{}
 Compiler.getCastExpr := () -> *CP_CastExpr{}
 CP_CastExpr.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_CastExpr_ParseResult{}
 CP_CastExpr.parseAfter := (p:*ParseResult)-> *CP_CastExpr_ParseResult{}
 
 CP_DefineParser: struct{}
 CP_DefineParser_ParseResult: struct{}
+CP_DefineParser_ParseResult.getId := () -> string{}
+CP_DefineParser_ParseResult.getType := () -> *ParseResult{}
+CP_DefineParser_ParseResult.getValue := () -> *ParseResult{}
 Compiler.getDefineParser := () -> *CP_DefineParser{}
 CP_DefineParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_DefineParser_ParseResult{}
 CP_DefineParser.parseAfter := (p:*ParseResult)-> *CP_DefineParser_ParseResult{}
 
 CP_DirectiveParser: struct{}
 CP_DirectiveParser_ParseResult: struct{}
+CP_DirectiveParser_ParseResult.getId := () -> string{}
+CP_DirectiveParser_ParseResult.getTop := () -> *ParseResult{}
 Compiler.getDirectiveParser := () -> *CP_DirectiveParser{}
 CP_DirectiveParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_DirectiveParser_ParseResult{}
 CP_DirectiveParser.parseAfter := (p:*ParseResult)-> *CP_DirectiveParser_ParseResult{}
@@ -52,144 +68,185 @@ CP_ExpressionParser.parseAfter := (p:*ParseResult)-> *CP_ExpressionParser_ParseR
 
 CP_FCallParser: struct{}
 CP_FCallParser_ParseResult: struct{}
+CP_FCallParser_ParseResult.getId := () -> string{}
+CP_FCallParser_ParseResult.getArg := (i: int) -> ParseResult{}
 Compiler.getFCallParser := () -> *CP_FCallParser{}
 CP_FCallParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_FCallParser_ParseResult{}
 CP_FCallParser.parseAfter := (p:*ParseResult)-> *CP_FCallParser_ParseResult{}
 
 CP_FCallStmtParser: struct{}
 CP_FCallStmtParser_ParseResult: struct{}
+CP_FCallStmtParser_ParseResult.getId := () -> string{}
+CP_FCallStmtParser_ParseResult.getArg := (i: int) -> ParseResult{}
 Compiler.getFCallStmtParser := () -> *CP_FCallStmtParser{}
 CP_FCallStmtParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_FCallStmtParser_ParseResult{}
 CP_FCallStmtParser.parseAfter := (p:*ParseResult)-> *CP_FCallStmtParser_ParseResult{}
 
 CP_FunctionParser: struct{}
 CP_FunctionParser_ParseResult: struct{}
+CP_FunctionParser_ParseResult.getReturnType := () -> *ParseResult{}
+CP_FunctionParser_ParseResult.getArg := (i: int) -> ParseResult{}
+CP_FunctionParser_ParseResult.getStmt := (i: int) -> ParseResult{}
 Compiler.getFunctionParser := () -> *CP_FunctionParser{}
 CP_FunctionParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_FunctionParser_ParseResult{}
 CP_FunctionParser.parseAfter := (p:*ParseResult)-> *CP_FunctionParser_ParseResult{}
 
 CP_FunctionSigParser: struct{}
 CP_FunctionSigParser_ParseResult: struct{}
+CP_FunctionSigParser_ParseResult.getReturnType := () -> *ParseResult{}
+CP_FunctionSigParser_ParseResult.getArg := (i: int) -> ParseResult{}
 Compiler.getFunctionSigParser := () -> *CP_FunctionSigParser{}
 CP_FunctionSigParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_FunctionSigParser_ParseResult{}
 CP_FunctionSigParser.parseAfter := (p:*ParseResult)-> *CP_FunctionSigParser_ParseResult{}
 
 CP_FunctionTypeParser: struct{}
 CP_FunctionTypeParser_ParseResult: struct{}
+CP_FunctionTypeParser_ParseResult.getReturnType := () -> *ParseResult{}
+CP_FunctionTypeParser_ParseResult.getArg := (i: int) -> ParseResult{}
 Compiler.getFunctionTypeParser := () -> *CP_FunctionTypeParser{}
 CP_FunctionTypeParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_FunctionTypeParser_ParseResult{}
 CP_FunctionTypeParser.parseAfter := (p:*ParseResult)-> *CP_FunctionTypeParser_ParseResult{}
 
 CP_IdParser: struct{}
 CP_IdParser_ParseResult: struct{}
+CP_IdParser_ParseResult.getId := () -> string{}
 Compiler.getIdParser := () -> *CP_IdParser{}
 CP_IdParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_IdParser_ParseResult{}
 CP_IdParser.parseAfter := (p:*ParseResult)-> *CP_IdParser_ParseResult{}
 
 CP_IfParser: struct{}
 CP_IfParser_ParseResult: struct{}
+CP_IfParser_ParseResult.getValue := () -> *ParseResult{}
+CP_IfParser_ParseResult.getSt1 := () -> *ParseResult{}
+CP_IfParser_ParseResult.getSt2 := () -> *ParseResult{}
 Compiler.getIfParser := () -> *CP_IfParser{}
 CP_IfParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_IfParser_ParseResult{}
 CP_IfParser.parseAfter := (p:*ParseResult)-> *CP_IfParser_ParseResult{}
 
 CP_ImportParser: struct{}
 CP_ImportParser_ParseResult: struct{}
+CP_ImportParser_ParseResult.getPath := () -> string{}
 Compiler.getImportParser := () -> *CP_ImportParser{}
 CP_ImportParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_ImportParser_ParseResult{}
 CP_ImportParser.parseAfter := (p:*ParseResult)-> *CP_ImportParser_ParseResult{}
 
 CP_InterfaceParser: struct{}
 CP_InterfaceParser_ParseResult: struct{}
+CP_InterfaceParser_ParseResult.getId := () -> string{}
+CP_InterfaceParser_ParseResult.getMethod := (i: int) -> *ParseResult{}
 Compiler.getInterfaceParser := () -> *CP_InterfaceParser{}
 CP_InterfaceParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_InterfaceParser_ParseResult{}
 CP_InterfaceParser.parseAfter := (p:*ParseResult)-> *CP_InterfaceParser_ParseResult{}
 
 CP_KeywordParser: struct{}
 CP_KeywordParser_ParseResult: struct{}
+CP_KeywordParser_ParseResult.getKeyword := () -> string{}
 Compiler.getKeywordParser := () -> *CP_KeywordParser{}
 CP_KeywordParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_KeywordParser_ParseResult{}
 CP_KeywordParser.parseAfter := (p:*ParseResult)-> *CP_KeywordParser_ParseResult{}
 
 CP_MemAccessParser: struct{}
 CP_MemAccessParser_ParseResult: struct{}
+CP_MemAccessParser_ParseResult.getId := () -> string{}
+CP_MemAccessParser_ParseResult.getExp := () -> *ParseResult{}
 Compiler.getMemAccessParser := () -> *CP_MemAccessParser{}
 CP_MemAccessParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_MemAccessParser_ParseResult{}
 CP_MemAccessParser.parseAfter := (p:*ParseResult)-> *CP_MemAccessParser_ParseResult{}
 
 CP_MethodCallParser: struct{}
 CP_MethodCallParser_ParseResult: struct{}
+CP_MethodCallParser_ParseResult.getExp := () -> *ParseResult{}
+CP_MethodCallParser_ParseResult.getArg := (i: int) -> *ParseResult{}
 Compiler.getMethodCallParser := () -> *CP_MethodCallParser{}
 CP_MethodCallParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_MethodCallParser_ParseResult{}
 CP_MethodCallParser.parseAfter := (p:*ParseResult)-> *CP_MethodCallParser_ParseResult{}
 
 CP_MethodCallStmtParser: struct{}
 CP_MethodCallStmtParser_ParseResult: struct{}
+CP_MethodCallStmtParser_ParseResult.getExp := () -> *ParseResult{}
+CP_MethodCallStmtParser_ParseResult.getArg := (i: int) -> *ParseResult{}
 Compiler.getMethodCallStmtParser := () -> *CP_MethodCallStmtParser{}
 CP_MethodCallStmtParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_MethodCallStmtParser_ParseResult{}
 CP_MethodCallStmtParser.parseAfter := (p:*ParseResult)-> *CP_MethodCallStmtParser_ParseResult{}
 
 CP_MethodParser: struct{}
 CP_MethodParser_ParseResult: struct{}
+CP_MethodParser_ParseResult.getStructName := () -> string{}
+CP_MethodParser_ParseResult.getMethodName := () -> string{}
+CP_MethodParser_ParseResult.getf := () -> *ParseResult{}
 Compiler.getMethodParser := () -> *CP_MethodParser{}
 CP_MethodParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_MethodParser_ParseResult{}
 CP_MethodParser.parseAfter := (p:*ParseResult)-> *CP_MethodParser_ParseResult{}
 
 CP_NamedTypeParser: struct{}
 CP_NamedTypeParser_ParseResult: struct{}
+CP_NamedTypeParser_ParseResult.getId := () -> string{}
 Compiler.getNamedTypeParser := () -> *CP_NamedTypeParser{}
 CP_NamedTypeParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_NamedTypeParser_ParseResult{}
 CP_NamedTypeParser.parseAfter := (p:*ParseResult)-> *CP_NamedTypeParser_ParseResult{}
 
 CP_NumberParser: struct{}
 CP_NumberParser_ParseResult: struct{}
+CP_NumberParser_ParseResult.getValue := () -> int{}
 Compiler.getNumberParser := () -> *CP_NumberParser{}
 CP_NumberParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_NumberParser_ParseResult{}
 CP_NumberParser.parseAfter := (p:*ParseResult)-> *CP_NumberParser_ParseResult{}
 
 CP_ParenParser: struct{}
 CP_ParenParser_ParseResult: struct{}
+CP_ParenParser_ParseResult.getExp := () -> *ParseResult{}
 Compiler.getParenParser := () -> *CP_ParenParser{}
 CP_ParenParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_ParenParser_ParseResult{}
 CP_ParenParser.parseAfter := (p:*ParseResult)-> *CP_ParenParser_ParseResult{}
 
 CP_PointerTypeParser: struct{}
 CP_PointerTypeParser_ParseResult: struct{}
+CP_PointerTypeParser_ParseResult.getInnerType := () -> *ParseResult{}
 Compiler.getPointerTypeParser := () -> *CP_PointerTypeParser{}
 CP_PointerTypeParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_PointerTypeParser_ParseResult{}
 CP_PointerTypeParser.parseAfter := (p:*ParseResult)-> *CP_PointerTypeParser_ParseResult{}
 
 CP_PreOpParser: struct{}
 CP_PreOpParser_ParseResult: struct{}
+CP_PreOpParser_ParseResult.getOp := () -> string{}
+CP_PreOpParser_ParseResult.getValue := () -> *ParseResult{}
 Compiler.getPreOpParser := () -> *CP_PreOpParser{}
 CP_PreOpParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_PreOpParser_ParseResult{}
 CP_PreOpParser.parseAfter := (p:*ParseResult)-> *CP_PreOpParser_ParseResult{}
 
 CP_PrimitiveTypeParser: struct{}
 CP_PrimitiveTypeParser_ParseResult: struct{}
+CP_PrimitiveTypeParser_ParseResult.getKey := () -> string{}
 Compiler.getPrimitiveTypeParser := () -> *CP_PrimitiveTypeParser{}
 CP_PrimitiveTypeParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_PrimitiveTypeParser_ParseResult{}
 CP_PrimitiveTypeParser.parseAfter := (p:*ParseResult)-> *CP_PrimitiveTypeParser_ParseResult{}
 
 CP_PtrValueParser: struct{}
 CP_PtrValueParser_ParseResult: struct{}
+CP_PtrValueParser_ParseResult.getExp := () -> *ParseResult{}
 Compiler.getPtrValueParser := () -> *CP_PtrValueParser{}
 CP_PtrValueParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_PtrValueParser_ParseResult{}
 CP_PtrValueParser.parseAfter := (p:*ParseResult)-> *CP_PtrValueParser_ParseResult{}
 
+// TODO handle nullable values such as return, define
+
 CP_ReturnParser: struct{}
 CP_ReturnParser_ParseResult: struct{}
+CP_ReturnParser_ParseResult.getValue := () -> *ParseResult{}
 Compiler.getReturnParser := () -> *CP_ReturnParser{}
 CP_ReturnParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_ReturnParser_ParseResult{}
 CP_ReturnParser.parseAfter := (p:*ParseResult)-> *CP_ReturnParser_ParseResult{}
 
 CP_SBlockParser: struct{}
 CP_SBlockParser_ParseResult: struct{}
+CP_SBlockParser_ParseResult.getStmt := (i: int) -> *ParseResult{}
 Compiler.getSBlockParser := () -> *CP_SBlockParser{}
 CP_SBlockParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_SBlockParser_ParseResult{}
 CP_SBlockParser.parseAfter := (p:*ParseResult)-> *CP_SBlockParser_ParseResult{}
 
 CP_SizeofParser: struct{}
 CP_SizeofParser_ParseResult: struct{}
+CP_SizeofParser_ParseResult.getType := () -> *ParseResult{}
 Compiler.getSizeofParser := () -> *CP_SizeofParser{}
 CP_SizeofParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_SizeofParser_ParseResult{}
 CP_SizeofParser.parseAfter := (p:*ParseResult)-> *CP_SizeofParser_ParseResult{}
@@ -202,18 +259,22 @@ CP_StatementParser.parseAfter := (p:*ParseResult)-> *CP_StatementParser_ParseRes
 
 CP_StringParser: struct{}
 CP_StringParser_ParseResult: struct{}
+CP_StringParser_ParseResult.getValue := () -> string {}
 Compiler.getStringParser := () -> *CP_StringParser{}
 CP_StringParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_StringParser_ParseResult{}
 CP_StringParser.parseAfter := (p:*ParseResult)-> *CP_StringParser_ParseResult{}
 
 CP_StructParser: struct{}
 CP_StructParser_ParseResult: struct{}
+CP_StructParser_ParseResult.getId := () -> string{}
+CP_StructParser_ParseResult.getMember := (i: int) -> *ParseResult{}
 Compiler.getStructParser := () -> *CP_StructParser{}
 CP_StructParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_StructParser_ParseResult{}
 CP_StructParser.parseAfter := (p:*ParseResult)-> *CP_StructParser_ParseResult{}
 
 CP_SymbolParser: struct{}
 CP_SymbolParser_ParseResult: struct{}
+CP_SymbolParser_ParseResult.getSymbol := () -> string{}
 Compiler.getSymbolParser := () -> *CP_SymbolParser{}
 CP_SymbolParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_SymbolParser_ParseResult{}
 CP_SymbolParser.parseAfter := (p:*ParseResult)-> *CP_SymbolParser_ParseResult{}
@@ -232,18 +293,22 @@ CP_TypeParser.parseAfter := (p:*ParseResult)-> *CP_TypeParser_ParseResult{}
 
 CP_ValueParser: struct{}
 CP_ValueParser_ParseResult: struct{}
+// TODO return Id ParseResult?
 Compiler.getValueParser := () -> *CP_ValueParser{}
 CP_ValueParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_ValueParser_ParseResult{}
 CP_ValueParser.parseAfter := (p:*ParseResult)-> *CP_ValueParser_ParseResult{}
 
 CP_VariableValueParser: struct{}
 CP_VariableValueParser_ParseResult: struct{}
+CP_VariableValueParser_ParseResult.getValue := () -> string {}
 Compiler.getVariableValueParser := () -> *CP_VariableValueParser{}
 CP_VariableValueParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_VariableValueParser_ParseResult{}
 CP_VariableValueParser.parseAfter := (p:*ParseResult)-> *CP_VariableValueParser_ParseResult{}
 
 CP_WhileParser: struct{}
 CP_WhileParser_ParseResult: struct{}
+CP_WhileParser_ParseResult.getCond := () -> *ParseResult{}
+CP_WhileParser_ParseResult.getStmt := () -> *ParseResult{}
 Compiler.getWhileParser := () -> *CP_WhileParser{}
 CP_WhileParser.parse := (c: *Compiler, s: *Source, pos: int) -> *CP_WhileParser_ParseResult{}
 CP_WhileParser.parseAfter := (p:*ParseResult)-> *CP_WhileParser_ParseResult{}
