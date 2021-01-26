@@ -27,6 +27,7 @@ void Directive::prepare(CC *cc){
 
 void Directive::compile(CC *cc){
   f->compile(cc);
+  cc->metaFunctions.insert(f->id);
 
   cc->debug(LOW) << "Calling codegen from directive on " << cc->asts.size() - cc->ast_gened << std::endl;
   for(int i = cc->ast_gened + 1; i < cc->asts.size(); i++){

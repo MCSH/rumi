@@ -30,6 +30,8 @@ CompileContext::CompileContext(int argc, char **argv){
       // TODO make sure this is safe
       this->outFile = std::string(argv[i+1]);
       i++;
+    } else if(arg == "-r"){
+      this->removeMeta = true;
     } else {
       this->sources.push_back(new Source(arg));
       // std::cout << argv[i] << std::endl;
@@ -116,6 +118,8 @@ void setCallback(CC *cc, char *ckey, void *value){
     // TODO
     int v = (long long) value;
     cc->verbosity = v;
+  } else if(key == "removeMeta"){
+    cc->removeMeta = (bool) value;
   } else {
     cc->debug(NONE) << "Compiler key " << key << " not found." << std::endl;
     exit(1);
@@ -127,10 +131,16 @@ void *getCallback(CC *cc, char *ckey){
 
   if(key == "verbosity"){
     return (void *)(long long)cc->verbosity;
+  } else if(key == "removeMeta"){
+    return (void*) cc->removeMeta;
   } else {
     cc->debug(NONE) << "Compiler key " << key << " not found." << std::endl;
     exit(1);
   }
+}
+
+void CompilerSetFMeta(CC *cc, char *key){
+  cc->metaFunctions.insert(std::string(key));
 }
 
 void *registerParserCallback(CC *cc, char *ckey, char *name){
@@ -156,6 +166,9 @@ void *registerParserCallback(CC *cc, char *ckey, char *name){
     cc->debug(NONE) << "Unknown parser type in register" << std::endl;
     exit(1);
   }
+
+  cc->metaFunctions.insert(parserName + "$parse");
+  cc->metaFunctions.insert(parserName + "$genAST");
 
   return 0;
 }
@@ -1833,6 +1846,7 @@ ParseResult *CP_WhileParser_ParseResultGetStmt(ParseResult *p){
       f->replaceAllUsesWith(n);                                                \
       n->takeName(f);                                                          \
       f->eraseFromParent();                                                    \
+      metaFunctions.insert(name);                                              \
     }                                                                          \
   }
 
@@ -1849,6 +1863,7 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("Compiler$exit", "Compiler$exit_replace", &exitCallback);
   REGISTER_CALLBACK("Compiler$set", "Compiler$set_replace", &setCallback);
   REGISTER_CALLBACK("Compiler$get", "Compiler$get_replace", &getCallback);
+  REGISTER_CALLBACK("Compiler$setFMeta", "Compiler$setFMeta_replace", &CompilerSetFMeta);
   REGISTER_CALLBACK("Compiler$registerParser", "Compiler$registerParser_replace", &registerParserCallback);
 
   // Address

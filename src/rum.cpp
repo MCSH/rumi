@@ -52,6 +52,15 @@ int main(int argc, char **argv) {
       s->codegen(&cc);
     cc.ast_gened = i;
   }
+
+  if(cc.removeMeta){
+    for (std::string f : cc.metaFunctions) {
+      cc.debug(LOW) << "Removing function " << f << std::endl;
+      auto ff = cc.llc->module->getFunction(f);
+      if(ff) ff->removeFromParent();
+    }
+  }
+
   if(cc.verbosity >= Verbosity::LOW)
     cc.llc->module->print(llvm::outs(), nullptr);
 

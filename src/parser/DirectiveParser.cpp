@@ -29,9 +29,11 @@ ParseResult DirectiveParser::scheme(CC *cc, Source *s, int pos){
   auto top = cc->parser.parseTop(s, base.token->epos+1);
   if(!top) return top;
 
-  std::string *id = &((IdToken *)((TupleToken*) base.token)->t2)->id;
+  std::string id = ((IdToken *)((TupleToken*) base.token)->t2)->id;
 
-  return ParseResult(new DirectiveToken(*id, top.token, cc, s, base.token->spos, top.token->epos));
+  if(id != "compile") return 0; // Only match compile for now
+
+  return ParseResult(new DirectiveToken(id, top.token, cc, s, base.token->spos, top.token->epos));
 }
 
 DirectiveParser::DirectiveParser()

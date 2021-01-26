@@ -29,6 +29,9 @@ public:
   std::vector<Source *> sources;
   std::set<std::string> loaded;
 
+  std::set<std::string> metaFunctions;
+  bool removeMeta = false;
+
   std::vector<AST *> asts;
   int ast_gened = -1;
 

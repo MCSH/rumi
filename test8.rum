@@ -168,6 +168,8 @@ add_statement := (c: *Compiler) -> int{
 
   c.registerParser("top", "DefPrintRule");
 
+  c.set("removeMeta", true);
+
   return 0;
 }
 

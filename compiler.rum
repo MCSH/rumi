@@ -2,7 +2,7 @@ Compiler: struct{}
 Compiler.exit := (i: int) -> unit{}
 Compiler.set := (s: string, v: any) -> unit{}
 Compiler.get := (s: string) -> any{}
-
+Compiler.setFMeta := (s: string) -> unit{} // set a function as a meta
 
 // compiler_parser TODO
 Source: struct{}
