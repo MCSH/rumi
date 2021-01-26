@@ -7,6 +7,9 @@ enum Compatibility { OK = 1, ImpCast = 2, ExpCast = 3, INCOMPATIBLE = 4 };
 
 class Type: public AST{
  public:
+
+  virtual std::string toString() = 0;
+  
   virtual void* typegen(CC *cc) = 0;
   virtual bool hasOp(CC *cc, std::string op, Expression *rhs) = 0;
   virtual void* opgen(CC *cc, Expression *lhs, std::string op, Expression *rhs)=0;

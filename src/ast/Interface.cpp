@@ -229,3 +229,7 @@ Type *Interface::preoptyperesolve(CC *cc, std::string op){
 void *Interface::preopgen(CC *cc, std::string op, Expression *value){
   return 0;
 }
+
+std::string Interface::toString(){
+  return id;
+}

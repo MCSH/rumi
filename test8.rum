@@ -98,10 +98,13 @@ DefPrintRule.genAST := (c: *Compiler, token: *ParseResult) -> *C_AST{
   i := 0;
   while(st.getMember(i)){
     mem := st.getMember(i);
-    printf("Member %d has name %s\n", i, mem.getId());
+    t := mem.getType();
+
+    printf("Member %d has name %s of type %s\n", i, mem.getId(), t.toString());
     i = i + 1;
 
-    if(streq(mem.getId(), "name")){
+
+    if(streq(t.toString(), "string")){
         ps := c.createFCallStmt();
         ps.setId("printf");
         cs := c.createCString();

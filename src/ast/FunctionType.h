@@ -10,6 +10,8 @@ public:
 
   bool vararg = false;
 
+  virtual std::string toString() override;
+
   virtual void* typegen(CC *cc) override;
   virtual void compile(CC *cc) override;
   virtual void prepare(CC *cc) override;

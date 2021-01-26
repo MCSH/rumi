@@ -23,6 +23,8 @@ public:
   FunctionSig *resolveMethod(CC *cc, std::string methodId);
   int methodInd(CC *cc, std::string mid);
 
+  virtual std::string toString() override;
+
   virtual void* typegen(CC *cc) override;
   virtual void compile(CC *cc) override;
   virtual void prepare(CC *cc) override;

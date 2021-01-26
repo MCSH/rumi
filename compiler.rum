@@ -6,10 +6,6 @@ Compiler.get := (s: string) -> any{}
 
 // compiler_parser TODO
 Source: struct{}
-Parser: struct{}
 ParseResult: struct{}
 
 Compiler.registerParser := (k: string, p: string) -> unit{}
-
-Parser.parse := (c: *Compiler, s: *Source, pos: int) -> *ParseResult{}
-Parser.parseAfter := (pr: *ParseResult) -> *ParseResult{}

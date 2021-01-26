@@ -58,3 +58,15 @@ Type *FunctionType::preoptyperesolve(CC *cc, std::string op){
 void *FunctionType::preopgen(CC *cc, std::string op, Expression *value){
   return 0;
 }
+
+std::string FunctionType::toString(){
+  std::string ans = "(";
+  bool first = true;
+  for (auto t : args) {
+    if(first) ans += t->toString();
+    else ans += ", " + t->toString();
+  }
+  if(vararg) ans += "...";
+  ans += ")->" + (returnType?returnType->toString():"unit");
+  return ans;
+}

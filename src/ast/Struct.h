@@ -22,6 +22,8 @@ public:
   Method *resolveMethod(CC *cc, std::string methodId);
   int resolveInterfaceVptrInd(CC *cc, Interface *it);
 
+  virtual std::string toString() override;
+
   virtual void* typegen(CC *cc) override;
   virtual void compile(CC *cc) override;
   virtual void prepare(CC *cc) override;

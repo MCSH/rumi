@@ -2,6 +2,7 @@ import compiler
 
 C_Expression: struct{}
 C_Type: struct{}
+C_Type.toString := () -> string{}
 C_Statement: struct{}
 C_AST: struct{}
 

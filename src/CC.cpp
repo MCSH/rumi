@@ -160,23 +160,7 @@ void *registerParserCallback(CC *cc, char *ckey, char *name){
   return 0;
 }
 
-ParseResult *ParserParse(ParseRule *pr, CC *cc, Source *s, int pos){
-  // TODO error handling
-  auto ans = pr->parse(cc, s, pos);
-  if(!ans) return 0;
-  ParseResult *parseResult = new ParseResult(ans);
-  return parseResult;
-}
-
-ParseResult *ParserParseAfter(ParseRule *pr, ParseResult *p){
-  if(!p) return 0;
-  auto ans = *p >> *pr;
-  if(!ans) return 0;
-  ParseResult *parseResult = new ParseResult(((TupleToken *) ans.token)->t2);
-  return parseResult;
-}
-
-// ========== AST ==========
+// ========== AST ==========    
 
 // Address
 #include "ast/Address.h"
@@ -818,7 +802,14 @@ void WhileSetStmt(While *w, Statement *stmt){
   w->st = stmt;
 }
 
-// === Parsers
+// == AST Baes ==
+
+char *C_TypeToString(Type *t){
+  if(!t) return 0;
+  return STRTOCSTR(t->toString());
+}
+
+// === Parser
 #include "parser/AddressParser.h"
 AddressParser * CompilerGetAddressParser(CC *cc){
   return new AddressParser();
@@ -1860,11 +1851,6 @@ void *CompileContext::getCompileObj(void *e){
   REGISTER_CALLBACK("Compiler$get", "Compiler$get_replace", &getCallback);
   REGISTER_CALLBACK("Compiler$registerParser", "Compiler$registerParser_replace", &registerParserCallback);
 
-  // Parser
-
-  REGISTER_CALLBACK("Parser$parse", "Parser$parse_replace", &ParserParse);
-  REGISTER_CALLBACK("Parser$parseAfter", "Parser$parseAfter_replace", &ParserParseAfter);
-
   // Address
   REGISTER_CALLBACK("Compiler$createAddress", "Compiler$createAddress_replace",
                     &createAddress);
@@ -2241,6 +2227,9 @@ void *CompileContext::getCompileObj(void *e){
                     &WhileSetCond);
   REGISTER_CALLBACK("C_While$setStmt", "C_While$setStmt_replace",
                     &WhileSetStmt);
+
+  // ============== BASE AST
+  REGISTER_CALLBACK("C_Type$toString", "C_Type$toString_replace", &C_TypeToString);
 
   // ============== Parser
   REGISTER_CALLBACK("Compiler$getAddressParser",
