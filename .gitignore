@@ -2,3 +2,4 @@ build
 bin
 a.out
 out.o
+.dir-locals.el

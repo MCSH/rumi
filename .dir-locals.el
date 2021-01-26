@@ -1,5 +1,0 @@
-((nil . ())
- (c++-mode . ((compile-command . "cmake --build ~/src/2020/42.crumi/build -j8")))
- (c-mode . ((compile-command . "cmake --build ~/src/2020/42.crumi/build -j8")))
- (cmake-mode . ((compile-command . "cmake -H~/src/2020/42.crumi/ -B~/src/2020/42.crumi/build")))
- )
