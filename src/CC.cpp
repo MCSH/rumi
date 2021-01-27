@@ -697,6 +697,21 @@ void NamedTypeSetId(NamedType *n, char *id){
   n->id = CSTRTOSTR(id);
 }
 
+// PackedAST
+#include "ast/PackedAST.h"
+PackedAST *createPackedAST(CC *cc){
+  return new PackedAST();
+}
+void PackedASTAddAST(PackedAST *pa, AST *a){
+  pa->stmts.push_back(a);
+}
+AST *PackedASTGetAST(PackedAST *pa, int i){
+  if(!pa) return 0;
+  if(i >= pa->stmts.size()) return 0;
+  return pa->stmts[i];
+}
+
+
 // PointerType
 #include "ast/PointerType.h"
 PointerType *createPointerType(CC *cc, Type *t){
@@ -2298,6 +2313,12 @@ void *CompileContext::getCompileObj(void *e) {
                     &NamedTypeGetId);
   REGISTER_CALLBACK("C_NamedType$setId", "C_NamedType$setId_replace",
                     &NamedTypeSetId);
+
+  // PackedAST
+  REGISTER_CALLBACK("Compiler$createPackedAST", "Compiler$createPackedAST_replace", &createPackedAST);
+  REGISTER_CALLBACK("C_PackedAST$addAST", "C_PackedAST$addAST_replace", PackedASTAddAST);
+  REGISTER_CALLBACK("C_PackedAST$getAST", "C_PackedAST$getAST_replace", PackedASTGetAST);
+
 
   // PointerType
   REGISTER_CALLBACK("Compiler$createPointerType",
