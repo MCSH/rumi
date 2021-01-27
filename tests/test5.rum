@@ -60,5 +60,8 @@ main := () -> int{
   if(p) printf("Wrong ptr!\n");
   else printf("Correct ptr!\n");
 
+  if(!p) printf("Correct not ptr!\n");
+  else printf("Wrong not ptr!\n");
+
   return 0;
 }
