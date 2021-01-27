@@ -30,11 +30,11 @@ private:
 
 public:
   void init(CompileContext *cc);
-  void registerTopRule(ParseRule *p);
-  void registerTypeRule(ParseRule *p);
-  void registerExpressionRule(ParseRule *p);
-  void registerValueRule(ParseRule *p);
-  void registerStatementRule(ParseRule *p);
+  void registerTopRule(ParseRule *p, bool top=false);
+  void registerTypeRule(ParseRule *p, bool top=false);
+  void registerExpressionRule(ParseRule *p, bool top=false);
+  void registerValueRule(ParseRule *p, bool top=false);
+  void registerStatementRule(ParseRule *p, bool top=false);
   ParseResult parseTop(Source *s, int pos = 0);
   ParseResult parseType(Source *s, int pos = 0);
   ParseResult parseExpression(Source *s, int pos, int prec);

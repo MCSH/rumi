@@ -32,18 +32,17 @@ fromfile: struct{}
 fromfile.parse := (c: *Compiler, s: *Source, pos: int) -> *ParseResult{
   // TODO
 
-  symp := c.getSymbolParser();
+  //symp := c.getSymbolParser();
   idp := c.getIdParser();
   sp := c.getStringParser();
 
-  sb := symp.parse(c, s, pos);
-  id := idp.parseAfter(sb);
+  //sb := symp.parse(c, s, pos);
+  id := idp.parse(c, s, pos);
   s := sp.parseAfter(id);
 
   if(id){
      ids := id.getId();
      if(!streq(ids, "STRFROMFILE")){
-       printf("The parsed id was %s\n", ids);
        s = 0;
      }
   }

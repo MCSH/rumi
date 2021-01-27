@@ -1,0 +1,2 @@
+This string is inside output.txt
+Your change reflects only in compile time!

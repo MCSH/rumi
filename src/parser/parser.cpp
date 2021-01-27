@@ -170,24 +170,29 @@ int nextws(std::string *w, int pos){
   return pos;
 }
 
-void Parser::registerTopRule(ParseRule *p){
-  topRules.push_back(p);
+void Parser::registerTopRule(ParseRule *p, bool top){
+  if(top)topRules.insert(topRules.begin(), p);
+  else topRules.push_back(p);
 }
 
-void Parser::registerTypeRule(ParseRule *p){
-  typeRules.push_back(p);
+void Parser::registerTypeRule(ParseRule *p, bool top){
+  if(top) typeRules.insert(typeRules.begin(), p);
+  else typeRules.push_back(p);
 }
 
-void Parser::registerExpressionRule(ParseRule *p){
-  expressionRules.push_back(p);
+void Parser::registerExpressionRule(ParseRule *p, bool top){
+  if(top) expressionRules.insert(expressionRules.begin(), p);
+  else expressionRules.push_back(p);
 }
 
-void Parser::registerValueRule(ParseRule *p){
-  valueRules.push_back(p);
+void Parser::registerValueRule(ParseRule *p, bool top){
+  if(top) valueRules.insert(valueRules.begin(), p);
+  else valueRules.push_back(p);
 }
 
-void Parser::registerStatementRule(ParseRule *p){
-  statementRules.push_back(p);
+void Parser::registerStatementRule(ParseRule *p, bool top){
+  if(top) statementRules.insert(statementRules.begin(), p);
+  else statementRules.push_back(p);
 }
 
 ParseResult Parser::parseTop(Source *s, int pos){

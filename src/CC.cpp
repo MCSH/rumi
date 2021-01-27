@@ -153,15 +153,15 @@ void *registerParserCallback(CC *cc, char *ckey, char *name){
   DynamicParseRule *drp = new DynamicParseRule(cc, parserName);
   
   if(key == "top"){
-    cc->parser.registerTopRule(drp);
+    cc->parser.registerTopRule(drp, true);
   } else if(key == "type"){
-    cc->parser.registerTypeRule(drp);
+    cc->parser.registerTypeRule(drp, true);
   } else if(key == "value"){
-    cc->parser.registerValueRule(drp);
+    cc->parser.registerValueRule(drp, true);
   } else if(key == "statement"){
-    cc->parser.registerStatementRule(drp);
+    cc->parser.registerStatementRule(drp, true);
   } else if(key == "expression"){
-    cc->parser.registerExpressionRule(drp);
+    cc->parser.registerExpressionRule(drp, true);
   } else {
     cc->debug(NONE) << "Unknown parser type in register" << std::endl;
     exit(1);
