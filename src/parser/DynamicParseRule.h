@@ -20,6 +20,7 @@ public:
   DynamicParseRule *drp;
   Token *res;
 
+  DynamicParseToken(){}
   DynamicParseToken(DynamicParseRule *drp, Token *res);
 
   virtual std::string desc() override;

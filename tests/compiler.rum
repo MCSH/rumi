@@ -7,5 +7,13 @@ Compiler.setFMeta := (s: string) -> unit{} // set a function as a meta
 // compiler_parser TODO
 Source: struct{}
 ParseResult: struct{}
+DynamicParseResult: struct{}
 
 Compiler.registerParser := (k: string, p: string) -> unit{}
+Compiler.createDynamicParseResult := () -> *DynamicParseResult{}
+
+DynamicParseResult.set := (v: *any) -> unit{}
+DynamicParseResult.get := () -> *any{}
+
+ParseResult.copyStart := (p: *ParseResult) -> unit{}
+ParseResult.copyEnd := (p: *ParseResult) -> unit{}

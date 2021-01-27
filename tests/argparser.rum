@@ -1,0 +1,252 @@
+import test_import
+import compiler
+import ast
+import parser
+
+filetostring := (fname: string) -> string{
+  // TODO
+  f := fopen(fname, "r");
+  if(!(f->bool)){
+    printf("The file %s wasn't found!\n", f);
+    exit(1);
+  }
+  if(fseek(f, 0, 2)){ // Go to the end of the file
+    printf("Couldn't open the file (seek error)\n");
+    exit(1);
+  }
+  bufsize := ftell(f);
+  if(bufsize == 0-1){
+    printf("Unable to read file\n");
+    exit(1);
+  }
+  buf :*u8=malloc(8 * (bufsize + 1)) -> *u8;
+  fseek(f, 0, 0);
+  fread(buf, 1, bufsize, f);
+
+  *(buf + bufsize) = 0;
+
+  return buf;
+}
+
+fromfile: struct{}
+fromfile.parse := (c: *Compiler, s: *Source, pos: int) -> *ParseResult{
+  // TODO
+
+  symp := c.getSymbolParser();
+  idp := c.getIdParser();
+  sp := c.getStringParser();
+
+  sb := symp.parse(c, s, pos);
+  id := idp.parseAfter(sb);
+  s := sp.parseAfter(id);
+
+  if(id){
+     ids := id.getId();
+     if(!streq(ids, "STRFROMFILE")){
+       printf("The parsed id was %s\n", ids);
+       s = 0;
+     }
+  }
+  return s;
+}
+fromfile.genAST := (c: *Compiler, token: *ParseResult) -> *C_AST{
+  // TODO
+
+  s_token :*CP_StringParser_ParseResult = token;
+
+  s := c.createCString();
+  s.setValue(filetostring(s_token.getValue()));
+  return s;
+}
+
+LinkedList: struct{
+  next: *LinkedList;
+  value: string;
+}
+
+CLI_APP: struct{
+  struct_name: string;
+  opt_flags: *LinkedList;
+  opt_members: *LinkedList;
+  inc_flags: *LinkedList;
+  inc_members: *LinkedList;
+}
+CLI_APP.parse := (c: *Compiler, s: *Source, pos: int) -> *ParseResult{
+  pr := c.createDynamicParseResult();
+  ans : *CLI_APP = malloc(sizeof CLI_APP);
+  ans.opt_flags = 0;
+  ans.opt_members = 0;
+  ans.inc_flags = 0;
+  ans.inc_members = 0;
+  pr.set(ans);
+
+  idp := c.getIdParser();
+  sp := c.getStringParser();
+
+  id := idp.parse(c, s, pos);
+  if(id){} else return id;
+  (pr->*ParseResult).copyStart(id);
+  ids := id.getId();
+  if(!streq("CLI_BEGIN", ids)) return 0;
+  name := idp.parseAfter(id);
+  ans.struct_name = name.getId();
+  printf("Parsing CLI RULE for %s\n", ans.struct_name);
+
+  id = idp.parseAfter(name);
+  if(id){} else return 0;
+
+  ids = id.getId();
+  while(!streq("CLI_END", ids)){
+    if(streq("OPT", ids)){
+      flag := sp.parseAfter(id);
+      id = idp.parseAfter(flag);
+      if(id){}else{
+        printf("incorrect arguments for OPT in CLI COMMAND\n");
+        exit(1);
+      }
+
+      printf("flag was %s and variable was %s\n", flag.getValue(), id.getId());
+      fl: *LinkedList = malloc(sizeof LinkedList);
+      fl.next = ans.opt_members;
+      fl.value = id.getId();
+      ans.opt_members = fl;
+      fl = malloc(sizeof LinkedList);
+      fl.next = ans.opt_flags;
+      fl.value = flag.getValue();
+      ans.opt_flags = fl;
+    } else if(streq("INC", ids)){
+      flag := sp.parseAfter(id);
+      id = idp.parseAfter(flag);
+      if(id){}else{
+        printf("incorrect arguments for OPT in CLI COMMAND\n");
+        exit(1);
+      }
+
+      printf("counting flag was %s and variable was %s\n", flag.getValue(), id.getId());
+      fl: *LinkedList = malloc(sizeof LinkedList);
+      fl.next = ans.inc_members;
+      fl.value = id.getId();
+      ans.inc_members = fl;
+      fl = malloc(sizeof LinkedList);
+      fl.next = ans.inc_flags;
+      fl.value = flag.getValue();
+      ans.inc_flags = fl;
+    } else {
+      printf("Couldn't understand CLI COMMAND %s\n", ids);
+      exit(1);
+    }
+
+    id = idp.parseAfter(id);
+    if(id){}else return 0;
+    ids = id.getId();
+  }
+
+  (pr->*ParseResult).copyEnd(id);
+
+
+  return pr;
+}
+CLI_APP.genAST := (c: *Compiler, token: *ParseResult) -> *C_AST{
+  ans : *CLI_APP = (token->*DynamicParseResult).get();
+  printf("Generating CLI RULE for %s\n", ans.struct_name);
+  f := c.createFunction();
+  f.setId(strcat(ans.struct_name, "$parse"));
+  f.setReturntype(c.createPrimitiveType("unit"));
+
+  a1 := c.createArg();
+  a1.setId("argc");
+  a1.setType(c.createPrimitiveType("int"));
+  f.addArg(a1);
+  a2 := c.createArg();
+  a2.setId("argv");
+  a2.setType(c.createPointerType(c.createPrimitiveType("string")));
+  f.addArg(a2);
+
+  ptr_opt := ans.opt_flags;
+  ptr_omem := ans.opt_members;
+
+  counter := c.createDefine("counter", c.createConstInt(0), 0);
+  f.addStmt(counter);
+
+  while_stmt := c.createCodeBlock();
+
+  while(ptr_opt){
+    printf("flag %s and member %s\n", ptr_opt.value, ptr_omem.value);
+
+    // Initially, it should be false!
+    f.addStmt(c.createAssign(c.createMemAccess(c.createVariableValue("self"), ptr_omem.value), c.createConstBool(false)));
+
+    fc := c.createFCall();
+    fc.setId("streq");
+
+    flag_s := c.createCString();
+    flag_s.setValue(ptr_opt.value);
+    fc.addArg(flag_s);
+
+    ptrval := c.createPtrValue(c.createBinOp(c.createVariableValue("argv"), "+", c.createVariableValue("counter")));
+    fc.addArg(ptrval);
+
+    if_stmt := c.createAssign(c.createMemAccess(c.createVariableValue("self"), ptr_omem.value), c.createConstBool(true));
+
+
+    if_:= c.createIf(fc, if_stmt, 0);
+    while_stmt.addStmt(if_);
+
+    ptr_opt = ptr_opt.next;
+    ptr_omem = ptr_omem.next;
+  }
+
+  ptr_opt = ans.inc_flags;
+  ptr_omem = ans.inc_members;
+
+  while(ptr_opt){
+    printf("counting flag %s and member %s\n", ptr_opt.value, ptr_omem.value);
+
+    // Initially, it should be false!
+    f.addStmt(c.createAssign(c.createMemAccess(c.createVariableValue("self"), ptr_omem.value), c.createConstBool(false)));
+
+    fc := c.createFCall();
+    fc.setId("streq");
+
+    flag_s := c.createCString();
+    flag_s.setValue(ptr_opt.value);
+    fc.addArg(flag_s);
+
+    ptrval := c.createPtrValue(c.createBinOp(c.createVariableValue("argv"), "+", c.createVariableValue("counter")));
+    fc.addArg(ptrval);
+
+    if_stmt := c.createAssign(c.createMemAccess(c.createVariableValue("self"), ptr_omem.value),
+    c.createBinOp(c.createMemAccess(c.createVariableValue("self"), ptr_omem.value), "+", c.createConstInt(1)));
+
+    if_:= c.createIf(fc, if_stmt, 0);
+    while_stmt.addStmt(if_);
+
+    ptr_opt = ptr_opt.next;
+    ptr_omem = ptr_omem.next;
+  }
+
+  counter_inc := c.createAssign(c.createVariableValue("counter"), c.createBinOp(c.createVariableValue("counter"), "+", c.createConstInt(1)));
+  while_stmt.addStmt(counter_inc);
+
+  cond := c.createBinOp(c.createVariableValue("counter"), "<", c.createVariableValue("argc"));
+  wl := c.createWhile(cond, while_stmt);
+  f.addStmt(wl);
+
+  f.addStmt(c.createReturn(0));
+
+  m := c.createMethod(ans.struct_name, "parse", f);
+  return m;
+}
+
+@compile
+test_compile := (c: *Compiler) -> int{
+
+  c.set("removeMeta", true);
+
+  printf("This is compile time\n");
+
+  c.registerParser("expression", "fromfile");
+  c.registerParser("top", "CLI_APP");
+
+  return 0;
+}

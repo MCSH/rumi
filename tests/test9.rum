@@ -1,0 +1,28 @@
+import argparser
+
+CC_OPTS: struct{
+  v: int;
+  r: bool;
+}
+
+CLI_BEGIN CC_OPTS
+INC "-v" v
+OPT "-r" r
+CLI_END
+
+main := (argc: int, argv: *string) -> int{
+  opts: CC_OPTS;
+  opts.parse(argc, argv);
+
+  printf("v = %d\n", opts.v);
+
+  if(opts.r) printf("r was set\n");
+  else printf("r was not set\n");
+
+  // s := +STRFROMFILE "output.txt" ;
+
+  printf(+STRFROMFILE "output.txt");
+  //printf("hello world\n");
+
+  return 0;
+}
