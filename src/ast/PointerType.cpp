@@ -6,6 +6,7 @@
 #include "../base.h"
 #include "../LLContext.h"
 #include "PtrValue.h"
+#include <llvm/IR/DerivedTypes.h>
 
 PointerType::PointerType(Type *innerType)
   : innerType(innerType)    
@@ -109,14 +110,20 @@ Type *PointerType::memtyperesolve(CC *cc, Expression *exp, std::string id){
 
 
 bool PointerType::hasPreOp(CC *cc, std::string op){
+  if(op == "!") return true;
   return false;
 }
 
 Type *PointerType::preoptyperesolve(CC *cc, std::string op){
+  if(op == "!") return new PrimitiveType(t_bool);
   return 0;
 }
 
-void *PointerType::preopgen(CC *cc, std::string op, Expression *value){
+void *PointerType::preopgen(CC *cc, std::string op, Expression *value) {
+  if (op == "!")
+    return cc->llc->builder->CreateNot(cc->llc->builder->CreatePtrToInt(
+        (llvm::Value *)value->exprgen(cc),
+        llvm::IntegerType::get(cc->llc->context, 1)));
   return 0;
 }
 
