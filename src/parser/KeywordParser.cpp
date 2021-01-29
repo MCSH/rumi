@@ -14,6 +14,7 @@ KeywordToken* KeywordParser::findkey(CC *cc, Source *s, int pos){
   if(w == "while") return new KeywordToken(Keyword::k_while, pos, end, cc, s);
   if(w == "sizeof") return new KeywordToken(Keyword::k_sizeof, pos, end, cc, s);
   if(w == "struct") return new KeywordToken(Keyword::k_struct, pos, end, cc, s);
+  if(w == "enum") return new KeywordToken(Keyword::k_enum, pos, end, cc, s);
   if(w == "interface") return new KeywordToken(Keyword::k_interface, pos, end, cc, s);
   if(w == "true") return new KeywordToken(Keyword::k_true, pos, end, cc, s);
   if(w == "false") return new KeywordToken(Keyword::k_false, pos, end, cc, s);
@@ -44,6 +45,8 @@ std::string KeywordToken::desc(){
     return "sizeof";
   case k_struct:
     return "struct";
+  case k_enum:
+    return "enum";
   case k_interface:
     return "interface";
   case k_true:

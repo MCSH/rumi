@@ -1,10 +1,14 @@
 #pragma once
 #include "Expression.h"
 
+class Enum;
+
 class MemAccess: public Expression{
  public:
   Expression *exp;
   std::string id;
+
+  Enum *e = 0;
   
   MemAccess(Expression *exp, std::string id);
 

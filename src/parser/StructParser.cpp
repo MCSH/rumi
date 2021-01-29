@@ -55,6 +55,9 @@ ParseResult StructParser::scheme(CC *cc, Source *s, int pos){
 
   auto ans =  base >> rcsp;
   if(!ans){
+    for(auto sm: st->members){
+      delete sm;
+    }
     delete st;
     return ans;
   }

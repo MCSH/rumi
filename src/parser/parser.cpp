@@ -30,6 +30,7 @@
 #include "SizeofParser.h"
 #include "ParenParser.h"
 #include "StructParser.h"
+#include "EnumParser.h"
 #include "InterfaceParser.h"
 #include "NamedTypeParser.h"
 #include "MemAccessParser.h"
@@ -48,6 +49,7 @@ void Parser::init(CompileContext *cc){
   this->registerTopRule(new DefineParser());
   this->registerTopRule(new StructParser());
   this->registerTopRule(new InterfaceParser());
+  this->registerTopRule(new EnumParser());
   this->registerTopRule(new MethodParser());
   this->registerTopRule(new ImportParser());
   this->registerTopRule(new DirectiveParser());

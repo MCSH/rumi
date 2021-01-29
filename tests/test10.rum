@@ -1,0 +1,21 @@
+import test_import
+
+E: enum {
+  v1 = 1,
+  v2,
+  v3 = 4,
+}
+
+main := () -> unit{
+  e: E;
+  e = E.v3;
+
+  if(e == E.v3){
+    printf("Correct, with value %d!\n", e);
+  } else {
+    printf("Incorrect!\n");
+  }
+/*
+*/
+  return ;
+}

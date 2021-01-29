@@ -59,6 +59,16 @@ Compiler.getDirectiveParser := () -> *CP_DirectiveParser{}
 CP_DirectiveParser.parse := (c: *Compiler, s: *Source, pos: u32) -> *CP_DirectiveParser_ParseResult{}
 CP_DirectiveParser.parseAfter := (p:*ParseResult)-> *CP_DirectiveParser_ParseResult{}
 
+CP_EnumParser: struct{}
+CP_EnumParser_ParseResult: struct{}
+CP_EnumParser_ParseResult.getId := () -> string{}
+CP_EnumParser_ParseResult.getMemberKey := (i: int) -> string{}
+CP_EnumParser_ParseResult.getMemberValue := (i: int) -> int{}
+CP_EnumParser_ParseResult.hasMemberValue := (i: int) -> bool{}
+Compiler.getEnumParser := () -> *CP_EnumParser{}
+CP_EnumParser.parse := (c: *Compiler, s: *Source, pos: u32) -> *CP_EnumParser_ParseResult{}
+CP_EnumParser.parseAfter := (p:*ParseResult)-> *CP_EnumParser_ParseResult{}
+
 CP_ExpressionParser: struct{}
 CP_ExpressionParser_ParseResult: struct{}
 Compiler.getExpressionParser := () -> *CP_ExpressionParser{}

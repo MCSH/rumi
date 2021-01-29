@@ -396,6 +396,44 @@ void DirectiveSetAST(Directive *d,AST *a){
   d->top = a;
 }
 
+// Enum
+#include "ast/Enum.h"
+Enum *createEnum(CC *cc){
+  return new Enum();
+}
+char *C_EnumGetId(Enum *e){
+  return STRTOCSTR(e->id);
+}
+char *C_EnumGetMemberKey(Enum *e, int i){
+  if(i >= e->memberOrders.size()) return 0;
+  return STRTOCSTR(e->memberOrders[i]);
+}
+int C_EnumGetMemberValue(Enum *e, char *ckey){
+  return e->members[CSTRTOSTR(ckey)]->num;
+}
+bool C_EnumHasMemberValue(Enum *e, char *ckey){
+  return e->members[CSTRTOSTR(ckey)]->hasNum;
+}
+int C_EnumCountMembers(Enum *e){
+  return e->memberOrders.size();
+}
+void C_EnumSetId(Enum *e, char *id){
+  e->id = CSTRTOSTR(id);
+}
+void C_EnumAddMember(Enum *e, CC *cc, char *key){
+  auto mem = new EnumMember();
+  mem->key = CSTRTOSTR(key);
+  mem->hasNum = false;
+  e->addMember(cc, mem);
+}
+void C_EnumAddMemberValue(Enum *e, CC *cc, char *key, int value){
+  auto mem = new EnumMember();
+  mem->key = CSTRTOSTR(key);
+  mem->hasNum = true;
+  mem->num = value;
+  e->addMember(cc, mem);
+}
+
 // FCall
 #include "ast/FCall.h"
 FCall *createFCall(CC *cc){
@@ -1079,6 +1117,47 @@ ParseResult *CP_DirectiveParser_ParseResultGetTop(ParseResult *p) {
     return 0;
   auto t = (DirectiveToken *)p->token;
   return new ParseResult(t->top);
+}
+
+#include "parser/EnumParser.h"
+EnumParser *CompilerGetEnumParser(CC *cc){
+  return new EnumParser();
+}
+ParseResult *CP_EnumParserParse(EnumParser *p, CC *cc, Source *s, int pos) {
+  auto ans = p->parse(cc, s, pos);
+  return ans ? new ParseResult(ans) : 0;
+}
+ParseResult *CP_EnumParserParseAfter(EnumParser *p, ParseResult *pr) {
+  if (!pr)
+    return 0;
+  auto ans = *pr >> *p;
+  if (!ans)
+    return 0;
+  Token *a = ((TupleToken *)ans.token)->t2;
+  return new ParseResult(a);
+}
+char *CP_EnumParser_ParseResultGetId(ParseResult *p){
+  if(!p) return 0;
+  auto t = (EnumToken *) p->token;
+  return STRTOCSTR(t->id);
+}
+char *CP_EnumParser_ParseResultGetMemberKey(ParseResult *p, int i){
+  if(!p) return 0;
+  auto t = (EnumToken *) p->token;
+  if(i >= t->members.size()) return 0;
+  return STRTOCSTR(t->members[i]->key);
+}
+int CP_EnumParser_ParseResultGetMemberValue(ParseResult *p, int i){
+  if(!p) return 0;
+  auto t = (EnumToken *) p->token;
+  if(i >= t->members.size()) return 0;
+  return t->members[i]->num;
+}
+bool CP_EnumParser_ParseResultHasMemberValue(ParseResult *p, int i){
+  if(!p) return 0;
+  auto t = (EnumToken *) p->token;
+  if(i >= t->members.size()) return 0;
+  return t->members[i]->hasNum;
 }
 
 #include "parser/ExpressionParser.h"
@@ -2143,6 +2222,25 @@ void *CompileContext::getCompileObj(void *e) {
   REGISTER_CALLBACK("C_Directive$setAST", "C_Directive$setAST_replace",
                     &DirectiveSetAST);
 
+  // Enum
+
+  REGISTER_CALLBACK("Compiler$createEnum", "Compiler$createEnum_replace",
+                    &createEnum);
+  REGISTER_CALLBACK("C_Enum$getId", "C_Enum$getId_replace", &C_EnumGetId);
+  REGISTER_CALLBACK("C_Enum$getMemberKey", "C_Enum$getMemberKey_replace",
+                    &C_EnumGetMemberKey);
+  REGISTER_CALLBACK("C_Enum$getMemberValue", "C_Enum$getMemberValue_replace",
+                    &C_EnumGetMemberValue);
+  REGISTER_CALLBACK("C_Enum$hasMemberValue", "C_Enum$hasMemberValue_replace",
+                    &C_EnumHasMemberValue);
+  REGISTER_CALLBACK("C_Enum$countMembers", "C_Enum$countMembers_replace",
+                    &C_EnumCountMembers);
+  REGISTER_CALLBACK("C_Enum$setId", "C_Enum$setId_replace", &C_EnumSetId);
+  REGISTER_CALLBACK("C_Enum$addMember", "C_Enum$addMember_replace",
+                    &C_EnumAddMember);
+  REGISTER_CALLBACK("C_Enum$addMemberValue", "C_Enum$addMemberValue_replace",
+                    &C_EnumAddMemberValue);
+
   // FCall
   REGISTER_CALLBACK("Compiler$createFCall", "Compiler$createFCall_replace",
                     &createFCall);
@@ -2525,6 +2623,26 @@ void *CompileContext::getCompileObj(void *e) {
   REGISTER_CALLBACK("CP_DirectiveParser_ParseResult$getTop",
                     "CP_DirectiveParser_ParseResult$getTop_replace",
                     &CP_DirectiveParser_ParseResultGetTop);
+
+  REGISTER_CALLBACK("CP_EnumParser_ParseResult$getId",
+                    "CP_EnumParser_ParseResult$getId_replace",
+                    &CP_EnumParser_ParseResultGetId);
+  REGISTER_CALLBACK("CP_EnumParser_ParseResult$getMemberKey",
+                    "CP_EnumParser_ParseResult$getMemberKey_replace",
+                    &CP_EnumParser_ParseResultGetMemberKey);
+  REGISTER_CALLBACK("CP_EnumParser_ParseResult$getMemberValue",
+                    "CP_EnumParser_ParseResult$getMemberValue_replace",
+                    &CP_EnumParser_ParseResultGetMemberValue);
+  REGISTER_CALLBACK("CP_EnumParser_ParseResult$hasMemberValue",
+                    "CP_EnumParser_ParseResult$hasMemberValue_replace",
+                    &CP_EnumParser_ParseResultHasMemberValue);
+  REGISTER_CALLBACK("Compiler$getEnumParser", "Compiler$getEnumParser_replace",
+                    &CompilerGetEnumParser);
+  REGISTER_CALLBACK("CP_EnumParser$parse", "CP_EnumParser$parse_replace",
+                    &CP_EnumParserParse);
+  REGISTER_CALLBACK("CP_EnumParser$parseAfter",
+                    "CP_EnumParser$parseAfter_replace",
+                    &CP_EnumParserParseAfter);
 
   REGISTER_CALLBACK("Compiler$getExpressionParser",
                     "Compiler$getExpressionParser_replace",

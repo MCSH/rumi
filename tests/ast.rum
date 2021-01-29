@@ -67,11 +67,22 @@ C_Define.setType := (t: *C_Type) -> unit{}
 C_Define.setExp := (exp: *C_Expression) -> unit{}
 
 C_Directive: struct{}
-Compiler.createDirective := (id: string, ast: *C_AST) -> C_Directive{}
+Compiler.createDirective := (id: string, ast: *C_AST) -> *C_Directive{}
 C_Directive.getId := () -> string{}
 C_Directive.getAST := () -> *C_AST{}
 C_Directive.setId := (id: string) -> unit{}
 C_Directive.setAST := (ast: *C_AST) -> unit{}
+
+C_Enum: struct{}
+Compiler.createEnum := () -> * C_Enum{}
+C_Enum.getId := () -> string{}
+C_Enum.getMemberKey := (i: int) -> string{}
+C_Enum.getMemberValue := (key: string) -> int{}
+C_Enum.hasMemberValue := (key: string) -> bool{}
+C_Enum.countMembers := () -> int{}
+C_Enum.setId := (id: string) -> unit{}
+C_Enum.addMember := (c: *Compiler, key: string) -> unit{}
+C_Enum.addMemberValue := (c: *Compiler, key: string, val: int) -> unit{}
 
 C_FCall: struct{}
 Compiler.createFCall := () -> *C_FCall{}
