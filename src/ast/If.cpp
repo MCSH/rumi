@@ -30,7 +30,6 @@ void If::compile(CC *cc){
 }
 
 void If::codegen(CC *cc){
-  // TODO
   auto v = (llvm::Value*) condition->exprgen(cc);
 
   llvm::Function *f = cc->llc->f;
@@ -46,14 +45,12 @@ void If::codegen(CC *cc){
   // generate true statement
   cc->llc->builder->SetInsertPoint(stTrueB);
   st1->codegen(cc);
-  // TODO check ifbrok
   cc->llc->builder->CreateBr(ifCont);
 
   // generate false statement
   if(st2){
     cc->llc->builder->SetInsertPoint(stFalseB);
     st2->codegen(cc);
-    // TODO check ifbrok
     cc->llc->builder->CreateBr(ifCont);
   }
 

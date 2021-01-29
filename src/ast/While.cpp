@@ -36,7 +36,7 @@ void While::codegen(CC *cc){
   cc->llc->builder->CreateBr(whileCondB);
 
   cc->llc->builder->SetInsertPoint(whileCondB);
-  // TODO clean this up
+
   auto cond = (llvm::Value*)condition->exprgen(cc);
   cc->llc->builder->CreateCondBr(cond, whileBodyB, whileContB);
 

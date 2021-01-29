@@ -12,7 +12,6 @@ void VariableValue::compile(CC *cc){
   }
 }
 
-// TODO
 void VariableValue::prepare(CC *cc) {}
 
 void *VariableValue::exprgen(CC *cc){

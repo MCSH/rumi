@@ -44,7 +44,7 @@ BinOpToken::BinOpToken(Symbol op, Token *lhs, Token *rhs, CC *cc,
 
 AST *BinOpToken::toAST(CC* cc){
   if(BinOpToken *r = dynamic_cast<BinOpToken*>(rhs)){
-    // TODO handle the precedence
+    // handle the precedence
     if(r->prec < prec){
       // swap the op
       auto tmpO = op;

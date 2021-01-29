@@ -14,12 +14,10 @@ void Arg::compile(CC *cc){
 }
 
 void Arg::prepare(CC *cc){
-  // TODO
   type->prepare(cc);
 }
 
 void Arg::codegen(CC *cc){
-  // TODO
   Named *named = cc->lookup(id);
   auto alloca = cc->llc->builder->CreateAlloca((llvm::Type *)type->typegen(cc));
   named -> alloca = alloca;

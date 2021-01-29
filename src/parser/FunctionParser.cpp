@@ -22,7 +22,6 @@ Function *FunctionBodyToken::toAST(CC *cc){
     ar->type = (Type *)a->type->toAST(cc);
     f->args.push_back(ar);
   }
-  // TODO
   for(Token *t: statements){
     Statement *s = dynamic_cast<Statement *>(t->toAST(cc));
     if(!s){

@@ -11,10 +11,7 @@ StructType::StructType(std::string id)
   : id(id)
 {}
 
-// TODO methods prepare and compile?
-
 void StructType::prepare(CC *cc){
-  // TODO
   // TODO check for name clashes
   Named *named = new Named();
   named->id = id;
@@ -25,8 +22,6 @@ void StructType::prepare(CC *cc){
 }
 
 void StructType::compile(CC *cc){
-  // TODO do I want anything here?
-  // TODO make sure types are valid
   for(auto m: members){
     m->type->compile(cc);
   }
@@ -53,7 +48,7 @@ void StructType::resetBody(CC *cc){
     auto id = &m->id;
     if(id->size() > 5 && id->substr(0, 5) == "vptr$"){
       auto it = (Interface *) m->type;
-      mem_t.push_back((llvm::Type *)it->generatedType); // TODO is this ok?
+      mem_t.push_back((llvm::Type *)it->generatedType);
     } else {
       mem_t.push_back((llvm::Type *)m->type->typegen(cc));
     }

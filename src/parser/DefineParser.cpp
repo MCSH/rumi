@@ -21,7 +21,6 @@ std::string DefineToken::desc(){
 }
 
 ParseResult DefineParser::scheme(CC *cc, Source *s, int pos){
-  // TODO
   Token *type=0, *value=0;
   ParseResult id = ip.parse(cc, s, pos);
   if(!id) return ParseResult();
@@ -50,17 +49,16 @@ DefineParser::DefineParser()
 
 
 AST *DefineToken::toAST(CC *cc){
-  // TODO
   if(!type){
     if (FunctionBodyToken *fbt = dynamic_cast<FunctionBodyToken *>(value)) {
-      // TODO We have a static function
+      // We have a static function
       auto tmp = fbt->toAST(cc);
 
       tmp->id = id;
       return tmp;
     }
     if (FunctionSigToken *fst = dynamic_cast<FunctionSigToken *>(value)) {
-      // TODO We have a static function
+      // We have a static function
       auto tmp = fst->toAST(cc);
 
       tmp->id = id;

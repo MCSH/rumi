@@ -4,7 +4,6 @@ import ast
 import parser
 
 filetostring := (fname: string) -> string{
-  // TODO
   f := fopen(fname, "r");
   if(!(f->bool)){
     printf("The file %s wasn't found!\n", f);
@@ -30,8 +29,6 @@ filetostring := (fname: string) -> string{
 
 fromfile: struct{}
 fromfile.parse := (c: *Compiler, s: *Source, pos: int) -> *ParseResult{
-  // TODO
-
   //symp := c.getSymbolParser();
   idp := c.getIdParser();
   sp := c.getStringParser();
@@ -49,8 +46,6 @@ fromfile.parse := (c: *Compiler, s: *Source, pos: int) -> *ParseResult{
   return s;
 }
 fromfile.genAST := (c: *Compiler, token: *ParseResult) -> *C_AST{
-  // TODO
-
   s_token :*CP_StringParser_ParseResult = token;
 
   s := c.createCString();

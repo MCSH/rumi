@@ -10,8 +10,7 @@
 
 void *MethodCall::exprgenInterface(CC *cc){
   auto e = exp->exp;
-  // TODO make sure we are not pointers
-
+  // make sure we are not pointers
   if(dynamic_cast<PointerType *>(e->type(cc)->baseType(cc))){
     // TODO make sure the level is only 1
     e = new PtrValue(e);
@@ -24,16 +23,16 @@ void *MethodCall::exprgenInterface(CC *cc){
 
   vtable = cc->llc->builder->CreateLoad(vtable);
 
-  // TODO resolve fptr
+  // resolve fptr
   auto mi = i->methodInd(cc, fs->id);
   auto fptr = cc->llc->builder->CreateStructGEP((llvm::Type *) i->generatedVptr, vtable, mi);
 
-  // TODO resolve and add self to arguments
+  // resolve and add self to arguments
   auto offset = cc->llc->builder->CreateStructGEP((llvm::Type *) i->generatedType, ptr, 1);
   offset = cc->llc->builder->CreateLoad(offset);
   auto self = cc->llc->builder->CreateAdd(ptr, offset);
 
-  // TODO setup fcall
+  // setup fcall
   std::vector<llvm::Value *> params;
   params.push_back(self);
   for(auto e: args){
@@ -81,7 +80,6 @@ void MethodCall::compileInterface(CC *cc){
 }
 
 void MethodCall::compile(CC *cc){
-  // TODO
   exp->exp->compile(cc);
 
   auto bt = exp->exp->type(cc)->baseType(cc);

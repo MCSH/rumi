@@ -1,6 +1,6 @@
 #include "FunctionType.h"
 
-// TODO compile & prep
+// TODO compile & prep & typegen
 
 void* FunctionType::typegen(CC *cc){
   return 0;

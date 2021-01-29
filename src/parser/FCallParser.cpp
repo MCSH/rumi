@@ -11,7 +11,6 @@ FCallToken::FCallToken(std::string id, CC *cc, Source *s, int spos, int epos)
 }
 
 FCall *FCallToken::toAST(CC *cc){
-  // TODO
   FCall *f = new FCall();
 
   f->id = id;

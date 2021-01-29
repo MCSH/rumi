@@ -7,7 +7,6 @@ NamedType::NamedType(std::string id)
 {}
 
 void NamedType::prepare(CC *cc){
-  // TODO
 }
 
 void NamedType::compile(CC *cc){

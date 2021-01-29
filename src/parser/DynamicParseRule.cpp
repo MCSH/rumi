@@ -9,8 +9,7 @@ DynamicParseRule::DynamicParseRule(CC *cc, std::string name)
   : name(name)
 {
   // figure out p
-
-  p = 0; // TODO
+  p = 0;
   
   // figure out innerf
   auto fname = name + "$parse";
@@ -51,7 +50,6 @@ std::string DynamicParseToken::desc(){
 }
 
 AST* DynamicParseToken::toAST(CC *cc){
-  // TODO
   auto fname = drp->name + "$genAST";
 
   std::string e;
