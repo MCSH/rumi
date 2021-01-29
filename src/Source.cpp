@@ -1,7 +1,10 @@
 #include "Source.h"
+#include "CC.h"
 #include "ast/Statement.h"
+#include "ast/ast.h"
 #include "base.h"
 #include <fstream>
+#include "DebugInfo.h"
 
 std::ostream &operator<<(std::ostream &os, const Source &s) {
   os << s.name;
@@ -56,7 +59,7 @@ void Source::parse(CC *cc){
   int epos = 0;
   while(t){
     epos = t.token->epos;
-    AST *a = t.token->toAST(cc);
+    AST *a = t.token->getAST(cc);
     if(a){
       // ans->push_back(a);
       cc->asts.push_back(a);
@@ -74,8 +77,9 @@ void Source::parse(CC *cc){
   }
 
   if (skipwscomment(&this->str, epos + 1) != -1) {
-    cc->debug(NONE) << "Couldn't parse file at index " << epos << " - " <<  str.size() << std::endl;
-    exit(1);
+    graceFulExit(new DebugInfo(&t), "Couldn't parse file");
+    //cc->debug(NONE) << "Couldn't parse file at index " << epos << " - " <<  str.size() << std::endl;
+    //exit(1);
   }
 }
 

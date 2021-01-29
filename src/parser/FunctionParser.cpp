@@ -19,20 +19,19 @@ Function *FunctionBodyToken::toAST(CC *cc){
   for(auto a: args){
     Arg *ar = new Arg();
     ar->id = a->id;
-    ar->type = (Type *)a->type->toAST(cc);
+    ar->type = (Type *)a->type->getAST(cc);
     f->args.push_back(ar);
   }
   for(Token *t: statements){
-    Statement *s = dynamic_cast<Statement *>(t->toAST(cc));
+    Statement *s = dynamic_cast<Statement *>(t->getAST(cc));
     if(!s){
-      cc->debug(NONE) << "Statement Token was not a real statement " << *t << std::endl;
-      exit(1);
+      graceFulExit(t->getDBG(), "Statement Token was not a real statement");
     }
     f->statements.push_back(s);
   }
 
   if(rt){
-    f->returnType = (Type *)rt->toAST(cc);
+    f->returnType = (Type *)rt->getAST(cc);
   }
 
   return f;
@@ -85,7 +84,7 @@ ParseResult FunctionParser::scheme(CC *cc, Source *s, int pos){
   }
   if(!args) {
     delete fbt;
-    return 0; 
+    return ParseResult();
   }
   auto sig =  args >> rpsp; // )
   auto a = sig >> asp >> tp; // -> type

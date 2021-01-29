@@ -19,12 +19,7 @@ AST *ReturnToken::toAST(CC *cc){
     return new Return(0);
   }
 
-  Expression *e = dynamic_cast<Expression *>(value->toAST(cc));
-
-  if(!e){
-    cc->debug(NONE) << "Expected Expression didn't convert to Expression\n" << *value << std::endl;
-    exit(1);
-  }
+  Expression *e = dynamic_cast<Expression *>(value->getAST(cc));
   return new Return(e);
 }
 

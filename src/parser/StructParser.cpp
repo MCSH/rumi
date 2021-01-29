@@ -21,7 +21,7 @@ AST *StructToken::toAST(CC *cc){
   auto ans =  new StructType(id);
 
   for(auto d: members){
-    ans->members.push_back((Define *) d->toAST(cc));
+    ans->members.push_back((Define *) d->getAST(cc));
   }
   
   return ans;

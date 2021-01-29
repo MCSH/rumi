@@ -5,6 +5,7 @@
 #include "../LLContext.h"
 #include "Named.h"
 #include "Type.h"
+#include "ast.h"
 
 Assign::Assign(Expression *baseExpr, Expression *e)
   : baseExpr(baseExpr)
@@ -26,13 +27,11 @@ void Assign::compile(CC *cc){
 
   if(compatible == ExpCast){
     // TODO add name of types
-    cc->debug(NONE) << "Cannot explictly cast types" << std::endl;
-    exit(1);
+    graceFulExit(dbg, "Cannot explicitly cast types");
   }
   if(compatible == INCOMPATIBLE){
     // TODO add name of types
-    cc->debug(NONE) << "Cannot cast types" << std::endl;
-    exit(1);
+    graceFulExit(dbg, "Cannot cast types");
   }
   if(compatible == ImpCast){
     cc->debug(LOW) << "Casting implicitly" << std::endl;

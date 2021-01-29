@@ -19,10 +19,6 @@ main := (argc: int, argv: *string) -> int{
   if(opts.r) printf("r was set\n");
   else printf("r was not set\n");
 
-  // s := STRFROMFILE "output.txt" ;
-
   printf(STRFROMFILE "output.txt");
-  //printf("hello world\n");
-
   return 0;
 }

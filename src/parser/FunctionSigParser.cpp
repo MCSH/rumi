@@ -15,11 +15,11 @@ FunctionSig *FunctionSigToken::toAST(CC *cc){
   for(auto a: args){
     Arg *ar = new Arg();
     ar->id = a->id;
-    ar->type = (Type *)a->type->toAST(cc);
+    ar->type = (Type *)a->type->getAST(cc);
     fs->args.push_back(ar);
   }
 
-  fs->returnType = (Type *) returnType->toAST(cc);
+  fs->returnType = (Type *) returnType->getAST(cc);
   fs->vararg = vararg;
   return fs;
 }

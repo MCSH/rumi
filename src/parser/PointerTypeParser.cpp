@@ -13,7 +13,7 @@ PointerTypeToken::PointerTypeToken(Token *innerType, CC *cc, Source *s, int pos,
 }
 
 AST *PointerTypeToken::toAST(CC *cc){
-  return new PointerType((Type*) innerType->toAST(cc));
+  return new PointerType((Type*) innerType->getAST(cc));
 }
 
 std::string PointerTypeToken::desc(){

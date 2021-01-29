@@ -4,6 +4,7 @@
 #include "PrimitiveType.h"
 #include "../base.h"
 #include "../LLContext.h"
+#include "ast.h"
 
 void ConstBool::compile(CC *cc){}
 void ConstBool::prepare(CC *cc){}
@@ -22,7 +23,7 @@ Type *ConstBool::type(CC *cc){
 
 
 void *ConstBool::allocagen(CC *cc){
-  cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
-  exit(1);
+  graceFulExit(dbg, "Calling alloca on unsupported type");
+  return 0;
 }
 

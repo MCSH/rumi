@@ -1,5 +1,6 @@
 #include "Cast.h"
 #include "../base.h"
+#include "ast.h"
 
 Cast::Cast(Expression *exp, Type *type_)
   : exp(exp)
@@ -13,8 +14,7 @@ void Cast::compile(CC *cc){
   // Ensure they are compatible
   auto compatibility = type_->compatible(cc, exp->type(cc)->baseType(cc));
   if(compatibility == INCOMPATIBLE){
-    cc->debug(NONE) << "Explicitly casting incompatible types" << std::endl;
-    exit(1);
+    graceFulExit(dbg, "Explicitly casting incompatible types");
   }
 }
 
@@ -32,6 +32,6 @@ void *Cast::exprgen(CC *cc){
 }
 
 void *Cast::allocagen(CC *cc){
-  cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
-  exit(1);
+  graceFulExit(dbg, "Calling alloca on unsupported type");
+  return 0;
 }

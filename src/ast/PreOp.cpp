@@ -1,6 +1,7 @@
 #include "PreOp.h"
 #include "../base.h"
 #include "PointerType.h"
+#include "ast.h"
 
 PreOp::PreOp(std::string op, Expression *value)
   : op(op)
@@ -11,8 +12,7 @@ void PreOp::compile(CC *cc){
   value->compile(cc);
 
   if(!value->type(cc)->hasPreOp(cc, op)){
-    cc->debug(NONE) << "Type doesn't support op " << op << std::endl;
-    exit(1);
+    graceFulExit(dbg, "Type doesn't support op " + op);
   }
 }
 
@@ -29,6 +29,6 @@ void *PreOp::exprgen(CC *cc){
 }
 
 void *PreOp::allocagen(CC *cc){
-  cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
-  exit(1);
+  graceFulExit(dbg, "Calling alloca on unsupported type");
+  return 0;
 }

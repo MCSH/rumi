@@ -14,7 +14,7 @@ WhileToken::WhileToken(Token *value, Token *statement, CC *cc, Source *s, int sp
 }
 
 AST *WhileToken::toAST(CC *cc){
-  return new While((Expression *) value->toAST(cc), (Statement*) statement->toAST(cc));
+  return new While((Expression *) value->getAST(cc), (Statement*) statement->getAST(cc));
 }
 
 std::string WhileToken::desc(){

@@ -24,10 +24,10 @@ KeywordToken* KeywordParser::findkey(CC *cc, Source *s, int pos){
 ParseResult  KeywordParser::scheme(CC *cc, Source *s, int pos){
   auto t = findkey(cc, s, pos);
   if(!has_match) return t;
-  if(!t) return 0;
+  if(!t) return ParseResult();
   if(t->kw == match) return t;
   delete t;
-  return 0;
+  return ParseResult();
 }
 
 std::string KeywordToken::desc(){

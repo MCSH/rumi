@@ -3,12 +3,12 @@
 #include "../LLContext.h"
 #include "FunctionType.h"
 #include "Named.h"
+#include "ast.h"
 
 void FCall::compile(CC *cc){
   // ensure function exists
   if(!cc->lookup(id)){
-    cc->debug(NONE) << "Couldn't find function " << id << std::endl;
-    exit(1);
+    graceFulExit(dbg, "Couldn't find function " + id);
   }
   // TODO ensure the arguments match the type
   for(auto e: args) e->compile(cc);
@@ -36,8 +36,8 @@ void *FCall::exprgen(CC *cc){
 }
 
 void *FCall::allocagen(CC *cc){
-  cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
-  exit(1);
+  graceFulExit(dbg, "Calling alloca on unsupported type");
+  return 0;
 }
 
 void FCallStmt::compile(CC *cc){

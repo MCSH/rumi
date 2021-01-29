@@ -1,6 +1,7 @@
 #include "Address.h"
 #include "PointerType.h"
 #include "../base.h"
+#include "ast.h"
 
 Address::Address(Expression *exp)
   : exp(exp)
@@ -24,6 +25,6 @@ Type *Address::type(CC *cc){
 }
 
 void *Address::allocagen(CC *cc){
-  cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
-  exit(1);
+  graceFulExit(dbg, "Calling alloca on unsupported type");
+  return 0;
 }

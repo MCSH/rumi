@@ -15,7 +15,7 @@ std::string ParenToken::desc(){
 }
 
 AST *ParenToken::toAST(CC *cc){
-  return exp->toAST(cc);
+  return exp->getAST(cc);
 }
 
 ParenParser::ParenParser()

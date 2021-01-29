@@ -10,6 +10,7 @@
 #include "Method.h"
 #include "PointerType.h"
 #include "PtrValue.h"
+#include "ast.h"
 
 Interface::Interface(std::string id)
   : id(id)
@@ -86,7 +87,7 @@ Compatibility Interface::compatible(CC *cc, Type *t){
 
   // handle structs
   if(StructType *st = dynamic_cast<StructType *>(t)){
-    if(hasImplemented(st)){
+    if(hasImplemented(cc, st)){
       return ImpCast;
     }
   }
@@ -147,7 +148,7 @@ void *Interface::memalloca(CC *cc, Expression *exp, std::string id){
 }
 
 
-bool Interface::hasImplemented(StructType *st){
+bool Interface::hasImplemented(CC *cc, StructType *st){
   if(structs.find(st->id) != structs.end()){
     // We have previously made sure that this is implementing us
     return true;
@@ -165,6 +166,7 @@ bool Interface::hasImplemented(StructType *st){
     }
 
     if(!found){
+      cc->debug(NONE) << "Struct " << st->id <<" is missing method " << m.first << " for interface " << this->id << std::endl;
       return false;
     }
   }
@@ -175,8 +177,6 @@ bool Interface::hasImplemented(StructType *st){
 
 
 void *Interface::resolveVptr(CC *cc, StructType *st){
-  // TODO
-
   auto name = id + "$$" + st->id;
   if(auto gb = cc->llc->module->getNamedGlobal(name)){
     return gb;
@@ -213,8 +213,8 @@ int Interface::methodInd(CC *cc, std::string mid){
     i++;
   }
 
-  cc->debug(NONE) << "methodInd resolve failed" << std::endl;
-  exit(1);
+  graceFulExit(dbg, "couldn't find method " + mid + " on interface " + id);
+  return 0;
 }
 
 

@@ -47,7 +47,7 @@ public:
 
 private:
 
-  bool hasImplemented(StructType *st);
+  bool hasImplemented(CC *cc, StructType *st);
   void *resolveVptr(CC *cc, StructType *st);
 
 };

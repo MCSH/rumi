@@ -16,7 +16,7 @@ std::string MethodCallStmtToken::desc(){
 }
 
 AST *MethodCallStmtToken::toAST(CC *cc){
-  auto a = (MethodCall *)mct->toAST(cc);
+  auto a = (MethodCall *)mct->getAST(cc);
   return new MethodCallStmt(a);
 }
 

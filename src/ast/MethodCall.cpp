@@ -63,15 +63,13 @@ void MethodCall::compileInterface(CC *cc){
     }
 
     if(!i){
-      cc->debug(NONE) << "Can't call method on non-structs" << std::endl;
-      exit(1);
+      graceFulExit(dbg, "Can't call method on non-structs");
     }
   }
 
   fs = i->resolveMethod(cc, exp->id);
   if(!fs){
-    cc->debug(NONE) << "Can't find method " << exp->id << " in interface " << i->id << std::endl;
-    exit(1);
+    graceFulExit(dbg, "Can't find method " + exp->id + " in interface " + i->id);
   }
 
   for(auto e: args) e->compile(cc);
@@ -96,8 +94,7 @@ void MethodCall::compile(CC *cc){
 
   method = s->resolveMethod(cc, exp->id);
   if(!method){
-    cc->debug(NONE) << "Can't find method " << exp->id << " in struct " << s->id << std::endl;
-    exit(1);
+    graceFulExit(dbg, "Can't find method " + exp->id + " in struct " + s->id);
   }
 
   // add self to arguments

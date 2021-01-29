@@ -18,7 +18,7 @@ AST *InterfaceToken::toAST(CC *cc){
   // TODO
   Interface *in = new Interface(id);
   for(auto m: methods){
-    in->addMethod(cc, (FunctionSig *)m->toAST(cc));
+    in->addMethod(cc, (FunctionSig *)m->getAST(cc));
   }
   return in;
 }
@@ -46,7 +46,7 @@ ParseResult InterfaceParser::scheme(CC *cc, Source *s, int pos){
     DefineToken *t = (DefineToken*)((TupleToken *) tmp.token)->t2;
     if(!dynamic_cast<FunctionSigToken *>(t->value)){
       delete ift;
-      return 0;
+      return ParseResult();
     }
 
     ift->methods.push_back(t);

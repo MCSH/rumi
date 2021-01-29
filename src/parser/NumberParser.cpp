@@ -4,9 +4,9 @@
 
 ParseResult NumberParser::scheme(CC *cc, Source *s, int pos){
   int p = skipws(&s->str, pos);
-  if(p == -1) return 0;
+  if(p == -1) return ParseResult();
   char n = s->str.at(p);
-  if(!isnumerical(n)) return 0;
+  if(!isnumerical(n)) return ParseResult();
   int val = 0;
   while(isnumerical(n)){
     val *= 10;

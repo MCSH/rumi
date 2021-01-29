@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "../Source.h"
+#include "../DebugInfo.h"
 
 #include "AssignParser.h"
 #include "DefineParser.h"
@@ -203,7 +204,7 @@ ParseResult Parser::parseTop(Source *s, int pos){
     ans = r->parse(cc, s, pos);
     if(ans) return ans;
   }
-  return 0;
+  return ParseResult();
 }
 
 ParseResult Parser::parseType(Source *s, int pos){
@@ -213,7 +214,7 @@ ParseResult Parser::parseType(Source *s, int pos){
     ans = r->parse(cc, s, pos);
     if(ans) return ans;
   }
-  return 0;
+  return ParseResult();
 }
 
 ParseResult Parser::parseExpression(Source *s, int pos, int prec){
@@ -224,7 +225,7 @@ ParseResult Parser::parseExpression(Source *s, int pos, int prec){
     ans = r->parse(cc, s, pos);
     if(ans) return ans;
   }
-  return 0;
+  return ParseResult();
 }
 
 ParseResult Parser::parseValue(Source *s, int pos){
@@ -234,7 +235,7 @@ ParseResult Parser::parseValue(Source *s, int pos){
     ans = r->parse(cc, s, pos);
     if(ans) return ans;
   }
-  return 0;
+  return ParseResult();
 }
 
 ParseResult Parser::parseStatement(Source *s, int pos){
@@ -244,11 +245,11 @@ ParseResult Parser::parseStatement(Source *s, int pos){
     ans = r->parse(cc, s, pos);
     if(ans) return ans;
   }
-  return 0;
+  return ParseResult();
 }
 
 std::ostream &operator<<(std::ostream &os, Token &s) {
-  os << "[" << s.spos << ", " << s.epos << "]" << s.desc();
+  os << *s.getDBG() << " : " << s.desc();
   return os;
 }
 
@@ -281,7 +282,7 @@ std::string TupleToken::desc(){
 ParseResult ParseRule::parse(CC *cc, Source *s, int pos){
   // TODO memoization
   pos = skipwscomment(&s->str, pos);
-  if(pos == -1) return 0;
+  if(pos == -1) return ParseResult();
   return this->scheme(cc, s, pos);
 }
 
@@ -318,4 +319,14 @@ Token::~Token(){
 
 int ParseRule::prec(){
   return 10;
+}
+
+DebugInfo *Token::getDBG(){
+  return new DebugInfo(this);
+}
+
+AST *Token::getAST(CC *cc){
+  auto ans = this->toAST(cc);
+  if(ans) ans->setDBG(getDBG());
+  return ans;
 }

@@ -14,7 +14,7 @@ MethodToken::MethodToken(std::string structName, std::string methodName, Token *
 }
 
 AST* MethodToken::toAST(CC *cc){
-  return new Method(structName, methodName, (Function *)f->toAST(cc));
+  return new Method(structName, methodName, (Function *)f->getAST(cc));
 }
 
 std::string MethodToken::desc(){

@@ -13,8 +13,7 @@ void PtrValue::compile(CC *cc){
   // type check
   PointerType *pt = dynamic_cast<PointerType *>(ptr->type(cc));
   if(!pt){
-    cc->debug(NONE) << "Accessign pointer value of a non-pointer expression" << std::endl;
-    exit(1);
+    graceFulExit(dbg, "Accessing pointer value of a non-pointer expression");
   }
 }
 

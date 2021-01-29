@@ -13,7 +13,7 @@ SBlockToken::SBlockToken(CC *cc, Source *s, int spos, int epos){
 AST *SBlockToken::toAST(CC *cc){
   CodeBlock *cb = new CodeBlock();
   for(auto t: stmts){
-    cb->stmts.push_back((Statement*) t->toAST(cc));
+    cb->stmts.push_back((Statement*) t->getAST(cc));
   }
   return cb;
 }

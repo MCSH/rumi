@@ -16,9 +16,9 @@ MethodCallToken::MethodCallToken(Token *exp, CC *cc, Source *s, int spos,
 AST *MethodCallToken::toAST(CC *cc){
   MethodCall *m = new MethodCall();
 
-  m->exp = (MemAccess *)exp->toAST(cc);
+  m->exp = (MemAccess *)exp->getAST(cc);
   for(Token *a: args){
-    m->args.push_back((Expression *) a->toAST(cc));;
+    m->args.push_back((Expression *) a->getAST(cc));;
   }
 
   return m;

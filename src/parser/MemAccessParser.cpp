@@ -15,7 +15,7 @@ MemAccessToken::MemAccessToken(Token *expression, std::string id, CC *cc,
 }
 
 AST *MemAccessToken::toAST(CC *cc){
-  return new MemAccess((Expression *) expression->toAST(cc), id);
+  return new MemAccess((Expression *) expression->getAST(cc), id);
 }
 
 std::string MemAccessToken::desc(){

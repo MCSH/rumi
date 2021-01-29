@@ -21,10 +21,10 @@ std::string StringToken::desc(){
 
 ParseResult StringParser::scheme(CC *cc, Source *s, int pos){
   int p = skipws(&s->str, pos);
-  if(p == -1) return 0;
+  if(p == -1) return ParseResult();
 
   char n = s->str.at(p);
-  if(n != '"') return 0;
+  if(n != '"') return ParseResult();
   std::stringstream val;
 
   p++;

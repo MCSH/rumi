@@ -18,7 +18,7 @@ std::string CastExprToken::desc(){
 }
 
 AST *CastExprToken::toAST(CC *cc){
-  return new Cast((Expression *)exp->toAST(cc), (Type *)type->toAST(cc));
+  return new Cast((Expression *)exp->getAST(cc), (Type *)type->getAST(cc));
 }
 
 ParseResult CastExprParser::innerscheme(CC *cc, Source *s, int pos){

@@ -4,6 +4,7 @@
 #include "../base.h"
 #include "Named.h"
 #include "Struct.h"
+#include "ast.h"
 
 Method::Method(std::string structName, std::string methodName, Function *f)
   : structName(structName)
@@ -19,13 +20,11 @@ void Method::prepare(CC *cc){
   // ensure struct exist
   Named *named = cc->lookup(structName);
   if(!named || !named->isType){
-    cc->debug(NONE) << structName << " is not a type" << std::endl;
-    exit(1);
+    graceFulExit(dbg, structName + " is not a type");
   }
   StructType *st = dynamic_cast<StructType *>(named->type);
   if(!st){
-    cc->debug(NONE) << structName << " is not a struct type" << std::endl;
-    exit(1);
+    graceFulExit(dbg, structName + " is not a struct type");
   }
   // register ourself to the struct
   st->addMethod(cc, this);

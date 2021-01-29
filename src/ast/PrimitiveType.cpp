@@ -9,6 +9,7 @@
 #include "Expression.h"
 #include "PointerType.h"
 #include "Type.h"
+#include "ast.h"
 
 PrimitiveType::PrimitiveType(TypeEnum key)
   : key(key)
@@ -44,8 +45,8 @@ void *PrimitiveType::typegen(CC *cc){
     return llvm::PointerType::getUnqual(llvm::IntegerType::get(cc->llc->context, 8));
   }
 
-  cc->debug(NONE) << "Not supporting this type in primitivetypes!" << std::endl;
-  exit(1);
+  graceFulExit(dbg, "Not supporting this type in primitive types!");
+  return 0;
 }
 
 bool isInt(TypeEnum key){
@@ -194,8 +195,7 @@ void *PrimitiveType::opgen(CC *cc, Expression *lhs,  std::string op, Expression 
       return cc->llc->builder->CreateICmpEQ((llvm::Value*) lhs->exprgen(cc), (llvm::Value*) rhs->exprgen(cc));
     } else {
       // TODO assuming float
-      cc->debug(NONE) << " == Not supported for floating points" << std::endl;
-      exit(1);
+      graceFulExit(dbg, "== Not supported for floating points");
     }
   }
 
@@ -295,8 +295,7 @@ void *PrimitiveType::opgen(CC *cc, Expression *lhs,  std::string op, Expression 
     }
   }
 
-  cc->debug(NONE) << "INCOMPLETE IMPLEMENTATION FOR OPGEN PRIM"  << std::endl;
-  exit(1);
+  graceFulExit(dbg, "INCOMPLETE IMPLEMENTATION FOR OPGEN PRIMITIVE");
   return 0;
 }
 
@@ -410,8 +409,7 @@ void *PrimitiveType::castgen(CC *cc, Expression *e){
   }
 
   if(!isInt(key) || !isInt(pt->key)){
-    std::cout << "Calling cast on non-integer types" << std::endl;
-    exit(1);
+    graceFulExit(dbg, "Calling cast on non-integer types");
   }
 
   if(key == t_bool){

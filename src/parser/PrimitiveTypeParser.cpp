@@ -23,7 +23,7 @@ std::string TypeToken::desc(){
 
 ParseResult PrimitiveTypeParser::scheme(CC *cc, Source *s, int pos){
   int end = extractNextAlphaNumerical(&s->str, pos);
-  if(end == -1) return 0;
+  if(end == -1) return ParseResult();
   std::string w = s->str.substr(pos, end-pos);
   end--;
   if(w == "int")
@@ -58,7 +58,7 @@ ParseResult PrimitiveTypeParser::scheme(CC *cc, Source *s, int pos){
     return new TypeToken(t_void, pos, end, cc, s);
   if(w == "bool")
     return new TypeToken(t_bool, pos, end, cc, s);
-  return 0;
+  return ParseResult();
 }
 
 std::string typeEnumToString(TypeEnum key){

@@ -17,7 +17,7 @@ std::string PreOpToken::desc(){
 }
 
 AST *PreOpToken::toAST(CC *cc){
-  return new PreOp(op, (Expression *)value->toAST(cc));
+  return new PreOp(op, (Expression *)value->getAST(cc));
 }
 
 ParseResult PreOpParser::scheme(CC *cc, Source *s, int pos){

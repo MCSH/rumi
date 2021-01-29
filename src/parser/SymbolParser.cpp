@@ -4,7 +4,7 @@
 
 ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
   pos = skipws(&s->str, pos);
-  if(pos == -1) return 0;
+  if(pos == -1) return ParseResult();
   char c = s->str.at(pos);
   int epos = pos ;
   Symbol sb;
@@ -32,7 +32,7 @@ ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
       epos++;
       break;
     }
-    return 0;
+    return ParseResult();
   case ':':
     sb = s_col;
     break;
@@ -112,10 +112,10 @@ ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
     sb = s_exc;
     break;
   default:
-    return 0;
+    return ParseResult();
   }
 
-  if(sb_set && sb != this->sb) return 0;
+  if(sb_set && sb != this->sb) return ParseResult();
   return new SymbolToken(sb, pos, epos, cc, s);
 }
 

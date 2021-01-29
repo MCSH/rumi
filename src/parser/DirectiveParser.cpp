@@ -15,7 +15,7 @@ DirectiveToken::DirectiveToken(std::string id, Token *top, CC *cc, Source *s, in
 }
 
 AST *DirectiveToken::toAST(CC *cc){
-  return new Directive(id, top->toAST(cc));
+  return new Directive(id, top->getAST(cc));
 }
 
 std::string DirectiveToken::desc(){
@@ -31,7 +31,7 @@ ParseResult DirectiveParser::scheme(CC *cc, Source *s, int pos){
 
   std::string id = ((IdToken *)((TupleToken*) base.token)->t2)->id;
 
-  if(id != "compile") return 0; // Only match compile for now
+  if(id != "compile") return ParseResult(); // Only match compile for now
 
   return ParseResult(new DirectiveToken(id, top.token, cc, s, base.token->spos, top.token->epos));
 }

@@ -7,8 +7,7 @@
 void VariableValue::compile(CC *cc){
   // ensure variable exists
   if(!cc->lookup(id)){
-    cc->debug(NONE) << "Couldn't find variable " << id << std::endl;
-    exit(1);
+    graceFulExit(dbg, "Couldn't find variable " + id);
   }
 }
 

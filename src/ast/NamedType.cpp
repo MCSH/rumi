@@ -1,6 +1,7 @@
 #include "NamedType.h"
 #include "Named.h"
 #include "../base.h"
+#include "ast.h"
 
 NamedType::NamedType(std::string id)
   : id(id)
@@ -12,8 +13,7 @@ void NamedType::prepare(CC *cc){
 void NamedType::compile(CC *cc){
   Named *named = cc->lookup(id);
   if(!named || !named->isType){
-    cc->debug(NONE) << id << " is not a type!" << std::endl;
-    exit(1);
+    graceFulExit(dbg, id + " is not a type!");
   }
 
   resolvedType = named->type;

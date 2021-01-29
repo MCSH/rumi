@@ -52,19 +52,19 @@ AST *DefineToken::toAST(CC *cc){
   if(!type){
     if (FunctionBodyToken *fbt = dynamic_cast<FunctionBodyToken *>(value)) {
       // We have a static function
-      auto tmp = fbt->toAST(cc);
+      auto tmp = (Function*)fbt->getAST(cc);
 
       tmp->id = id;
       return tmp;
     }
     if (FunctionSigToken *fst = dynamic_cast<FunctionSigToken *>(value)) {
       // We have a static function
-      auto tmp = fst->toAST(cc);
+      auto tmp = (FunctionSig*)fst->getAST(cc);
 
       tmp->id = id;
       return tmp;
     }
   }
 
-  return new Define(id, value?(Expression *)value->toAST(cc):0, type?(Type *)type->toAST(cc):0);
+  return new Define(id, value?(Expression *)value->getAST(cc):0, type?(Type *)type->getAST(cc):0);
 }

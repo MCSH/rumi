@@ -2,14 +2,14 @@
 #include "../base.h"
 #include "../LLContext.h"
 #include "Named.h"
+#include "ast.h"
 #include <ostream>
 
 void MemAccess::compile(CC *cc){
   exp->compile(cc);
   // ensure id belongs to exp
   if(!exp->type(cc)->hasMem(cc, exp, id)){
-    cc->debug(NONE) << "Expression doesn't have member " << id << std::endl;
-    exit(1);
+    graceFulExit(dbg, "Expression of type " + exp->type(cc)->toString() +  " doesn't have member " + id);
   }
 }
 

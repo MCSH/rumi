@@ -2,6 +2,7 @@
 #include "../base.h"
 #include "../LLContext.h"
 #include "PrimitiveType.h"
+#include "ast.h"
 
 String::String(std::string val)
   : val(val)
@@ -19,6 +20,6 @@ Type *String::type(CC *cc){
 }
 
 void *String::allocagen(CC *cc){
-  cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
-  exit(1);
+  graceFulExit(dbg, "Calling alloca on unsupported type");
+  return 0;
 }

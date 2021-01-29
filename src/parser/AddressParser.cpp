@@ -13,7 +13,7 @@ AddressToken::AddressToken(Token *exp, CC *cc, Source *s, int spos, int epos)
 }
 
 AST *AddressToken::toAST(CC *cc){
-  return new Address((Expression *) exp->toAST(cc));
+  return new Address((Expression *) exp->getAST(cc));
 }
 
 std::string AddressToken::desc(){

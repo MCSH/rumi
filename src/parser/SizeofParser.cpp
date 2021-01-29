@@ -16,7 +16,7 @@ std::string SizeofToken::desc(){
 }
 
 AST *SizeofToken::toAST(CC *cc){
-  return new Sizeof((Type*) type->toAST(cc));
+  return new Sizeof((Type*) type->getAST(cc));
 }
 
 SizeofParser::SizeofParser()

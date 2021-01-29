@@ -65,7 +65,7 @@ AST *BinOpToken::toAST(CC* cc){
     }
   }
   std::string ops = symbolDesc(op);
-  return new BinOp((Expression *)lhs->toAST(cc), ops, (Expression *)rhs->toAST(cc));
+  return new BinOp((Expression *)lhs->getAST(cc), ops, (Expression *)rhs->getAST(cc));
 }
 
 std::string BinOpToken::desc(){
@@ -147,7 +147,7 @@ ParseResult BinOpParser::innerscheme(CC *cc, Source *s, int pos){
   tmp = v1 >> orp;
   if(tmp) return tmp >> vp;
 
-  return 0;
+  return ParseResult();
 }
 
 

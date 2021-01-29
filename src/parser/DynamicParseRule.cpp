@@ -4,6 +4,7 @@
 #include "Token.h"
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
+#include "../DebugInfo.h"
 
 DynamicParseRule::DynamicParseRule(CC *cc, std::string name)
   : name(name)
@@ -22,15 +23,15 @@ DynamicParseRule::DynamicParseRule(CC *cc, std::string name)
   innerf = (ParseResult *(*)(void *, CC *, Source *, int)) EE->getFunctionAddress(fname);
 
   if(!innerf){
-    cc->debug(NONE) << "Parser " << name << " was not declared properly, missing method parse" << std::endl;
-    exit(1);
+    // TODO location?
+    graceFulExit(new DebugInfo(new ParseResult()), "Parser " + name + " was not declared properly, missing method parse");
   }
 }
 
 ParseResult DynamicParseRule::scheme(CC *cc, Source *s, int pos){
   auto ans = innerf(p, cc, s, pos);
 
-  if(!ans) return 0;
+  if(!ans) return ParseResult();
 
   return ParseResult(new DynamicParseToken(this, ans->token));
 }

@@ -23,6 +23,6 @@ Type *ConstInt::type(CC *cc){
 
 
 void *ConstInt::allocagen(CC *cc){
-  cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
-  exit(1);
+  graceFulExit(dbg, "Calling alloca on unsupported type");
+  return 0;
 }

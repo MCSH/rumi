@@ -14,7 +14,7 @@ AssignToken::AssignToken(Token *expr, Token *value, CC *cc, Source *s, int pos,
 }
 
 AST *AssignToken::toAST(CC* cc){
-  return new Assign((Expression *) expr->toAST(cc), (Expression *)value->toAST(cc));
+  return new Assign((Expression *) expr->getAST(cc), (Expression *)value->getAST(cc));
 }
 
 std::string AssignToken::desc(){

@@ -1,6 +1,7 @@
 #include "BinOp.h"
 #include "../base.h"
 #include "PointerType.h"
+#include "ast.h"
 
 BinOp::BinOp(Expression *lhs, std::string op, Expression *rhs)
   : lhs(lhs)
@@ -13,8 +14,7 @@ void BinOp::compile(CC *cc){
   rhs->compile(cc);
 
   if(!lhs->type(cc)->hasOp(cc, op, rhs)){
-    cc->debug(NONE) << "Type doesn't support ops" << std::endl;
-    exit(1);
+    graceFulExit(dbg, "Type doesn't support op " + op);
   }
 }
 
@@ -32,7 +32,7 @@ void *BinOp::exprgen(CC *cc){
 }
 
 void *BinOp::allocagen(CC *cc){
-  cc->debug(NONE) << "Calling alloca on unsupported type" << std::endl;
-  exit(1);
+  graceFulExit(dbg, "Calling alloca on unsupported type");
+  return 0;
 }
 

@@ -15,7 +15,7 @@ FCall *FCallToken::toAST(CC *cc){
 
   f->id = id;
   for(Token *a: args){
-    f->args.push_back((Expression *)a->toAST(cc));
+    f->args.push_back((Expression *)a->getAST(cc));
   }
 
   return f;

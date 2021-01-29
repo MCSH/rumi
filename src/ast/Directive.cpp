@@ -1,8 +1,10 @@
 #include "Directive.h"
 #include "../LLContext.h"
 #include "../base.h"
+#include "ast.h"
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
+#include "../DebugInfo.h"
 
 Directive::Directive(std::string id, AST *top)
   : id(id)
@@ -11,15 +13,13 @@ Directive::Directive(std::string id, AST *top)
 
 void Directive::prepare(CC *cc){
   if(id != "compile"){
-    cc->debug(NONE) << "Directive  " << id << " Not implemented" << std::endl;
-    exit(1);
+    graceFulExit(dbg, "Directive " + id + " not implemented");
   }
 
   // assuming @compile
   f = dynamic_cast<Function *>(top);
   if(!f){
-    cc->debug(NONE) << "@compile only works on functions" << std::endl;
-    exit(1);
+    graceFulExit(dbg, "@compile works only on functions");
   }
 
   f->prepare(cc);
@@ -65,8 +65,7 @@ void Directive::compile(CC *cc){
   }
 
   if(!isRan){
-    cc->debug(NONE) << "Compile directive " << f->id << " doesn't have a correct signature." << std::endl;
-    exit(1);
+    graceFulExit(dbg, "Compile directive " +  f->id + " doesn't have a correct signature");
   }
 
   if(retval == 1){
@@ -74,7 +73,7 @@ void Directive::compile(CC *cc){
     cc->debug(NONE) << "Compile directive "<< f->id << " returned warning" << std::endl;
   } else if(retval > 1){
     // ERROR
-    cc->debug(NONE) << "Compile directive " << f->id << " returned " << retval << std::endl;
+    cc->debug(NONE) << "Compile directive " << f->id << " returned " << retval << " " << *dbg << std::endl;
     exit(retval);
   }
 

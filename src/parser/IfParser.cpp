@@ -15,7 +15,7 @@ IfToken::IfToken(Token *value, Token *st1, Token *st2, CC *cc, Source *s, int sp
 }
 
 AST *IfToken::toAST(CC *cc){
-  return new If((Expression*)value->toAST(cc), (Statement*)st1->toAST(cc), st2?(Statement*)st2->toAST(cc):0);
+  return new If((Expression*)value->getAST(cc), (Statement*)st1->getAST(cc), st2?(Statement*)st2->getAST(cc):0);
 }
 
 std::string IfToken::desc(){

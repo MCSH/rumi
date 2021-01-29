@@ -16,7 +16,7 @@ std::string PtrValueToken::desc(){
 }
 
 AST* PtrValueToken::toAST(CC *cc){
-  return new PtrValue((Expression *) exp->toAST(cc));
+  return new PtrValue((Expression *) exp->getAST(cc));
 }
 
 PtrValueParser::PtrValueParser()
