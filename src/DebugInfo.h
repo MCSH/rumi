@@ -25,6 +25,7 @@ class DebugInfo{
   DebugInfo(Token *t);
   DebugInfo(Failure *t);
   DebugInfo(ParseResult *p);
+  DebugInfo(CC *cc, Source *s, int pos);
 
   virtual std::string toString();
 };

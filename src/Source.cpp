@@ -77,7 +77,7 @@ void Source::parse(CC *cc){
   }
 
   if (skipwscomment(&this->str, epos + 1) != -1) {
-    graceFulExit(new DebugInfo(&t), "Couldn't parse file");
+    graceFulExit(new DebugInfo(cc, this, skipwscomment(&this->str, epos+1)), "Couldn't parse file");
     //cc->debug(NONE) << "Couldn't parse file at index " << epos << " - " <<  str.size() << std::endl;
     //exit(1);
   }

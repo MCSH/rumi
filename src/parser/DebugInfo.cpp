@@ -42,6 +42,14 @@ DebugInfo::DebugInfo(ParseResult *p){
   }
 }
 
+DebugInfo::DebugInfo(CC *cc, Source *s, int pos){
+  this->cc = cc;
+  this->s = s;
+  this->pos = pos;
+
+  resolvelineno();
+}
+
 std::string DebugInfo::toString(){
   if(unknown) return "unknown location";
   std::stringstream sb;
