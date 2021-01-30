@@ -401,32 +401,32 @@ void DirectiveSetAST(Directive *d,AST *a){
 Enum *createEnum(CC *cc){
   return new Enum();
 }
-char *C_EnumGetId(Enum *e){
+char *EnumGetId(Enum *e){
   return STRTOCSTR(e->id);
 }
-char *C_EnumGetMemberKey(Enum *e, int i){
+char *EnumGetMemberKey(Enum *e, int i){
   if(i >= e->memberOrders.size()) return 0;
   return STRTOCSTR(e->memberOrders[i]);
 }
-int C_EnumGetMemberValue(Enum *e, char *ckey){
+int EnumGetMemberValue(Enum *e, char *ckey){
   return e->members[CSTRTOSTR(ckey)]->num;
 }
-bool C_EnumHasMemberValue(Enum *e, char *ckey){
+bool EnumHasMemberValue(Enum *e, char *ckey){
   return e->members[CSTRTOSTR(ckey)]->hasNum;
 }
-int C_EnumCountMembers(Enum *e){
+int EnumCountMembers(Enum *e){
   return e->memberOrders.size();
 }
-void C_EnumSetId(Enum *e, char *id){
+void EnumSetId(Enum *e, char *id){
   e->id = CSTRTOSTR(id);
 }
-void C_EnumAddMember(Enum *e, CC *cc, char *key){
+void EnumAddMember(Enum *e, CC *cc, char *key){
   auto mem = new EnumMember();
   mem->key = CSTRTOSTR(key);
   mem->hasNum = false;
   e->addMember(cc, mem);
 }
-void C_EnumAddMemberValue(Enum *e, CC *cc, char *key, int value){
+void EnumAddMemberValue(Enum *e, CC *cc, char *key, int value){
   auto mem = new EnumMember();
   mem->key = CSTRTOSTR(key);
   mem->hasNum = true;
@@ -867,6 +867,12 @@ void StructAddMember(StructType *st, Define *d){
 }
 void StructAddMethod(StructType *st, CC *cc, Method *m){
   st->addMethod(cc, m);
+}
+void StructSetInitializer(StructType *st, Function *f){
+  st->initializer = f;
+}
+Function *StructGetInitializer(StructType *st){
+  return st->initializer;
 }
 
 StructType *CompilerGetStruct(CC *cc, char *id){
@@ -1654,6 +1660,23 @@ char *CP_NamedTypeParser_ParseResultGetId(ParseResult *p) {
   return STRTOCSTR(t->typeId);
 }
 
+#include "parser/NewParser.h"
+NewParser *CompilerGetNewParser(CC *cc){ return new NewParser();}
+ParseResult *CP_NewParserParse(NewParser *p, CC *cc, Source *s,
+                                     int pos) {
+  auto ans = p->parse(cc, s, pos);
+  return ans ? new ParseResult(ans) : 0;
+}
+ParseResult *CP_NewParserParseAfter(NewParser *p, ParseResult *pr) {
+  if (!pr)
+    return 0;
+  auto ans = *pr >> *p;
+  if (!ans)
+    return 0;
+  Token *a = ((TupleToken *)ans.token)->t2;
+  return new ParseResult(a);
+}
+
 #include "parser/NumberParser.h"
 NumberParser *CompilerGetNumberParser(CC *cc) { return new NumberParser(); }
 ParseResult *CP_NumberParserParse(NumberParser *p, CC *cc, Source *s, int pos) {
@@ -2226,20 +2249,20 @@ void *CompileContext::getCompileObj(void *e) {
 
   REGISTER_CALLBACK("Compiler$createEnum", "Compiler$createEnum_replace",
                     &createEnum);
-  REGISTER_CALLBACK("C_Enum$getId", "C_Enum$getId_replace", &C_EnumGetId);
+  REGISTER_CALLBACK("C_Enum$getId", "C_Enum$getId_replace", &EnumGetId);
   REGISTER_CALLBACK("C_Enum$getMemberKey", "C_Enum$getMemberKey_replace",
-                    &C_EnumGetMemberKey);
+                    &EnumGetMemberKey);
   REGISTER_CALLBACK("C_Enum$getMemberValue", "C_Enum$getMemberValue_replace",
-                    &C_EnumGetMemberValue);
+                    &EnumGetMemberValue);
   REGISTER_CALLBACK("C_Enum$hasMemberValue", "C_Enum$hasMemberValue_replace",
-                    &C_EnumHasMemberValue);
+                    &EnumHasMemberValue);
   REGISTER_CALLBACK("C_Enum$countMembers", "C_Enum$countMembers_replace",
-                    &C_EnumCountMembers);
-  REGISTER_CALLBACK("C_Enum$setId", "C_Enum$setId_replace", &C_EnumSetId);
+                    &EnumCountMembers);
+  REGISTER_CALLBACK("C_Enum$setId", "C_Enum$setId_replace", &EnumSetId);
   REGISTER_CALLBACK("C_Enum$addMember", "C_Enum$addMember_replace",
-                    &C_EnumAddMember);
+                    &EnumAddMember);
   REGISTER_CALLBACK("C_Enum$addMemberValue", "C_Enum$addMemberValue_replace",
-                    &C_EnumAddMemberValue);
+                    &EnumAddMemberValue);
 
   // FCall
   REGISTER_CALLBACK("Compiler$createFCall", "Compiler$createFCall_replace",
@@ -2486,6 +2509,10 @@ void *CompileContext::getCompileObj(void *e) {
                     &StructAddMember);
   REGISTER_CALLBACK("C_Struct$addMethod", "C_Struct$addMethod_replace",
                     &StructAddMethod);
+  REGISTER_CALLBACK("C_Struct$setInitializer", "C_Struct$setInitializer_replace",
+                    &StructSetInitializer);
+  REGISTER_CALLBACK("C_Struct$getInitializer", "C_Struct$getInitializer_replace",
+                    &StructGetInitializer);
   REGISTER_CALLBACK("Compiler$getStruct", "Compiler$getStruct_replace",
                     &CompilerGetStruct);
 
@@ -2878,6 +2905,16 @@ void *CompileContext::getCompileObj(void *e) {
   REGISTER_CALLBACK("CP_NamedTypeParser_ParseResult$getId",
                     "CP_NamedTypeParser_ParseResult$getId_replace",
                     &CP_NamedTypeParser_ParseResultGetId);
+
+  REGISTER_CALLBACK("Compiler$getNewParser",
+                    "Compiler$getNewParser_replace",
+                    &CompilerGetNewParser);
+  REGISTER_CALLBACK("CP_NewParser$parse",
+                    "CP_NewParser$parse_replace",
+                    &CP_NewParserParse);
+  REGISTER_CALLBACK("CP_NewParser$parseAfter",
+                    "CP_NewParser$parseAfter_replace",
+                    &CP_NewParserParseAfter);
 
   REGISTER_CALLBACK("Compiler$getNumberParser",
                     "Compiler$getNumberParser_replace",

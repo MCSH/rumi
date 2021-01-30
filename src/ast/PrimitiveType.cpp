@@ -466,3 +466,8 @@ void *PrimitiveType::preopgen(CC *cc, std::string op, Expression *value){
 std::string PrimitiveType::toString(){
   return typeEnumToString(key);
 }
+
+
+void PrimitiveType::initgen(CC *cc, Expression *alloca){
+  // Do nothing
+}

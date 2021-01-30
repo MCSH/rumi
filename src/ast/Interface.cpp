@@ -233,3 +233,7 @@ void *Interface::preopgen(CC *cc, std::string op, Expression *value){
 std::string Interface::toString(){
   return id;
 }
+
+void Interface::initgen(CC *cc, Expression *alloca){
+  // Do nothing
+}

@@ -6,6 +6,8 @@
 #include "Expression.h"
 #include "Method.h"
 #include "Interface.h"
+#include "Address.h"
+#include "FCall.h"
 
 StructType::StructType(std::string id)
   : id(id)
@@ -58,7 +60,6 @@ void StructType::resetBody(CC *cc){
 }
 
 bool StructType::hasOp(CC *cc, std::string op, Expression *rhs){
-  // TODO
   return false;
 }
 void* StructType::opgen(CC *cc, Expression *lhs, std::string op, Expression *rhs){
@@ -120,6 +121,10 @@ void *StructType::memalloca(CC *cc, Expression *exp, std::string id){
 
 void StructType::addMethod(CC *cc, Method *m){
   methods[m->methodName] = m;
+
+  if(m->methodName == "!new"){
+    initializer = m->f;
+  }
 }
 
 Method *StructType::resolveMethod(CC *cc, std::string id){
@@ -161,4 +166,22 @@ void *StructType::preopgen(CC *cc, std::string op, Expression *value){
 
 std::string StructType::toString(){
   return id;
+}
+
+void StructType::initgen(CC *cc, Expression *alloca){
+  // TODO
+  if(!initializer) return;
+
+  FCallStmt *fcs = new FCallStmt();
+
+  // TODO check this
+  alloca = new Address(alloca);
+
+  // Create the function call
+  fcs->fc.id = initializer->id;
+  fcs->fc.args.push_back(alloca);
+
+  fcs->prepare(cc);
+  fcs->compile(cc);
+  fcs->codegen(cc);
 }

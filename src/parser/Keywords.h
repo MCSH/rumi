@@ -12,4 +12,5 @@ enum Keyword : short {
   k_false,
   k_import,
   k_enum,
+  k_new,
 };

@@ -194,6 +194,11 @@ Compiler.getNamedTypeParser := () -> *CP_NamedTypeParser{}
 CP_NamedTypeParser.parse := (c: *Compiler, s: *Source, pos: u32) -> *CP_NamedTypeParser_ParseResult{}
 CP_NamedTypeParser.parseAfter := (p:*ParseResult)-> *CP_NamedTypeParser_ParseResult{}
 
+CP_NewParser: struct{}
+Compiler.getNewParser := () -> *CP_NewParser{}
+CP_NewParser.parse := (c: *Compiler, s: *Source, pos: u32) -> *CP_MethodParser_ParseResult{}
+CP_NewParser.parseAfter := (p: *ParseResult) -> *CP_MethodParser_ParseResult{}
+
 CP_NumberParser: struct{}
 CP_NumberParser_ParseResult: struct{}
 CP_NumberParser_ParseResult.getValue := () -> u32{}

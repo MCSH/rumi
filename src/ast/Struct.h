@@ -1,5 +1,6 @@
 #pragma once
 #include "Define.h"
+#include "Function.h"
 #include "Type.h"
 #include <vector>
 #include <map>
@@ -12,6 +13,8 @@ public:
   std::string id;
   std::vector<Define *> members;
   std::map<std::string, Method *> methods;
+
+  Function *initializer = 0;
 
   void *generatedType = 0;
 
@@ -27,6 +30,8 @@ public:
   virtual void* typegen(CC *cc) override;
   virtual void compile(CC *cc) override;
   virtual void prepare(CC *cc) override;
+
+  virtual void initgen(CC *cc, Expression *alloca) override;
 
   virtual bool hasOp(CC *cc, std::string op, Expression *rhs) override;
   virtual void* opgen(CC *cc, Expression *lhs, std::string op, Expression *rhs) override;

@@ -70,3 +70,8 @@ std::string FunctionType::toString(){
   ans += ")->" + (returnType?returnType->toString():"unit");
   return ans;
 }
+
+
+void FunctionType::initgen(CC *cc, Expression *alloca){
+  // Do nothing
+}

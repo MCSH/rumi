@@ -13,6 +13,8 @@ class PointerType: public Type{
   virtual void compile(CC *cc) override;
   virtual void prepare(CC *cc) override;
 
+  virtual void initgen(CC *cc, Expression *alloca) override;
+
   virtual bool hasOp(CC *cc, std::string op, Expression *rhs) override;
   virtual void* opgen(CC *cc, Expression *lhs, std::string op, Expression *rhs) override;
   virtual Type* optyperesolve(CC *cc, std::string op, Expression *rhs) override;

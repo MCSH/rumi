@@ -112,3 +112,7 @@ void *Enum::enumMemGen(CC *cc, std::string id){
   int value = members[id]->num;
   return llvm::ConstantInt::get((llvm::Type *)innerType->typegen(cc), value, true);
 }
+
+void Enum::initgen(CC *cc, Expression *alloca){
+  // Do nothing
+}

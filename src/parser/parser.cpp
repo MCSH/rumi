@@ -35,6 +35,7 @@
 #include "NamedTypeParser.h"
 #include "MemAccessParser.h"
 #include "MethodParser.h"
+#include "NewParser.h"
 #include "MethodCallParser.h"
 #include "MethodCallStmtParser.h"
 #include "BoolValueParser.h"
@@ -51,6 +52,7 @@ void Parser::init(CompileContext *cc){
   this->registerTopRule(new InterfaceParser());
   this->registerTopRule(new EnumParser());
   this->registerTopRule(new MethodParser());
+  this->registerTopRule(new NewParser());
   this->registerTopRule(new ImportParser());
   this->registerTopRule(new DirectiveParser());
 

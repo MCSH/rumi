@@ -130,3 +130,7 @@ void *PointerType::preopgen(CC *cc, std::string op, Expression *value) {
 std::string PointerType::toString(){
   return "*" + innerType->toString();
 }
+
+void PointerType::initgen(CC *cc, Expression *alloca){
+  // Do nothing
+}

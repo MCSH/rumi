@@ -9,6 +9,9 @@ void VariableValue::compile(CC *cc){
   if(!cc->lookup(id)){
     graceFulExit(dbg, "Couldn't find variable " + id);
   }
+  if(cc->lookup(id)->isType){
+    graceFulExit(dbg, "Couldn't access the value of a type in a variable " + id);
+  }
 }
 
 void VariableValue::prepare(CC *cc) {}

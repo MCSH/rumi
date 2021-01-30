@@ -235,6 +235,8 @@ C_Struct.getMember := (i: int) -> *C_Define{}
 C_Struct.setId := (id: string) -> unit{}
 C_Struct.addMember := (d: *C_Define) -> unit{}
 C_Struct.addMethod := (c: *Compiler, m: *C_Method) -> unit{} // Don't need to call directly if you are returning method as an AST
+C_Struct.setInitializer := (f: *C_Function) -> unit{}
+C_Struct.getInitializer := () -> *C_Function{}
 Compiler.getStruct := (id: string) -> *C_Struct{}
 // TODO interfaces and structs
 

@@ -9,8 +9,12 @@ class Type: public AST{
  public:
 
   virtual std::string toString() = 0;
-  
+
   virtual void* typegen(CC *cc) = 0;
+
+  // This function is called with an alloca that has the type (typegen)
+  virtual void initgen(CC *cc, Expression *alloca) = 0;
+  
   virtual bool hasOp(CC *cc, std::string op, Expression *rhs) = 0;
   virtual void* opgen(CC *cc, Expression *lhs, std::string op, Expression *rhs)=0;
   virtual Type* optyperesolve(CC *cc, std::string op, Expression *rhs) = 0;

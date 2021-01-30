@@ -78,3 +78,7 @@ void *NamedType::preopgen(CC *cc, std::string op, Expression *value){
 std::string NamedType::toString(){
   return id;
 }
+
+void NamedType::initgen(CC *cc, Expression *alloca){
+  resolvedType -> initgen(cc, alloca);
+}

@@ -4,6 +4,7 @@
 #include "../LLContext.h"
 #include "Expression.h"
 #include "Type.h"
+#include "VariableValue.h"
 
 void Define::prepare(CC *cc){
   if(expression) expression->prepare(cc);
@@ -31,6 +32,8 @@ void Define::codegen(CC *cc){
 
   if(expression){
     cc->llc->builder->CreateStore((llvm::Value*)expression->exprgen(cc), (llvm::Value*)named->alloca);
+  } else {
+    type->initgen(cc, new VariableValue(id));
   }
 }
 
