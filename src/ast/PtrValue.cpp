@@ -3,6 +3,7 @@
 #include "../LLContext.h"
 #include "PointerType.h"
 
+// NOTE: PtrValue should not rely on prepare / compile directly. The inner exp will always get their prepare/compile called, but address might not. (EX: Struct op gen)
 PtrValue::PtrValue(Expression *ptr)
   : ptr(ptr)
 {}

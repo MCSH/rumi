@@ -23,8 +23,10 @@ int precSymbol(Symbol op){
   case s_div:
   case s_rem:
     return 3;
+  default:
+    std::cout << "[WARNING]: UNKNOWN OP IN PREC " << std::endl;
+    return 4;
   }
-  std::cout << "UNKNOWN OP IN PREC " << std::endl;
   exit(1);
 }
 
@@ -94,75 +96,7 @@ ParseResult BinOpParser::scheme(CC *cc, Source *s, int pos){
 ParseResult BinOpParser::innerscheme(CC *cc, Source *s, int pos){
   // exp op exp
   auto v1 = vp.parse(cc, s, pos);
-
-  // op = +?
-  auto tmp = v1 >> addp;
-  if(tmp) return tmp >> vp;
-
-  // op = -?
-  tmp = v1 >> minusp;
-  if(tmp) return tmp >> vp;
-
-  // op = *?
-  tmp = v1 >> multp;
-  if(tmp) return tmp >> vp;
-
-  // op = /?
-  tmp = v1 >> divp;
-  if(tmp) return tmp >> vp;
-
-  // op = %?
-  tmp = v1 >> remp;
-  if(tmp) return tmp >> vp;
-
-  // op = ==?
-  tmp = v1 >> eqp;
-  if(tmp) return tmp >> vp;
-
-  // op = !=?
-  tmp = v1 >> neqp;
-  if(tmp) return tmp >> vp;
-
-  // op = >?
-  tmp = v1 >> gtp;
-  if(tmp) return tmp >> vp;
-
-  // op = >=?
-  tmp = v1 >> gtep;
-  if(tmp) return tmp >> vp;
-
-  // op = <?
-  tmp = v1 >> ltp;
-  if(tmp) return tmp >> vp;
-
-  // op = <=?
-  tmp = v1 >> ltep;
-  if(tmp) return tmp >> vp;
-
-  // op = &&?
-  tmp = v1 >> andp;
-  if(tmp) return tmp >> vp;
-
-  // op = ||?
-  tmp = v1 >> orp;
-  if(tmp) return tmp >> vp;
+  return v1 >> opp >> vp;
 
   return ParseResult();
 }
-
-
-BinOpParser::BinOpParser()
-  : addp(s_plus)
-  , minusp(s_minus)
-  , multp(s_mult)
-  , divp(s_div)
-  , remp(s_rem)
-  , eqp(s_eqeq)
-  , neqp(s_neq)
-  , gtp(s_gt)
-  , gtep(s_gte)
-  , ltp(s_lt)
-  , ltep(s_lte)
-  , andp(s_andand)
-  , orp(s_pipepipe)
-{}

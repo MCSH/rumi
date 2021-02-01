@@ -1,6 +1,6 @@
 #pragma once
 #include "ExpressionParser.h"
-#include "SymbolParser.h"
+#include "OpParser.h"
 
 class BinOpToken: public Token{
 public:
@@ -16,12 +16,7 @@ class BinOpParser: public ParseRule{
  public:
   virtual ParseResult scheme(CC *cc, Source *s, int pos);
   ParseResult innerscheme(CC *cc, Source *s, int pos);
-  BinOpParser();
  private:
-  SymbolParser addp, minusp, multp, divp, remp;
-  SymbolParser eqp, neqp;
-  SymbolParser gtp, gtep;
-  SymbolParser ltp, ltep;
-  SymbolParser andp, orp;
   ExpressionParser vp;
+  OpParser opp;
 };

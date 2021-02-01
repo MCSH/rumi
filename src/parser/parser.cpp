@@ -36,6 +36,7 @@
 #include "MemAccessParser.h"
 #include "MethodParser.h"
 #include "NewParser.h"
+#include "BinOpDefParser.h"
 #include "MethodCallParser.h"
 #include "MethodCallStmtParser.h"
 #include "BoolValueParser.h"
@@ -52,15 +53,16 @@ void Parser::init(CompileContext *cc){
   this->registerTopRule(new InterfaceParser());
   this->registerTopRule(new EnumParser());
   this->registerTopRule(new MethodParser());
+  this->registerTopRule(new BinOpDefParser());
   this->registerTopRule(new NewParser());
   this->registerTopRule(new ImportParser());
   this->registerTopRule(new DirectiveParser());
 
+  this->registerExpressionRule(new BinOpParser());
   this->registerExpressionRule(new MethodCallParser());
   this->registerExpressionRule(new MemAccessParser());
   this->registerExpressionRule(new AddressParser());
   this->registerExpressionRule(new CastExprParser());
-  this->registerExpressionRule(new BinOpParser());
   this->registerExpressionRule(new PreOpParser());
   this->registerExpressionRule(new NumberParser());
   this->registerExpressionRule(new FCallParser());
@@ -315,7 +317,12 @@ ParseResult::~ParseResult(){
 
 
 std::ostream &operator<<(std::ostream &os, ParseResult &s){
-  return os << *s.token;
+  if(s.token)
+    return os << *s.token;
+  else if(s.failure)
+    return os << "Failure"; // TODO
+  else
+    return os << "UNKNOWN PARSERESULT";
 }
 
 Token::~Token(){

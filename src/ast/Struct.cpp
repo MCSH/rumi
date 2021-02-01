@@ -1,7 +1,10 @@
 #include "Struct.h"
 #include "../base.h"
 #include "../LLContext.h"
+#include "BinOpDef.h"
 #include "Named.h"
+#include "PointerType.h"
+#include "PtrValue.h"
 #include "Type.h"
 #include "Expression.h"
 #include "Method.h"
@@ -60,21 +63,75 @@ void StructType::resetBody(CC *cc){
 }
 
 bool StructType::hasOp(CC *cc, std::string op, Expression *rhs){
+  // check for rhs type
+  auto name = id + "." + op + "." + rhs->type(cc)->toString();
+  BinOpDef *bod = 0;
+  if(binops.find(name) != binops.end())
+    bod = binops[name];
+  // check for pointer to rhs type
+  else if(PointerType *pt = dynamic_cast<PointerType *>(rhs->type(cc))){
+    auto altname = id + "." + op + "." + pt->innerType->toString();
+    if (binops.find(altname) != binops.end())
+      bod = binops[altname];
+  }
+  if(bod) return true;
   return false;
 }
+// NOTE: This function doesn't respect prepare/compile for fcall and address
 void* StructType::opgen(CC *cc, Expression *lhs, std::string op, Expression *rhs){
-  // TODO
-  return 0;
+  bool rhsIsPointer = false;
+  auto name = id + "." + op + "." + rhs->type(cc)->toString();
+  BinOpDef *bod = 0;
+  if(binops.find(name) != binops.end())
+    bod = binops[name];
+  // check for pointer to rhs type
+  else if(PointerType *pt = dynamic_cast<PointerType *>(rhs->type(cc))){
+    rhsIsPointer = true;
+    auto altname = id + "." + op + "." + pt->innerType->toString();
+    if (binops.find(altname) != binops.end())
+      bod = binops[altname];
+  }
+  if(!bod) return 0;
+  if(rhsIsPointer) rhs = new PtrValue(rhs);
+  if(bod->firstPtr){
+    lhs = new Address(lhs);
+  }
+  if(bod->secondPtr){
+    rhs = new Address(rhs);
+  }
+
+  FCall fc;
+  fc.id = bod->f->id;
+  fc.args.push_back(lhs);
+  fc.args.push_back(rhs);
+  return fc.exprgen(cc);
 }
 Type* StructType::optyperesolve(CC *cc, std::string op, Expression *rhs){
-  // TODO
+  // check for rhs type
+  auto name = id + "." + op + "." + rhs->type(cc)->toString();
+  BinOpDef *bod = 0;
+  if(binops.find(name) != binops.end())
+    bod = binops[name];
+  // check for pointer to rhs type
+  else if(PointerType *pt = dynamic_cast<PointerType *>(rhs->type(cc))){
+    auto altname = id + "." + op + "." + pt->innerType->toString();
+    if (binops.find(altname) != binops.end())
+      bod = binops[altname];
+  }
+  if(bod) return bod->f->returnType;
   return 0;
 }
 Compatibility StructType::compatible(CC *cc, Type *t){
   // TODO
+  if(StructType *st = dynamic_cast<StructType*>(t->baseType(cc))){
+    if(st == this) return OK;
+  }
   return INCOMPATIBLE;
 }
 void* StructType::castgen(CC *cc, Expression *e){
+  if(StructType *st = dynamic_cast<StructType*>(e->type(cc)->baseType(cc))){
+    if(st == this) return e->exprgen(cc);
+  }
   // TODO
   return 0;
 }
@@ -125,6 +182,10 @@ void StructType::addMethod(CC *cc, Method *m){
   if(m->methodName == "!new"){
     initializer = m->f;
   }
+}
+
+void StructType::addBinOp(CC *cc, BinOpDef *bod){
+  binops[bod->methodName] = bod;
 }
 
 Method *StructType::resolveMethod(CC *cc, std::string id){

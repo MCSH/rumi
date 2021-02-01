@@ -1,5 +1,6 @@
 #include "PointerType.h"
 #include "PrimitiveType.h"
+#include "Struct.h"
 #include "Type.h"
 #include "Expression.h"
 #include "PrimitiveType.h"
@@ -31,6 +32,9 @@ bool PointerType::hasOp(CC *cc, std::string op, Expression *rhs){
       return true;
     }
   }
+  if(StructType *st = dynamic_cast<StructType*>(innerType->baseType(cc))){
+    return innerType->hasOp(cc, op, rhs);
+  }
   return false;
 }
 
@@ -48,6 +52,9 @@ void *PointerType::opgen(CC *cc, Expression *lhs, std::string op, Expression *rh
       return cc->llc->builder->CreateInBoundsGEP(p, ind);
     }
   }
+  if(StructType *st = dynamic_cast<StructType*>(innerType->baseType(cc))){
+    return innerType->opgen(cc, new PtrValue(lhs), op, rhs);
+  }
   return 0;
 }
 
@@ -57,6 +64,9 @@ Type *PointerType::optyperesolve(CC *cc, std::string op, Expression *rhs){
     if(isInt(pt->key) && (op == "+" || op == "-")){
       return this;
     }
+  }
+  if(StructType *st = dynamic_cast<StructType*>(innerType->baseType(cc))){
+    return innerType->optyperesolve(cc, op, rhs);
   }
   return 0;
 }

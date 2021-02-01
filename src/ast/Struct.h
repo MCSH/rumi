@@ -1,4 +1,5 @@
 #pragma once
+#include "BinOpDef.h"
 #include "Define.h"
 #include "Function.h"
 #include "Type.h"
@@ -7,12 +8,15 @@
 
 class Method;
 class Interface;
+class BinOpDef;
 
+// TODO expose additions to compiler API
 class StructType: public Type{
 public:
   std::string id;
   std::vector<Define *> members;
   std::map<std::string, Method *> methods;
+  std::map<std::string, BinOpDef *> binops;
 
   Function *initializer = 0;
 
@@ -21,6 +25,7 @@ public:
   StructType(std::string id);
 
   void addMethod(CC *cc, Method *m);
+  void addBinOp(CC *cc, BinOpDef *bod);
 
   Method *resolveMethod(CC *cc, std::string methodId);
   int resolveInterfaceVptrInd(CC *cc, Interface *it);

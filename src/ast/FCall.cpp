@@ -5,6 +5,8 @@
 #include "Named.h"
 #include "ast.h"
 
+// NOTE: There are cases where prepare/compile won't be called on fcall, but we will ensure the function exists and that th arguments have their compile/prepeare called and they are type checked. E.x., struct opgen
+
 void FCall::compile(CC *cc){
   // ensure function exists
   if(!cc->lookup(id)){

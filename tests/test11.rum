@@ -11,8 +11,52 @@ new Vector2d := () -> unit{
   printf("inside the new function\n");
   return ;
 }
-main := ()->unit{
+
+Vector2d.print := () -> unit{
+  printf("<%d, %d>\n", self.x, self.y);
+  return;
+}
+
+// arguments could be a direct instance or a pointer to the types.
+// return type is treated as is.
+Vector2d + Vector2d := (lhs: Vector2d, rhs: *Vector2d) -> Vector2d{
+  ans : Vector2d;
+  ans.x = lhs.x + rhs.x;
+  ans.y = lhs.y + rhs.y;
+  // proof that the second one is a pointer:
+  rhs.x = 0;
+  rhs.y = 0;
+  rhs.print();
+  return ans;
+}
+
+main := () -> unit {
+  printf("=== Initialization Test ===\n\n");
   pos : Vector2d;
-  printf("pos=<%d, %d>\n", pos.x, pos.y);
+  pos.print();
+  printf("=== Normal Op Test ===\n\n");
+  movement : Vector2d;
+  movement.x = 11;
+  movement.y = 1;
+  movement.print();
+  pos = pos + movement;
+  pos.print();
+  movement.print();
+  printf("=== Op with ptr rhs Test ===\n\n");
+  movement.x = 11;
+  // It should be okay if either side is a pointer
+  pos = pos + (&movement);
+  pos.print();
+  movement.print();
+  printf("=== Op with ptr lhs, nromal rhs Test ===\n\n");
+  movement.x = 10;
+  pos = (&pos) + (movement);
+  pos.print();
+  movement.print();
+  printf("=== Op with ptr both Test ===\n\n");
+  movement.x = 10;
+  pos = (&pos) + (&movement);
+  pos.print();
+  movement.print();
   return;
 }

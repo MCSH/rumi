@@ -14,7 +14,7 @@ void BinOp::compile(CC *cc){
   rhs->compile(cc);
 
   if(!lhs->type(cc)->hasOp(cc, op, rhs)){
-    graceFulExit(dbg, "Type doesn't support op " + op);
+    graceFulExit(dbg, "Type " + lhs->type(cc)->toString() +  "  doesn't support op " + op + " with " + rhs->type(cc)->toString());
   }
 }
 

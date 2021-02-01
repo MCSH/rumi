@@ -3,6 +3,8 @@
 #include "../base.h"
 #include "ast.h"
 
+// NOTE: Address should not rely on prepare / compile directly. The inner exp will always get their prepare/compile called, but address might not. (EX: Struct op gen)
+
 Address::Address(Expression *exp)
   : exp(exp)
 {}
