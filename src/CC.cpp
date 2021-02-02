@@ -2153,6 +2153,8 @@ void *CompileContext::getCompileObj(void *e) {
   if (compileObj)
     return compileObj;
 
+  // TODO move these to a precompiled file and load it instead.
+
   compileObj = this; // nothign is insie, so we don't care
 
   // Initialize compile functions in the module.

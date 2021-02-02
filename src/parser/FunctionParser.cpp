@@ -23,11 +23,12 @@ Function *FunctionBodyToken::toAST(CC *cc){
     f->args.push_back(ar);
   }
   for(Token *t: statements){
-    Statement *s = dynamic_cast<Statement *>(t->getAST(cc));
-    if(!s){
+    AST *a = t->getAST(cc);
+    Statement *s = dynamic_cast<Statement *>(a);
+    if(a && !s){
       graceFulExit(t->getDBG(), "Statement Token was not a real statement");
     }
-    f->statements.push_back(s);
+    if(s) f->statements.push_back(s);
   }
 
   if(rt){

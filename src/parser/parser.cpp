@@ -11,6 +11,7 @@
 #include "PrimitiveTypeParser.h"
 #include "SBlockParser.h"
 #include "StatementParser.h"
+#include "Symbols.h"
 #include "WhileParser.h"
 #include "KeywordParser.h"
 #include "IdParser.h"
@@ -46,6 +47,30 @@
 #include "DirectiveParser.h"
 #include "TopParser.h"
 #include <iostream>
+#include "Symbols.h"
+
+class EmptyToken: public Token{
+public:
+  EmptyToken(CC *cc, Source *s, int spos, int epos){
+    this->cc = cc;
+    this->s = s;
+    this->spos = spos;
+    this->epos = epos;
+  }
+  virtual std::string desc() override { return ";"; }
+  virtual AST *toAST(CC *cc) override { return 0; }
+};
+
+class EmptySemiColonParser: public ParseRule{
+  SymbolParser sp;
+public:
+  EmptySemiColonParser():sp(s_semicolon){}
+  ParseResult scheme(CC *cc, Source *s, int pos){
+    auto a = sp.parse(cc, s, pos);
+    if(!a) return a;
+    return new EmptyToken(cc, s, a.token->spos, a.token->epos);
+  }
+};
 
 void Parser::init(CompileContext *cc){
   this->cc = cc;
@@ -58,6 +83,7 @@ void Parser::init(CompileContext *cc){
   this->registerTopRule(new NewParser());
   this->registerTopRule(new ImportParser());
   this->registerTopRule(new DirectiveParser());
+  this->registerTopRule(new EmptySemiColonParser());
 
   this->registerExpressionRule(new BinOpParser());
   this->registerExpressionRule(new IndexingParser());
@@ -86,6 +112,7 @@ void Parser::init(CompileContext *cc){
   this->registerStatementRule(new WhileParser());
   this->registerStatementRule(new SBlockParser());
   this->registerStatementRule(new MethodCallStmtParser());
+  this->registerStatementRule(new EmptySemiColonParser());
 
   this->registerTypeRule(new PrimitiveTypeParser());
   this->registerTypeRule(new PointerTypeParser());

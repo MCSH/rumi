@@ -1,10 +1,15 @@
 printInt := (i: int) -> unit;
 printString := (s: string) -> unit;
 
+// testing empty semicolons
+;
+;
 main := () -> int {
   i := 2;
   a : s64 = 2;
 
+// testing empty semicolons
+;
   while(i){
     i = i - 1;
     a = a * a;
