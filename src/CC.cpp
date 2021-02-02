@@ -7,6 +7,7 @@
 #include <iostream>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/IR/IRBuilder.h>
+#include <vector>
 #include "parser/DynamicParseRule.h"
 
 // Used in outputing to nowhere.
@@ -20,7 +21,28 @@ const NullStream &operator<<(NullStream &&os, const T &value) {
   return os;
 }
 
+void s_split(std::string inp, char split, std::vector<std::string> &ans){
+  int pos = 0;
+  int last = -1;
+  int size = inp.size();
+  while(pos < size){
+    if(inp[pos] == split){
+      if(pos - last - 1 )
+        ans.push_back(inp.substr(last + 1, pos - last - 1));
+      last = pos;
+    }
+    pos ++;
+  }
+
+  if(last + 1 < pos)
+    ans.push_back(inp.substr(last + 1, last - size -1));
+}
+
 CompileContext::CompileContext(int argc, char **argv){
+  const char *rumpath = std::getenv("RUMI_PATH");
+  if(rumpath){
+    s_split(rumpath, ':', rumpaths);
+  }
   this->verbosity = 0;
   for (int i = 1; i < argc; i++) {
     std::string arg = std::string(argv[i]);
@@ -39,6 +61,12 @@ CompileContext::CompileContext(int argc, char **argv){
   }
   this->debug(Verbosity::LOW)
     << "Verbosity set at " << this->verbosity << std::endl;
+
+  this->debug(LOW) << "RUMI_PATH = ";
+  for(auto p: rumpaths)
+    this->debug(LOW) << p << ":";
+  this->debug(LOW) << std::endl;
+
   /// TODO PrintInfo and exit on arg parsing error
   parser.init(this);
 }
@@ -53,7 +81,7 @@ std::ostream &CompileContext::debug(int v) {
 }
 
 void CompileContext::load(Source *s) {
-  s->loadBuff();
+  s->loadBuff(this);
   s->fetch();
   this->debug(LOW) << s->str << std::endl;
 }

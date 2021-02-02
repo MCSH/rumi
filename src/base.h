@@ -35,6 +35,8 @@ public:
   std::vector<AST *> asts;
   int ast_gened = -1;
 
+  std::vector<std::string> rumpaths;
+
   int verbosity;
   Parser parser;
   LLContext *llc;

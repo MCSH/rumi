@@ -23,7 +23,7 @@ public:
   std::string str;
   std::map<int, ParseState*> mem;
   Source(std::string name) : name(name) {}
-  void loadBuff();
+  void loadBuff(CC *cc);
   void fetch();
   ParseState *resolveState(int pos);
 

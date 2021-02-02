@@ -15,8 +15,20 @@ void Source::fetch(){
   str = sstr.str();
 }
 
-void Source::loadBuff() {
+void Source::loadBuff(CC *cc) {
   std::ifstream f(this->name);
+  if(!f.good()){
+    // file isn't in this directory, iteratively try all paths
+    for(auto p: cc->rumpaths){
+      f = std::ifstream(p + "/" + name);
+      if(f.good()) break;
+    }
+  }
+
+  if(!f.good()){
+    cc->debug(NONE) << "Couldn't find file " << name << std::endl;
+    exit(1);
+  }
 
   this->sstr << f.rdbuf();
 }
