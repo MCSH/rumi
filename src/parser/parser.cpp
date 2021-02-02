@@ -20,6 +20,7 @@
 #include "FunctionParser.h"
 #include "ReturnParser.h"
 #include "BinOpParser.h"
+#include "IndexingParser.h"
 #include "FCallParser.h"
 #include "FCallStmtParser.h"
 #include "FunctionSigParser.h"
@@ -59,6 +60,7 @@ void Parser::init(CompileContext *cc){
   this->registerTopRule(new DirectiveParser());
 
   this->registerExpressionRule(new BinOpParser());
+  this->registerExpressionRule(new IndexingParser());
   this->registerExpressionRule(new MethodCallParser());
   this->registerExpressionRule(new MemAccessParser());
   this->registerExpressionRule(new AddressParser());

@@ -471,3 +471,19 @@ std::string PrimitiveType::toString(){
 void PrimitiveType::initgen(CC *cc, Expression *alloca){
   // Do nothing
 }
+
+bool PrimitiveType::hasIndex(CC *cc, Expression *index){
+  return 0;
+}
+
+void *PrimitiveType::indexgen(CC *cc, Expression *expr, Expression *index){
+  return 0;
+}
+
+Type *PrimitiveType::indextyperesolve(CC *cc, Expression *index){
+  return 0;
+}
+
+void *PrimitiveType::indexallocagen(CC *cc, Expression *expr, Expression *index){
+  return 0;
+}

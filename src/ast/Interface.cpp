@@ -237,3 +237,19 @@ std::string Interface::toString(){
 void Interface::initgen(CC *cc, Expression *alloca){
   // Do nothing
 }
+
+bool Interface::hasIndex(CC *cc, Expression *index){
+  return 0;
+}
+
+void *Interface::indexgen(CC *cc, Expression *expr, Expression *index){
+  return 0;
+}
+
+Type *Interface::indextyperesolve(CC *cc, Expression *index){
+  return 0;
+}
+
+void *Interface::indexallocagen(CC *cc, Expression *expr, Expression *index){
+  return 0;
+}

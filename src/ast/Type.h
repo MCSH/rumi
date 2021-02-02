@@ -22,8 +22,10 @@ class Type: public AST{
   virtual Compatibility compatible(CC *cc, Type *t) = 0;
   virtual void* castgen(CC *cc, Expression *e) = 0;
 
+  // TODO hasMem shouldn't get exp...
   virtual bool hasMem(CC *cc, Expression *exp, std::string id) = 0;
   virtual void* memgen(CC *cc, Expression *exp, std::string id) = 0;
+  // TODO memtyperesolve shouldn't get exp...
   virtual Type* memtyperesolve(CC *cc, Expression *exp, std::string id) = 0;
   virtual void* memalloca(CC *cc, Expression *exp, std::string id) = 0;
 
@@ -32,4 +34,9 @@ class Type: public AST{
   virtual bool hasPreOp(CC *cc, std::string op) = 0;
   virtual Type *preoptyperesolve(CC *cc, std::string op) = 0;
   virtual void *preopgen(CC *cc, std::string op, Expression *value) = 0;
+
+  virtual bool hasIndex(CC *cc, Expression *index) = 0;
+  virtual void *indexgen(CC *cc, Expression *expr, Expression *index) = 0;
+  virtual Type *indextyperesolve(CC *cc, Expression *index) = 0;
+  virtual void *indexallocagen(CC *cc, Expression *expr, Expression *index) = 0;
 };

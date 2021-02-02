@@ -69,6 +69,6 @@ ParseResult InterfaceParser::scheme(CC *cc, Source *s, int pos){
 InterfaceParser::InterfaceParser()
   : ikp(k_interface)
   , csp(s_col)
-  , lcsp(s_lbra)
-  , rcsp(s_rbra)
+  , lcsp(s_lcbra)
+  , rcsp(s_rcbra)
 {}

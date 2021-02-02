@@ -75,6 +75,6 @@ EnumParser::EnumParser()
   , csp(s_col)
   , comsp(s_comma)
   , eqp(s_eq)
-  , lcsp(s_lbra)
-  , rcsp(s_rbra)
+  , lcsp(s_lcbra)
+  , rcsp(s_rcbra)
 {}

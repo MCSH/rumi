@@ -246,3 +246,19 @@ void StructType::initgen(CC *cc, Expression *alloca){
   fcs->compile(cc);
   fcs->codegen(cc);
 }
+
+bool StructType::hasIndex(CC *cc, Expression *index){
+  return 0;
+}
+
+void *StructType::indexgen(CC *cc, Expression *expr, Expression *index){
+  return 0;
+}
+
+Type *StructType::indextyperesolve(CC *cc, Expression *index){
+  return 0;
+}
+
+void *StructType::indexallocagen(CC *cc, Expression *expr, Expression *index){
+  return 0;
+}

@@ -75,3 +75,19 @@ std::string FunctionType::toString(){
 void FunctionType::initgen(CC *cc, Expression *alloca){
   // Do nothing
 }
+
+bool FunctionType::hasIndex(CC *cc, Expression *index){
+  return 0;
+}
+
+void *FunctionType::indexgen(CC *cc, Expression *expr, Expression *index){
+  return 0;
+}
+
+Type *FunctionType::indextyperesolve(CC *cc, Expression *index){
+  return 0;
+}
+
+void *FunctionType::indexallocagen(CC *cc, Expression *expr, Expression *index){
+  return 0;
+}

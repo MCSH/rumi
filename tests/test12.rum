@@ -1,0 +1,31 @@
+import test_import
+
+// Indexing test
+
+T: struct{
+  val: int;
+}
+
+main := () -> int{
+  x := 2;
+
+  printf("==== Normal Indexing ====\n");
+  arr : *int = malloc(sizeof int * 10);
+  arr[0] = 5;
+  arr[1] = 2;
+  arr[x] = 3;
+  printf("arr[0]: %d\n", arr[0]);
+  printf("arr[1]: %d\n", arr[1]);
+  printf("arr[x(x==2)]: %d\n", arr[x]);
+
+
+  printf("==== Array of Structs ====\n");
+  ts : *T = malloc(sizeof T * 10);
+  (ts[0]).val = 5;
+  (ts[x]).val = 3;
+  printf("ts[0].val: %d\n", (ts[0]).val);
+  printf("ts[x(x==2)].val: %d\n", (ts[x]).val);
+
+  // TODO structs of arrays
+  return 0;
+}

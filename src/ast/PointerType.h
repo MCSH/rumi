@@ -30,4 +30,9 @@ class PointerType: public Type{
   virtual bool hasPreOp(CC *cc, std::string op) override;
   virtual Type *preoptyperesolve(CC *cc, std::string op) override;
   virtual void *preopgen(CC *cc, std::string op, Expression *value) override;
+
+  virtual bool hasIndex(CC *cc, Expression *index) override;
+  virtual void *indexgen(CC *cc, Expression *expr, Expression *index) override;
+  virtual Type *indextyperesolve(CC *cc, Expression *index) override;
+  virtual void *indexallocagen(CC *cc, Expression *expr, Expression *index) override;
 };

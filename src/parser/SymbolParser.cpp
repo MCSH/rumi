@@ -66,11 +66,17 @@ ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
   case ')':
     sb = s_rpar;
     break;
-  case '{':
+  case '[':
     sb = s_lbra;
     break;
-  case '}':
+  case ']':
     sb = s_rbra;
+    break;
+  case '{':
+    sb = s_lcbra;
+    break;
+  case '}':
+    sb = s_rcbra;
     break;
   case '.':
     if( s->str.at(pos+1) == s->str.at(pos+2) ){
@@ -140,8 +146,12 @@ std::string symbolDesc(Symbol sb){
   case s_rpar:
     return ")";
   case s_lbra:
-    return "{";
+    return "[";
   case s_rbra:
+    return "]";
+  case s_lcbra:
+    return "{";
+  case s_rcbra:
     return "}";
   case s_to:
     return "->";

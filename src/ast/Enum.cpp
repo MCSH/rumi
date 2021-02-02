@@ -116,3 +116,19 @@ void *Enum::enumMemGen(CC *cc, std::string id){
 void Enum::initgen(CC *cc, Expression *alloca){
   // Do nothing
 }
+
+bool Enum::hasIndex(CC *cc, Expression *index){
+  return 0;
+}
+
+void *Enum::indexgen(CC *cc, Expression *expr, Expression *index){
+  return 0;
+}
+
+Type *Enum::indextyperesolve(CC *cc, Expression *index){
+  return 0;
+}
+
+void *Enum::indexallocagen(CC *cc, Expression *expr, Expression *index){
+  return 0;
+}

@@ -26,7 +26,7 @@ void *PointerType::typegen(CC *cc){
 }
 
 bool PointerType::hasOp(CC *cc, std::string op, Expression *rhs){
-  Type *rhst = rhs->type(cc);
+  Type *rhst = rhs->type(cc)->baseType(cc);
   if(PrimitiveType * pt = dynamic_cast<PrimitiveType *>(rhst)){
     if(isInt(pt->key) && (op == "+" || op == "-")){
       return true;
@@ -39,7 +39,6 @@ bool PointerType::hasOp(CC *cc, std::string op, Expression *rhs){
 }
 
 void *PointerType::opgen(CC *cc, Expression *lhs, std::string op, Expression *rhs){
-  // TODO
   Type *rhst = rhs->type(cc);
   if(PrimitiveType * pt = dynamic_cast<PrimitiveType *>(rhst)){
     if(isInt(pt->key) && (op == "+" || op == "-")){
@@ -143,4 +142,32 @@ std::string PointerType::toString(){
 
 void PointerType::initgen(CC *cc, Expression *alloca){
   // Do nothing
+}
+
+bool PointerType::hasIndex(CC *cc, Expression *index){
+  Type *t = index->type(cc)->baseType(cc);
+  if(PrimitiveType * pt = dynamic_cast<PrimitiveType *>(t)){
+    if(isInt(pt->key))
+      return true;
+  }
+  return false;
+}
+
+void *PointerType::indexgen(CC *cc, Expression *expr, Expression *index){
+  return cc->llc->builder->CreateLoad((llvm::Value *)indexallocagen(cc, expr, index));
+}
+
+Type *PointerType::indextyperesolve(CC *cc, Expression *index){
+  return innerType;
+}
+
+void *PointerType::indexallocagen(CC *cc, Expression *expr, Expression *index){
+  auto v = (llvm::Value *)index->exprgen(cc); // int
+  auto p = (llvm::Value *)expr->exprgen(cc); // ptr
+  //auto p = (llvm::Value *)expr->allocagen(cc); // ptr
+
+  std::vector<llvm::Value *> ind;
+  ind.push_back(v);
+
+  return cc->llc->builder->CreateInBoundsGEP(p, ind);
 }

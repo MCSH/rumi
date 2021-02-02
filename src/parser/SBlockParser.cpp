@@ -47,6 +47,6 @@ ParseResult SBlockParser::scheme(CC *cc, Source *s, int pos){
 }
 
 SBlockParser::SBlockParser()
-  : lbra(s_lbra)
-  , rbra(s_rbra)
+  : lbra(s_lcbra)
+  , rbra(s_rcbra)
 {}

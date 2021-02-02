@@ -1,12 +1,12 @@
 #pragma once
 #include "Expression.h"
 
-class BinOp: public Expression{
- public:
-  Expression *lhs, *rhs;
-  std::string op;
+// TODO expose in compiler API
 
-  BinOp(Expression *lhs, std::string op, Expression *rhs);
+class Indexing: public Expression{
+public:
+  Expression *expr, *index;
+  Indexing(Expression *expr, Expression *index);
 
   virtual void compile(CC *cc) override;
   virtual void prepare(CC *cc) override;

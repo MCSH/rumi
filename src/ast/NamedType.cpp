@@ -82,3 +82,19 @@ std::string NamedType::toString(){
 void NamedType::initgen(CC *cc, Expression *alloca){
   resolvedType -> initgen(cc, alloca);
 }
+
+bool NamedType::hasIndex(CC *cc, Expression *index){
+  return resolvedType->hasIndex(cc, index);
+}
+
+void *NamedType::indexgen(CC *cc, Expression *expr, Expression *index){
+  return resolvedType->indexgen(cc, expr, index);
+}
+
+void *NamedType::indexallocagen(CC *cc, Expression *expr, Expression *index){
+  return resolvedType->indexallocagen(cc, expr, index);
+}
+
+Type *NamedType::indextyperesolve(CC *cc, Expression *index){
+  return resolvedType->indextyperesolve(cc, index);
+}

@@ -28,8 +28,8 @@ AST *StructToken::toAST(CC *cc){
 }
 
 StructParser::StructParser()
-  : lcsp(s_lbra)
-  , rcsp(s_rbra)
+  : lcsp(s_lcbra)
+  , rcsp(s_rcbra)
   , csp(s_col)
   , skp(k_struct)
 {}
