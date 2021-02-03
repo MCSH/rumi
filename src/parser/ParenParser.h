@@ -14,7 +14,7 @@ class ParenToken: public Token{
 
 class ParenParser: public ParseRule{
  public:
-  virtual ParseResult scheme(CC *cc, Source *s, int pos);
+  virtual ParseResult scheme(CC *cc, Source *s, int pos) override;
   ParenParser();
   virtual int prec() override;
  private:

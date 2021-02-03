@@ -16,7 +16,7 @@ class FunctionSigToken: public Token{
   FunctionSigToken(CC *cc, Source *s, int spos, int epos);
 
   virtual std::string desc() override;
-  virtual FunctionSig* toAST(CC *cc);
+  virtual FunctionSig* toAST(CC *cc) override;
 
   bool vararg = false;
 };
