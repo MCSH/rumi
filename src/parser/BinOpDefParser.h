@@ -1,4 +1,5 @@
-#pragma ocne
+#pragma once
+
 #include "parser.h"
 #include "TypeParser.h"
 #include "IdParser.h"
