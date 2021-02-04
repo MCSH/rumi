@@ -28,3 +28,4 @@ main := () -> int {
 
   return c;
 }
+// Comment at the end (#2)
