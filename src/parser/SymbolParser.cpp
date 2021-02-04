@@ -18,6 +18,12 @@ ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
   case '@':
     sb = s_at;
     break;
+  case '~':
+    sb = s_tilda;
+    break;
+  case '^':
+    sb = s_caret;
+    break;
   case '&':
     if(s->str.at(pos+1) == '&'){ // &&
       sb = s_andand;
@@ -32,7 +38,8 @@ ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
       epos++;
       break;
     }
-    return ParseResult();
+    sb = s_pipe;
+    break;
   case ':':
     sb = s_col;
     break;
@@ -50,11 +57,21 @@ ParseResult SymbolParser::scheme(CC *cc, Source *s, int pos){
       epos ++;
       break;
     }
+    if(s->str.at(pos+1) == '<'){ // <<
+      sb = s_ltlt;
+      epos ++;
+      break;
+    }
     sb = s_lt;
     break;
   case '>':
     if(s->str.at(pos+1) == '='){ // >=
       sb = s_gte;
+      epos ++;
+      break;
+    }
+    if(s->str.at(pos+1) == '>'){ // >>
+      sb = s_gtgt;
       epos ++;
       break;
     }
@@ -170,21 +187,31 @@ std::string symbolDesc(Symbol sb){
   case s_exc:
     return "!";
   case s_tripledot:
-    return "<...>";
+    return "...";
   case s_gt:
     return ">";
   case s_gte:
     return ">=";
+  case s_gtgt:
+    return ">>";
   case s_lt:
     return "<";
   case s_lte:
     return "<=";
+  case s_ltlt:
+    return "<<";
   case s_andand:
     return "&&";
+  case s_pipe:
+    return "|";
+  case s_caret:
+    return "^";
   case s_pipepipe:
     return "||";
   case s_at:
     return "@";
+  case s_tilda:
+    return "~";
   default:
     return "<Unprogrammed Symbol>";
   }

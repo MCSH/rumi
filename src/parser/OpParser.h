@@ -16,4 +16,6 @@ class OpParser: public ParseRule{
   SymbolParser gtp, gtep;
   SymbolParser ltp, ltep;
   SymbolParser andp, orp;
+  SymbolParser carP, pipP, ampP;
+  SymbolParser lshiftP, rshiftP;
 };

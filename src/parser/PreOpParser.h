@@ -20,5 +20,6 @@ class PreOpParser: public ParseRule{
   PreOpParser();
  private:
   SymbolParser excp;
+  SymbolParser tildP;
   ExpressionParser vp;
 };

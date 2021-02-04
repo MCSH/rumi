@@ -23,7 +23,10 @@ AST *PreOpToken::toAST(CC *cc){
 ParseResult PreOpParser::scheme(CC *cc, Source *s, int pos){
   auto e = excp.parse(cc, s, pos);
 
-  if(!e) return e;
+  if(!e)
+    e = tildP.parse(cc, s, pos);
+
+  if(!e) return e; 
 
   auto v = e >> vp;
 
@@ -31,9 +34,12 @@ ParseResult PreOpParser::scheme(CC *cc, Source *s, int pos){
 
   Token * value = ((TupleToken*) v.token) -> t2;
 
-  return ParseResult(new PreOpToken(cc, s, e.token->spos, v.token->epos, "!", value));
+  std::string ops = symbolDesc(((SymbolToken *) e.token)->sb);
+
+  return ParseResult(new PreOpToken(cc, s, e.token->spos, v.token->epos, ops, value));
 }
 
 PreOpParser::PreOpParser()
   : excp(s_exc)
+  , tildP(s_tilda)
 {}

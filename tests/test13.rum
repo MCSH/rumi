@@ -1,0 +1,21 @@
+import test_import
+
+main := () -> unit{
+// b10 AND b10 = b10
+  printf("2 = 2 & 2 = %d\n", 2 & 2);
+// b010 OR b101 = b111
+  printf("7 = 2 | 5 = %d\n", 2 | 5);
+// b10 XOR b11 = b01
+  printf("1 = 2 ^ 3 = %d\n", 2 ^ 3);
+// b10 >> 1 = b1
+  printf("1 = 2 >> 1 = %d\n", 2 >> 1);
+// b10 << 1 = b100
+  printf("4 = 2 << 1 = %d\n", 2 << 1);
+
+  a := 2;
+  b := 1;
+  printf("1 = a >> b = %d\n", a >> b);
+  printf("4 = a << b = %d\n", a << b);
+  printf("-3 = ~a = %d\n", ~a);
+  return ;
+}

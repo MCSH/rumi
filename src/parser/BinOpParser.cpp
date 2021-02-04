@@ -9,23 +9,32 @@ int precSymbol(Symbol op){
   case s_andand:
   case s_pipepipe:
     return 0;
+  case s_caret:
+    return 1;
+  case s_pipe:
+    return 2;
+  case s_and:
+    return 3;
   case s_eqeq:
   case s_neq:
   case s_gt:
   case s_gte:
   case s_lt:
   case s_lte:
-    return 1;
+    return 4;
+  case s_ltlt:
+  case s_gtgt:
+    return 5;
   case s_plus:
   case s_minus:
-    return 2;
+    return 6;
   case s_mult:
   case s_div:
   case s_rem:
-    return 3;
+    return 7;
   default:
     std::cout << "[WARNING]: UNKNOWN OP IN PREC " << std::endl;
-    return 4;
+    return 8;
   }
   exit(1);
 }

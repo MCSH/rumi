@@ -101,7 +101,7 @@ bool isSigned(TypeEnum key){
 
 Type* PrimitiveType::optyperesolve(CC *cc, std::string op, Expression *rhs){
   // TODO
-  if((op == "+" || op == "-" || op == "*" || op == "/" || op == "%")
+  if((op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "^" || op == "&" || op == "|" || op == ">>" || op == "<<")
      && isInt(key)){
     Type *rt = rhs->type(cc);
     if(PrimitiveType *prt = dynamic_cast<PrimitiveType*>(rt)){
@@ -119,6 +119,16 @@ Type* PrimitiveType::optyperesolve(CC *cc, std::string op, Expression *rhs){
 
 bool PrimitiveType::hasOp(CC *cc, std::string op, Expression *rhs){
   // TODO
+
+  if(op == "^" || op == "|" || op == "&" || op == ">>" || op == "<<"){
+    if(isInt(key)){
+      Type *rt = rhs->type(cc);
+      if(PrimitiveType *prt = dynamic_cast<PrimitiveType*>(rt)){
+        if(isInt(prt->key)) return true;
+      }
+    }
+  }
+  
   if(op == "&&" || op == "||"){
     PrimitiveType booleanType(t_bool);
     if(compatible(cc, &booleanType))
@@ -151,6 +161,51 @@ bool PrimitiveType::hasOp(CC *cc, std::string op, Expression *rhs){
 
 void *PrimitiveType::opgen(CC *cc, Expression *lhs,  std::string op, Expression *rhs){
   // TODO take care of casting
+  if(op == ">>"){
+    if(isInt(key)){
+      Type *rt = rhs->type(cc);
+      if(PrimitiveType *prt = dynamic_cast<PrimitiveType*>(rt)){
+        if(isInt(prt->key))
+          return cc->llc->builder->CreateAShr((llvm::Value *)lhs->exprgen(cc), (llvm::Value *)rhs->exprgen(cc));
+      }
+    }
+  }
+  if(op == "<<"){
+    if(isInt(key)){
+      Type *rt = rhs->type(cc);
+      if(PrimitiveType *prt = dynamic_cast<PrimitiveType*>(rt)){
+        if(isInt(prt->key))
+          return cc->llc->builder->CreateShl((llvm::Value *)lhs->exprgen(cc), (llvm::Value *)rhs->exprgen(cc));
+      }
+    }
+  }
+  if(op == "^"){
+    if(isInt(key)){
+      Type *rt = rhs->type(cc);
+      if(PrimitiveType *prt = dynamic_cast<PrimitiveType*>(rt)){
+        if(isInt(prt->key))
+          return cc->llc->builder->CreateXor((llvm::Value *)lhs->exprgen(cc), (llvm::Value *)rhs->exprgen(cc));
+      }
+    }
+  }
+  if( op == "|"){
+    if(isInt(key)){
+      Type *rt = rhs->type(cc);
+      if(PrimitiveType *prt = dynamic_cast<PrimitiveType*>(rt)){
+        if(isInt(prt->key))
+          return cc->llc->builder->CreateOr((llvm::Value *)lhs->exprgen(cc), (llvm::Value *)rhs->exprgen(cc));
+      }
+    }
+  }
+  if(op == "&"){
+    if(isInt(key)){
+      Type *rt = rhs->type(cc);
+      if(PrimitiveType *prt = dynamic_cast<PrimitiveType*>(rt)){
+        if(isInt(prt->key))
+          return cc->llc->builder->CreateAnd((llvm::Value *)lhs->exprgen(cc), (llvm::Value *)rhs->exprgen(cc));
+      }
+    }
+  }
 
   if(op == ">"){
     if(isInt(key)){
@@ -441,6 +496,10 @@ bool PrimitiveType::hasPreOp(CC *cc, std::string op){
     return key == t_bool;
   }
 
+  if(op == "~"){
+    return isInt(key);
+  }
+
   return false;
 }
 
@@ -450,6 +509,8 @@ Type *PrimitiveType::preoptyperesolve(CC *cc, std::string op){
       return this;
   }
 
+  if(op == "~") return this;
+
   return 0;
 }
 
@@ -458,6 +519,11 @@ void *PrimitiveType::preopgen(CC *cc, std::string op, Expression *value){
     if(key == t_bool){
       return cc->llc->builder->CreateNot((llvm::Value *)value->exprgen(cc));
     }
+  }
+
+  if(op == "~"){
+    auto negOne = llvm::ConstantInt::get((llvm::Type *)typegen(cc), -1, true);
+    return cc->llc->builder->CreateXor((llvm::Value*) value->exprgen(cc), negOne);
   }
 
   return 0;
