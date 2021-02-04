@@ -4,7 +4,7 @@
 
 class VariableValueParser: public ParseRule{
 public:
-  virtual ParseResult scheme(CC *cc, Source *s, int pos);
+  virtual ParseResult scheme(CC *cc, Source *s, int pos) override;
 
   virtual int prec() override;
 private:

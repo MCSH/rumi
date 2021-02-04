@@ -17,6 +17,6 @@ private:
   Symbol sb;
 public:
   SymbolParser():sb_set(false){}
-  SymbolParser(Symbol sb):sb(sb), sb_set(true){}
+  SymbolParser(Symbol sb):sb_set(true), sb(sb) {}
   virtual ParseResult scheme(CC *cc, Source *s, int pos);
 };

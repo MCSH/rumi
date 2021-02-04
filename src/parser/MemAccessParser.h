@@ -17,7 +17,7 @@ public:
 
 class MemAccessParser: public ParseRule{
  public:
-  ParseResult scheme(CC *cc, Source *s, int pos);
+  ParseResult scheme(CC *cc, Source *s, int pos) override;
   ParseResult innerscheme(CC *cc, Source *s, int pos);
 
   virtual int prec() override;

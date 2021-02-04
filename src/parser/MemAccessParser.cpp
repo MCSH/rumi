@@ -51,6 +51,6 @@ int MemAccessParser::prec(){
 }
 
 MemAccessParser::MemAccessParser()
-  : dsp(s_dot)
-  , ep(5)
+  : ep(5)
+  , dsp(s_dot)
 {}
