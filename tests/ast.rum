@@ -158,7 +158,7 @@ C_MemAccess.setId := (id: string) -> unit{}
 C_MemAccess.setExp := (exp: *C_Expression) -> unit{}
 
 C_Method: struct{}
-Compiler.createMethod := (structName: string, methodName: string, f: C_Function)-> *C_Method{}
+Compiler.createMethod := (structName: string, methodName: string, f: *C_Function)-> *C_Method{}
 C_Method.getStructName := () -> string{}
 C_Method.getMethodName := () -> string{}
 C_Method.getFunction := () -> *C_Function{}

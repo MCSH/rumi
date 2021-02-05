@@ -112,6 +112,7 @@ void MethodCall::compile(CC *cc){
   auto fname = s->id + "$" + exp->id;
   // setup fcall
   fcall = new FCall();
+  fcall->dbg = dbg;
   fcall->id = fname;
   fcall->args = args;
 

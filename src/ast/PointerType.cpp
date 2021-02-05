@@ -71,6 +71,15 @@ Type *PointerType::optyperesolve(CC *cc, std::string op, Expression *rhs){
 }
 
 Compatibility PointerType::compatible(CC *cc, Type *t){
+
+  // Speical case, u8 from string
+  if(PrimitiveType *pt = dynamic_cast<PrimitiveType *>(innerType)){
+    if(pt->key == t_any) return OK;
+    if(pt->key == t_u8)  
+      if(PrimitiveType *opt = dynamic_cast<PrimitiveType*>(t))
+        if(opt->key == t_string) return OK;
+  }
+  
   // TODO
   if(PointerType *pt = dynamic_cast<PointerType*>(t)){
     return OK;
@@ -85,6 +94,14 @@ Compatibility PointerType::compatible(CC *cc, Type *t){
 }
 void *PointerType::castgen(CC *cc, Expression *e){
   // TODO
+
+  // Speical case, u8 from string
+  if(PrimitiveType *pt = dynamic_cast<PrimitiveType *>(innerType)){
+    if(pt->key == t_any) return e->exprgen(cc);
+    if(pt->key == t_u8)  
+      if(PrimitiveType *opt = dynamic_cast<PrimitiveType*>(e->type(cc)->baseType(cc)))
+        if(opt->key == t_string) return e->exprgen(cc);
+  }
 
   // TODO improve
   if(PrimitiveType *pt = dynamic_cast<PrimitiveType*>(e->type(cc)->baseType(cc))){

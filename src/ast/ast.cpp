@@ -10,6 +10,9 @@ void AST::setDBG(DebugInfo *d){
 
 void graceFulExit(DebugInfo *d, std::string error){
   if(error.size() > 0) error += " ";
-  std::cerr << "Error " << error << "at " << *d << std::endl;
+  if(d)
+    std::cerr << "Error " << error << "at " << *d << std::endl;
+  else
+    std::cerr << "Error " << error << "at unknown location" << std::endl;
   exit(1);
 }

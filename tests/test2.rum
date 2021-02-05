@@ -35,7 +35,7 @@ main := () -> int {
 
   t.id = 10;
 
-  t.print();
+  t.print(0);
   tmp := t.getId();
 
   t2 := t.id;

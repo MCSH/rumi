@@ -27,8 +27,11 @@ void FunctionSig::compile(CC *cc){
     type->args.push_back(a->type);
   }
 
+  // TODO is it okay to remove the next lines? investigate!
+  /*
   if(vararg)
     type->args.pop_back();
+  */
 
   type->vararg = vararg;
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include "FunctionType.h"
 #include "Statement.h"
 #include "Expression.h"
 #include <vector>
@@ -13,6 +14,9 @@ class FCall: public Expression{
   virtual void* exprgen(CC *cc) override;
   virtual Type* type(CC *cc) override;
   virtual void *allocagen(CC *cc) override;
+
+private:
+  void argError(FunctionType *ft, CC *cc);
 };
 
 class FCallStmt: public Statement{

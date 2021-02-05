@@ -10,7 +10,8 @@ void VariableValue::compile(CC *cc){
     graceFulExit(dbg, "Couldn't find variable " + id);
   }
   if(cc->lookup(id)->isType){
-    graceFulExit(dbg, "Couldn't access the value of a type in a variable " + id);
+    // WHAT? TODO hint: enums seems to have problem witht his. what is this catching?
+    //graceFulExit(dbg, "Couldn't access the value of a type in a variable " + id);
   }
 }
 

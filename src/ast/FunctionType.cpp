@@ -65,6 +65,7 @@ std::string FunctionType::toString(){
   for (auto t : args) {
     if(first) ans += t->toString();
     else ans += ", " + t->toString();
+    first = false;
   }
   if(vararg) ans += "...";
   ans += ")->" + (returnType?returnType->toString():"unit");

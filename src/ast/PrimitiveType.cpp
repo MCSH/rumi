@@ -355,6 +355,18 @@ void *PrimitiveType::opgen(CC *cc, Expression *lhs,  std::string op, Expression 
 }
 
 Compatibility PrimitiveType::compatible(CC *cc, Type *t){
+  if(key == t_string){
+    // Also accept *u8
+    if(PointerType *pt = dynamic_cast<PointerType *>(t)){
+      if(PrimitiveType *p = dynamic_cast<PrimitiveType*>(pt->innerType)){
+        if(p->key == t_u8) return OK;
+      }
+    }
+  }
+
+  if(key == t_any)
+    return OK;
+
   // TODO implement this.
   PrimitiveType *pt = dynamic_cast<PrimitiveType *>(t);
   if(!pt){
@@ -368,6 +380,7 @@ Compatibility PrimitiveType::compatible(CC *cc, Type *t){
 
   if(key == pt->key)
     return OK;
+
 
   if(pt->key == t_any)
     return OK; // TODO check
@@ -441,7 +454,19 @@ Compatibility PrimitiveType::compatible(CC *cc, Type *t){
 }
 
 void *PrimitiveType::castgen(CC *cc, Expression *e){
-  auto t = e->type(cc);
+  auto t = e->type(cc)->baseType(cc);
+
+  if(key == t_string){
+    if(PointerType *pt = dynamic_cast<PointerType *>(t)){
+      if(PrimitiveType *p = dynamic_cast<PrimitiveType*>(pt->innerType)){
+        if(p->key == t_u8) return e->exprgen(cc);
+      }
+    }
+  }
+
+  if(key == t_any)
+    return e->exprgen(cc);
+
   PrimitiveType *pt = dynamic_cast<PrimitiveType *>(t);
   if(!pt){
     if(PointerType *pt = dynamic_cast<PointerType *>(t)){
@@ -453,7 +478,7 @@ void *PrimitiveType::castgen(CC *cc, Expression *e){
             llvm::ConstantInt::get(i64t, 0));
       }
     }
-    return 0; 
+    return 0;
   }
 
   if(key == pt->key)
