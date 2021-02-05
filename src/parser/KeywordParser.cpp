@@ -20,6 +20,7 @@ KeywordToken* KeywordParser::findkey(CC *cc, Source *s, int pos){
   if(w == "false") return new KeywordToken(Keyword::k_false, pos, end, cc, s);
   if(w == "import") return new KeywordToken(Keyword::k_import, pos, end, cc, s);
   if(w == "new") return new KeywordToken(Keyword::k_new, pos, end, cc, s);
+  if(w == "using") return new KeywordToken(Keyword::k_using, pos, end, cc, s);
   return 0;
 }
 
@@ -58,6 +59,8 @@ std::string KeywordToken::desc(){
     return "import";
   case k_new:
     return "new";
+  case k_using:
+    return "using";
   default:
     return "[Unknown keyword]";
   }

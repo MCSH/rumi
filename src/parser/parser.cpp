@@ -46,6 +46,7 @@
 #include "ImportParser.h"
 #include "DirectiveParser.h"
 #include "TopParser.h"
+#include "UsingParser.h"
 #include <iostream>
 #include "Symbols.h"
 
@@ -113,6 +114,7 @@ void Parser::init(CompileContext *cc){
   this->registerStatementRule(new SBlockParser());
   this->registerStatementRule(new MethodCallStmtParser());
   this->registerStatementRule(new EmptySemiColonParser());
+  this->registerStatementRule(new UsingParser());
 
   this->registerTypeRule(new PrimitiveTypeParser());
   this->registerTypeRule(new PointerTypeParser());

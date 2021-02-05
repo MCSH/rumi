@@ -1,0 +1,46 @@
+import test_import
+
+Vector2d : struct{
+  x: int;
+  y: int;
+}
+
+new Vector2d := () -> unit{
+  using self;
+
+  x = 0;
+  y = 0;
+
+  return ;
+}
+
+Vector2d + Vector2d := (lhs: *Vector2d, rhs: *Vector2d) -> Vector2d{
+  ans : Vector2d;
+  using ans;
+
+  x = lhs.x + rhs.x;
+  y = lhs.y + rhs.y;
+
+  return ans;
+}
+
+Vector2d.print := () -> unit {
+  using self;
+  printf("<Vector2d x: %d, y: %d>\n", x, y);
+  return ;
+}
+
+main := () -> int{
+  pos : Vector2d;
+  movement : Vector2d;
+  movement.x = 2;
+  movement.y = 5;
+
+  pos.print();
+
+  pos = pos + movement;
+
+  pos.print();
+
+  return 0;
+}
