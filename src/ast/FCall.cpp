@@ -36,7 +36,7 @@ void FCall::compile(CC *cc){
   
   for(int i = 0; i < ft->args.size(); i++){
     if(i == args.size()){
-      if(ft->vararg) break;
+      if(ft->vararg && i == ft->args.size()-1) break;
       argError(ft, cc);
     }
     auto p = ft->args[i];
