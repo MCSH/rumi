@@ -38,6 +38,9 @@ ParseResult StringParser::scheme(CC *cc, Source *s, int pos){
       case 'n':
         val << '\n';
         break;
+      case 'r':
+        val << '\r';
+        break;
       default:
         val << n;
       }
