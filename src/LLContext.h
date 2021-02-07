@@ -9,4 +9,6 @@ class LLContext{
   llvm::Module *module;
   llvm::IRBuilder<> *builder;
   llvm::Function *f;
+
+  bool isBrOk(llvm::IRBuilder<> *builder=0); // is it okay to add a br (or return) here?
 };

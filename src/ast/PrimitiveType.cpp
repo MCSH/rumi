@@ -40,43 +40,50 @@ void *PrimitiveType::typegen(CC *cc){
     return llvm::IntegerType::get(cc->llc->context, 64);
   case t_unit:
     return llvm::Type::getVoidTy(cc->llc->context);
-
   case t_string:
     return llvm::PointerType::getUnqual(llvm::IntegerType::get(cc->llc->context, 8));
+  case t_f32:
+    return llvm::Type::getFloatTy(cc->llc->context);
+  case t_f64:
+    return llvm::Type::getDoubleTy(cc->llc->context);
   }
 
   graceFulExit(dbg, "Not supporting this type in primitive types!");
   return 0;
 }
 
-bool isInt(TypeEnum key){
-  return key == t_int || key == t_u8 || key == t_u16 || key == t_u32 || key == t_u64 || key == t_s8 || key == t_s16 || key == t_s32 || key == t_s64 || key == t_any || key == t_bool;
-}
-
-int sizeInt(TypeEnum key){
-  switch(key){
-  case t_int:
-  case t_s64:
-  case t_u64:
-    return 64;
-  case t_u32:
-  case t_s32:
-    return 32;
-  case t_u16:
-  case t_s16:
-    return 16;
-  case t_u8:
-  case t_s8:
-  case t_any:
-    return 8;
-  case t_bool:
-    return 1;
-  default:
-    return -1;
-  }
+bool isFloat(TypeEnum key){
+  return key == t_f32 || key == t_f64;
 }
 
 #include <iostream>
+
+bool isBiggerOrEq(TypeEnum k1, TypeEnum k2){
+  // only on integers
+  if(k1 == t_u64) return true;
+  if(k1 == t_s64) return true;
+  if(k1 == t_int) return true;
+  if(k1 == t_u32 || k1 == t_s32){
+    if(k2 == t_u64 || k2 == t_s64 || k2 == t_int) return false;
+    return true;
+  }
+  if(k1 == t_u16 || k1 == t_s16){
+    if(k2 == t_u16 || k2 == t_s16 || k2 == t_s8 || k2 == t_u8 || k2 == t_bool) return true;
+    return false;
+  }
+  if(k1 == t_u8 || k1 == t_s8){
+    if(k2 == t_s8 || k2 == t_u8 || k2 == t_bool) return true;
+    return false;
+  }
+  if(k1 == t_bool) return k2 == t_bool;
+  std::cout << "isBiggerOrEq called on types other than int" << std::endl;
+  exit(1);
+  return false;
+}
+
+bool isInt(TypeEnum key){
+  return key == t_int || key == t_u8 || key == t_u16 || key == t_u32 || key == t_u64 || key == t_s8 || key == t_s16 || key == t_s32 || key == t_s64 || key == t_any || key == t_bool;
+}
 
 bool isSigned(TypeEnum key){
   switch(key){
@@ -85,6 +92,8 @@ bool isSigned(TypeEnum key){
   case t_s32:
   case t_s16:
   case t_s8:
+  case t_f32:
+  case t_f64:
     return true;
   case t_any:
   case t_u64:
@@ -100,13 +109,29 @@ bool isSigned(TypeEnum key){
 }
 
 Type* PrimitiveType::optyperesolve(CC *cc, std::string op, Expression *rhs){
-  // TODO
   if((op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "^" || op == "&" || op == "|" || op == ">>" || op == "<<")
      && isInt(key)){
     Type *rt = rhs->type(cc);
     if(PrimitiveType *prt = dynamic_cast<PrimitiveType*>(rt)){
-      if (isInt(prt->key))
-        return this;
+      if(isInt(prt->key)){
+        if(isBiggerOrEq(key, prt->key))
+          return this;
+        else
+          return rt;
+      }
+      if(isFloat(prt->key))
+        return prt;
+    }
+  }
+  if(op == "+" || op == "-" || op == "*" || op == "/" || op == "%"){
+    if(isFloat(key)){
+      Type *rt = rhs->type(cc);
+      if(PrimitiveType *prt = dynamic_cast<PrimitiveType*>(rt)){
+        if(key == prt->key) return this;
+        if(prt->key == t_f64) return prt;
+        if(isFloat(prt->key) || isInt(prt->key))
+          return this;
+      }
     }
   }
 
@@ -143,16 +168,19 @@ bool PrimitiveType::hasOp(CC *cc, std::string op, Expression *rhs){
       }
   }
   if((op == "==" || op == "!=") && key != t_string){
-    if(compatible(cc, rhs->type(cc)) != INCOMPATIBLE)
-      if(isInt(key))
+    if(compatible(cc, rhs->type(cc)) != INCOMPATIBLE){
+      // TODO float vs int comparison might be problematic... handle it somehow
+      if(isInt(key)|| isFloat(key))
         return true;
+    }
   }
-  if((op == "+" || op == "-" || op == "*" || op == "/" || op == "%")
-     && isInt(key)){
-    Type *rt = rhs->type(cc);
-    if(PrimitiveType *prt = dynamic_cast<PrimitiveType*>(rt)){
-      if (isInt(prt->key))
-        return true;
+  if(op == "+" || op == "-" || op == "*" || op == "/" || op == "%"){
+    if (isInt(key) || isFloat(key)) {
+      Type *rt = rhs->type(cc);
+      if (PrimitiveType *prt = dynamic_cast<PrimitiveType *>(rt)) {
+        if (isInt(prt->key) || isFloat(prt->key))
+          return true;
+      }
     }
   }
 
@@ -242,15 +270,18 @@ void *PrimitiveType::opgen(CC *cc, Expression *lhs,  std::string op, Expression 
   if(op == "!="){
     if(isInt(key)){
       return cc->llc->builder->CreateICmpNE((llvm::Value*) lhs->exprgen(cc), (llvm::Value*) rhs->exprgen(cc));
+    } else if(isFloat(key)){
+      return cc->llc->builder->CreateFCmpUNE((llvm::Value*) lhs->exprgen(cc), (llvm::Value*) rhs->exprgen(cc));
     }
   }
 
   if(op == "=="){
     if(isInt(key)){
       return cc->llc->builder->CreateICmpEQ((llvm::Value*) lhs->exprgen(cc), (llvm::Value*) rhs->exprgen(cc));
+    } else if(isFloat(key)){
+      return cc->llc->builder->CreateFCmpUEQ((llvm::Value*) lhs->exprgen(cc), (llvm::Value*) rhs->exprgen(cc));
     } else {
-      // TODO assuming float
-      graceFulExit(dbg, "== Not supported for floating points");
+      graceFulExit(dbg, "== Not supported for this type");
     }
   }
 
@@ -350,6 +381,30 @@ void *PrimitiveType::opgen(CC *cc, Expression *lhs,  std::string op, Expression 
     }
   }
 
+  if(op == "+" || op == "*" || op == "-" || op == "/" || op == "%"){
+    // TODO validate this
+    // at least one isn't a float, are we 32?
+    bool is32 = (key != t_f64) && (prt->key != t_f64);
+    auto t = llvm::Type::getDoubleTy(cc->llc->context);
+    if(is32){
+      t = llvm::Type::getFloatTy(cc->llc->context);
+    }
+    auto l = (llvm::Value*)lhs->exprgen(cc);
+    auto r = (llvm::Value*)rhs->exprgen(cc);
+    if(isInt(key) && isSigned(key)) l = cc->llc->builder->CreateSIToFP(l, t);
+    if(isInt(key) && !isSigned(key)) l = cc->llc->builder->CreateUIToFP(l, t);
+    if(isInt(prt->key) && isSigned(prt->key)) l = cc->llc->builder->CreateSIToFP(r, t);
+    if(isInt(prt->key) && !isSigned(prt->key)) l = cc->llc->builder->CreateUIToFP(r, t);
+    // handle f32 and f64 conversion...
+    if(!is32 && key == t_f32) l = cc->llc->builder->CreateFPCast(l, t);
+    if(!is32 && prt->key == t_f32) r = cc->llc->builder->CreateFPCast(r, t);
+    if(op == "+") return cc->llc->builder->CreateFAdd(l, r);
+    if(op == "-") return cc->llc->builder->CreateFSub(l, r);
+    if(op == "*") return cc->llc->builder->CreateFMul(l, r);
+    if(op == "/") return cc->llc->builder->CreateFDiv(l, r);
+    if(op == "%") return cc->llc->builder->CreateFRem(l, r);
+  }
+
   graceFulExit(dbg, "INCOMPLETE IMPLEMENTATION FOR OPGEN PRIMITIVE");
   return 0;
 }
@@ -383,7 +438,27 @@ Compatibility PrimitiveType::compatible(CC *cc, Type *t){
 
 
   if(pt->key == t_any)
-    return OK; // TODO check
+    return OK;
+
+  // float to float
+  if(isFloat(key) && isFloat(pt->key)){
+    if(key == t_f64){
+      return ImpCast; // f32 -> f64
+    }
+    if(key == t_f32){
+      return ExpCast; // f64 -> f32
+    }
+  }
+
+  // int to float
+  if(isFloat(key) && isInt(pt->key)){
+    return ImpCast;
+  }
+
+  // float to int
+  if(isInt(key) && isFloat(pt->key)){
+    return ExpCast;
+  }
 
   if(isInt(key) && isInt(pt->key)){
     if(key == t_bool){
@@ -486,6 +561,22 @@ void *PrimitiveType::castgen(CC *cc, Expression *e){
 
   if(pt->key == t_any){
     return e->exprgen(cc);
+  }
+
+  if(isFloat(key) && isFloat(pt->key)){
+    return cc->llc->builder->CreateFPCast((llvm::Value*)e->exprgen(cc), (llvm::Type *)typegen(cc));
+  }
+
+  if(isFloat(key) && isInt(pt->key)){
+    if(isSigned(pt->key))
+      return cc->llc->builder->CreateSIToFP((llvm::Value *)e->exprgen(cc), (llvm::Type *)typegen(cc));
+    return cc->llc->builder->CreateUIToFP((llvm::Value *)e->exprgen(cc), (llvm::Type *)typegen(cc));
+  }
+
+  if(isInt(key) && isFloat(pt->key)){
+    if(isSigned(key))
+      return cc->llc->builder->CreateFPToSI((llvm::Value*)e->exprgen(cc), (llvm::Type*)typegen(cc));
+    return cc->llc->builder->CreateFPToUI((llvm::Value*)e->exprgen(cc), (llvm::Type*)typegen(cc));
   }
 
   if(!isInt(key) || !isInt(pt->key)){

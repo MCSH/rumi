@@ -1,0 +1,19 @@
+import test_import
+
+main := () -> unit{
+  f := 3.14f;
+  d := 3.14;
+  printf("f is %.2f\n", f->f64); // there is no f32 in printf
+  printf("d is %.2f\n", d);
+  printf("d as an int is %d\n", d->int);
+  d = 5;
+  printf("d is %.2f\n", d);
+
+  printf("============\n");
+
+  // if these work, everything else should too!
+  printf("1 + 1 = %d\n", 1 + 1);
+  printf("1.0 + 1 = %f\n", 1.0 + 1);
+  printf("1.0 + 1.0 = %f\n", 1.0 + 1.0);
+  printf("1.0f + 1.0 = %f\n", 1.0f + 1.0);
+}

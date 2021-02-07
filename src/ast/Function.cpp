@@ -1,4 +1,5 @@
 #include "Function.h"
+#include "PrimitiveType.h"
 #include "Statement.h"
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/IR/BasicBlock.h>
@@ -8,6 +9,14 @@
 #include "FunctionType.h"
 #include "Named.h"
 #include "Arg.h"
+
+bool isvoid(Type *rt){
+  if(!rt) return true;
+  if(PrimitiveType *pt = dynamic_cast<PrimitiveType *>(rt)){
+    return pt->key == t_void || pt->key == t_unit;
+  }
+  return false;
+}
 
 void Function::prepare(CC *cc){
   cc->pushContext();
@@ -87,4 +96,13 @@ void Function::codegen(CC *cc){
     s->codegen(cc);
   }
   cc->popContext();
+
+  if(cc->llc->isBrOk()){
+    // TODO check return type
+    if(isvoid(returnType)){
+      cc->llc->builder->CreateRetVoid();
+    } else {
+      graceFulExit(dbg, "Function " + id + " doesn't end with a return statement");
+    }
+  }
 }
