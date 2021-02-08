@@ -1,4 +1,5 @@
 import test_import
+import sstream
 
 Vector2d : struct{
   x: int;
@@ -30,6 +31,18 @@ Vector2d.print := () -> unit {
   return ;
 }
 
+//Vector2d -> string := () -> string{
+Vector2d.toString := () -> string{
+  using self;
+  s: sstring;
+  s = s + "<Vector2d x: ";
+  s = s + inttostr(x);
+  s = s + ", y: ";
+  s = s + inttostr(y);
+  s = s + ">";
+  return s.toString();
+}
+
 main := () -> int{
   pos : Vector2d;
   movement : Vector2d;
@@ -41,6 +54,7 @@ main := () -> int{
   pos = pos + movement;
 
   pos.print();
+  printf("pos->string: %s\n", pos.toString());
 
   return 0;
 }
