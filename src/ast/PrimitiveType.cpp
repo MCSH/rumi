@@ -633,7 +633,8 @@ Type *PrimitiveType::preoptyperesolve(CC *cc, std::string op){
 void *PrimitiveType::preopgen(CC *cc, std::string op, Expression *value){
   if(op == "!"){
     if(key == t_bool){
-      return cc->llc->builder->CreateNot((llvm::Value *)value->exprgen(cc));
+      return cc->llc->builder->CreateICmpEQ((llvm::Value *)value->exprgen(cc),
+                                            llvm::ConstantInt::get((llvm::Type *)typegen(cc), 0, false));
     }
   }
 

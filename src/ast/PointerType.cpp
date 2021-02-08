@@ -7,6 +7,7 @@
 #include "../base.h"
 #include "../LLContext.h"
 #include "PtrValue.h"
+#include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
 
 PointerType::PointerType(Type *innerType)
@@ -147,9 +148,9 @@ Type *PointerType::preoptyperesolve(CC *cc, std::string op){
 
 void *PointerType::preopgen(CC *cc, std::string op, Expression *value) {
   if (op == "!")
-    return cc->llc->builder->CreateNot(cc->llc->builder->CreatePtrToInt(
+    return cc->llc->builder->CreateICmpEQ(
         (llvm::Value *)value->exprgen(cc),
-        llvm::IntegerType::get(cc->llc->context, 1)));
+        llvm::ConstantPointerNull::get((llvm::PointerType *)typegen(cc)));
   return 0;
 }
 
