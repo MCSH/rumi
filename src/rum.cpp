@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
 
   std::error_code EC;
   auto output = cc.outFile;
-  llvm::raw_fd_ostream dest(output, EC, llvm::sys::fs::F_None);
+  llvm::raw_fd_ostream dest(output, EC, llvm::sys::fs::OF_None);
 
   if (EC) {
     llvm::errs() << "Could not open file: " << EC.message();
