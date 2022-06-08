@@ -189,8 +189,6 @@ If you return 0, it means it's okay for the compiler to move on, if you return 1
 
 The first argument is optionally a pointer to the Compiler struct.
 
-TODO: Take a look at test 7, test 8 and test 9
-
 * Enums
 
 ```rumi

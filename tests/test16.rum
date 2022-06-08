@@ -1,0 +1,38 @@
+import test_import;
+
+Person : struct{
+  first_name : string;
+  last_name  : string;
+}
+
+
+Person.print := () -> unit {
+  printf("<Person: %s %s>\n", self.first_name, self.last_name);
+}
+
+Printable : interface{
+  print := () -> unit ;
+}
+
+dummy := () -> unit{
+    s: Person;
+    i :Printable = s;
+}
+
+main := () -> int{
+    // printf("1.I'm here\n");
+    // printInt(sizeof Person);
+    s : * Person = malloc(sizeof Person) -> *Person;
+
+    s.first_name = "Sajjad" ;
+    s.last_name  = "Heydari";
+
+    p : Printable ;
+    // p = s -> Printable ;
+    p = s ;
+
+    p.print();
+    s.print();
+
+    return 0;
+}

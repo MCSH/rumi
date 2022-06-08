@@ -5,6 +5,7 @@
 #include "Expression.h"
 #include "Type.h"
 #include "VariableValue.h"
+#include "Cast.h"
 
 void Define::prepare(CC *cc){
   if(expression) expression->prepare(cc);
@@ -23,7 +24,29 @@ void Define::compile(CC *cc){
   named -> alloca = 0;
   cc->registerNamed(id, named);
 
-  // TODO casting
+  if(!type) // In cases where the variable is defined without any type, e.x.: var := 1;
+    return;
+
+  if(!expression) // In cases where the variable is defined without any value, e.x.: var :int;
+    return;
+
+  // TODO casting handle this together wi assign 
+  auto compatible = type->compatible(cc, expression->type(cc)->baseType(cc));
+
+  if(compatible == ExpCast){
+    // TODO add name of types
+    graceFulExit(dbg, "Cannot explicitly cast types");
+  }
+  if(compatible == INCOMPATIBLE){
+    // TODO add name of types
+    graceFulExit(dbg, "Cannot cast types");
+  }
+  if(compatible == ImpCast){
+    cc->debug(LOW) << "Casting implicitly" << std::endl;
+    expression = new Cast(expression, type);
+    expression->prepare(cc);
+    expression->compile(cc);
+  }
 }
 
 void Define::codegen(CC *cc){
