@@ -101,6 +101,8 @@ void Function::codegen(CC *cc){
     // TODO check return type
     if(isvoid(returnType)){
       cc->llc->builder->CreateRetVoid();
+    } else if(isDummy){
+      cc->llc->builder->CreateRet(cc->llc->builder->getInt32(0));
     } else {
       graceFulExit(dbg, "Function " + id + " doesn't end with a return statement");
     }

@@ -6,6 +6,12 @@ test := () -> int{
 }
 
 @compile
+compile_test_no_arg := () -> int{
+  printf("Running in compile time!\n");
+  return 0;
+}
+
+@compile
 compile_test := (c: *Compiler) -> int{
   printf("Running in compile time!\n");
   printf("Test() = %d\n", test());

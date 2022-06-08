@@ -11,6 +11,11 @@
 
 void FunctionSig::prepare(CC *cc){
   // TODO
+  returnType->prepare(cc);
+
+  for(auto arg : args){
+    arg->prepare(cc);
+  }
 }
 
 void FunctionSig::compile(CC *cc){
@@ -24,8 +29,11 @@ void FunctionSig::compile(CC *cc){
   cc->registerNamed(id, named);
 
   for(Arg *a: args){
+    a->compile(cc);
     type->args.push_back(a->type);
   }
+
+  returnType->compile(cc);
 
   // TODO is it okay to remove the next lines? investigate!
   /*

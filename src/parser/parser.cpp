@@ -36,6 +36,7 @@
 #include "InterfaceParser.h"
 #include "NamedTypeParser.h"
 #include "MemAccessParser.h"
+#include "MethodSigParser.h"
 #include "MethodParser.h"
 #include "NewParser.h"
 #include "BinOpDefParser.h"
@@ -79,6 +80,7 @@ void Parser::init(CompileContext *cc){
   this->registerTopRule(new StructParser());
   this->registerTopRule(new InterfaceParser());
   this->registerTopRule(new EnumParser());
+  this->registerTopRule(new MethodSigParser());
   this->registerTopRule(new MethodParser());
   this->registerTopRule(new BinOpDefParser());
   this->registerTopRule(new NewParser());

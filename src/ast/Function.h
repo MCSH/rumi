@@ -9,6 +9,7 @@ class BlockContext;
 
 class Function: public Statement{
 public:
+  bool isDummy=false;
   std::string id;
   std::vector<Statement *> statements;
   std::vector<Arg *> args;

@@ -535,6 +535,9 @@ Arg *FunctionGetArg(Function *f, int i){
   if(i >= f->args.size()) return 0;
   return f->args[i];
 }
+bool FunctionGetIsDummy(Function *f){
+  return f->isDummy;
+}
 
 void FunctionSetId(Function *f, char *id){
   f->id = CSTRTOSTR(id);
@@ -547,6 +550,9 @@ void FunctionAddStmt(Function *f, Statement *s){
 }
 void FunctionAddArg(Function *f, Arg *a){
   f->args.push_back(a);
+}
+void FunctionSetIsDummy(Function *f, bool b){
+  f->isDummy = b;
 }
 
 // FunctionSig
@@ -1663,6 +1669,41 @@ ParseResult *CP_MethodParser_ParseResultGetf(ParseResult *p) {
   return new ParseResult(t->f);
 }
 
+// TODO parser/MethodSigParser.h
+#include "parser/MethodSigParser.h"
+MethodSigParser *CompilerGetMethodSigParser(CC *cc) { return new MethodSigParser(); }
+ParseResult *CP_MethodSigParserParse(MethodSigParser *p, CC *cc, Source *s, int pos) {
+  auto ans = p->parse(cc, s, pos);
+  return ans ? new ParseResult(ans) : 0;
+}
+ParseResult *CP_MethodSigParserParseAfter(MethodSigParser *p, ParseResult *pr) {
+  if (!pr)
+    return 0;
+  auto ans = *pr >> *p;
+  if (!ans)
+    return 0;
+  Token *a = ((TupleToken *)ans.token)->t2;
+  return new ParseResult(a);
+}
+char *CP_MethodSigParser_ParseResultGetStructName(ParseResult *p) {
+  if (!p)
+    return 0;
+  auto t = (MethodSigToken *)p->token;
+  return STRTOCSTR(t->structName);
+}
+char *CP_MethodSigParser_ParseResultGetMethodName(ParseResult *p) {
+  if (!p)
+    return 0;
+  auto t = (MethodSigToken *)p->token;
+  return STRTOCSTR(t->methodName);
+}
+ParseResult *CP_MethodSigParser_ParseResultGetf(ParseResult *p) {
+  if (!p)
+    return 0;
+  auto t = (MethodSigToken *)p->token;
+  return new ParseResult(t->f);
+}
+
 #include "parser/NamedTypeParser.h"
 NamedTypeParser *CompilerGetNamedTypeParser(CC *cc) {
   return new NamedTypeParser();
@@ -2325,6 +2366,8 @@ void *CompileContext::getCompileObj(void *e) {
                     &FunctionGetStmt);
   REGISTER_CALLBACK("C_Function$getArg", "C_Function$getArg_replace",
                     &FunctionGetArg);
+  REGISTER_CALLBACK("C_Function$getIsDummy", "C_Function$getIsDummy_replace",
+                    &FunctionGetIsDummy);
   REGISTER_CALLBACK("C_Function$setId", "C_Function$setId_replace",
                     &FunctionSetId);
   REGISTER_CALLBACK("C_Function$setReturntype",
@@ -2333,6 +2376,8 @@ void *CompileContext::getCompileObj(void *e) {
                     &FunctionAddStmt);
   REGISTER_CALLBACK("C_Function$addArg", "C_Function$addArg_replace",
                     &FunctionAddArg);
+  REGISTER_CALLBACK("C_Function$setIsDummy", "C_Function$setIsDummy_replace",
+                    &FunctionSetIsDummy);
 
   // FunctionSig
   REGISTER_CALLBACK("Compiler$createFunctionSig",
@@ -2922,6 +2967,24 @@ void *CompileContext::getCompileObj(void *e) {
   REGISTER_CALLBACK("CP_MethodParser_ParseResult$getf",
                     "CP_MethodParser_ParseResult$getf_replace",
                     &CP_MethodParser_ParseResultGetf);
+
+  REGISTER_CALLBACK("Compiler$getMethodSigParser",
+                    "Compiler$getMethodSigParser_replace",
+                    &CompilerGetMethodSigParser);
+  REGISTER_CALLBACK("CP_MethodSigParser$parse", "CP_MethodSigParser$parse_replace",
+                    &CP_MethodSigParserParse);
+  REGISTER_CALLBACK("CP_MethodSigParser$parseAfter",
+                    "CP_MethodSigParser$parseAfter_replace",
+                    &CP_MethodSigParserParseAfter);
+  REGISTER_CALLBACK("CP_MethodSigParser_ParseResult$getStructName",
+                    "CP_MethodSigParser_ParseResult$getStructName_replace",
+                    &CP_MethodSigParser_ParseResultGetStructName);
+  REGISTER_CALLBACK("CP_MethodSigParser_ParseResult$getMethodName",
+                    "CP_MethodSigParser_ParseResult$getMethodName_replace",
+                    &CP_MethodSigParser_ParseResultGetMethodName);
+  REGISTER_CALLBACK("CP_MethodSigParser_ParseResult$getf",
+                    "CP_MethodSigParser_ParseResult$getf_replace",
+                    &CP_MethodSigParser_ParseResultGetf);
 
   REGISTER_CALLBACK("Compiler$getNamedTypeParser",
                     "Compiler$getNamedTypeParser_replace",

@@ -1,19 +1,19 @@
 Compiler: struct{}
-Compiler.exit := (i: int) -> unit{}
-Compiler.set := (s: string, v: any) -> unit{}
-Compiler.get := (s: string) -> any{}
-Compiler.setFMeta := (s: string) -> unit{} // set a function as a meta
+Compiler.exit := (i: int) -> unit;
+Compiler.set := (s: string, v: any) -> unit;
+Compiler.get := (s: string) -> any;
+Compiler.setFMeta := (s: string) -> unit; // set a function as a meta
 
 // compiler_parser TODO
 Source: struct{}
 ParseResult: struct{}
 DynamicParseResult: struct{}
 
-Compiler.registerParser := (k: string, p: string) -> unit{}
-Compiler.createDynamicParseResult := () -> *DynamicParseResult{}
+Compiler.registerParser := (k: string, p: string) -> unit;
+Compiler.createDynamicParseResult := () -> *DynamicParseResult;
 
-DynamicParseResult.set := (v: *any) -> unit{}
-DynamicParseResult.get := () -> *any{}
+DynamicParseResult.set := (v: *any) -> unit;
+DynamicParseResult.get := () -> *any;
 
-ParseResult.copyStart := (p: *ParseResult) -> unit{}
-ParseResult.copyEnd := (p: *ParseResult) -> unit{}
+ParseResult.copyStart := (p: *ParseResult) -> unit;
+ParseResult.copyEnd := (p: *ParseResult) -> unit;
