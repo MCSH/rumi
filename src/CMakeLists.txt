@@ -28,3 +28,9 @@ target_link_libraries(rum PUBLIC ${llvm_libs} base)
 add_executable(rumi rumi.cpp)
 target_link_libraries(rumi PUBLIC base)
 
+find_package(Clang REQUIRED CONFIG)
+
+message(STATUS "Found ClangConfig.cmake in: ${Clang_DIR}")
+
+add_executable(c2rumi c2rumi.cpp)
+target_link_libraries(c2rumi PUBLIC clang libclang)
