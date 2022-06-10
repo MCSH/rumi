@@ -13,6 +13,12 @@ string translate_type(CXType t){
   auto str = clang_getTypeSpelling(t);
   string type = clang_getCString(str);
 
+  // printf("type kind: %d\n", t.kind);
+
+  if(t.kind == CXType_Char_S){
+    return "u8";
+  }
+
   if(t.kind == CXType_Pointer){
     return "*" + translate_type(clang_getPointeeType(t));
   }
@@ -42,7 +48,11 @@ void functionVisitor(CXCursor c){
   auto name = clang_getCursorSpelling(c);
 
   if(type.kind == CXType_FunctionNoProto){
-    cout << name << " := () -> " << translate_type(resType) << ";" << endl;
+    if(clang_isFunctionTypeVariadic(type)){
+      cout << name << " := (v: ...any) -> " << translate_type(resType) << ";" << endl;
+    } else {
+      cout << name << " := () -> " << translate_type(resType) << ";" << endl;
+    }
   } else {
     cout << name << " := (";
     int total = clang_getNumArgTypes(type);
@@ -57,8 +67,24 @@ void functionVisitor(CXCursor c){
 
     }
 
+    if(clang_isFunctionTypeVariadic(type)){
+      cout << ", va: ...any";
+    }
+
     cout << ") -> " << translate_type(resType) << ";" << endl;
   }
+}
+
+CXChildVisitResult structVisitor(CXCursor c, MyData *data){
+    // cout << "StructDecl: " << clang_getCursorSpelling(c) << endl;
+  auto name = clang_getCursorSpelling(c);
+  string name2 = clang_getCString(name);
+  if(name2 == ""){ // TODO Handle these properly
+    return CXChildVisit_Continue;
+  }
+  cout << clang_getCursorSpelling(c) << " : struct {" << endl;
+  data->is_inside_brackets = true;
+  return CXChildVisit_Recurse;
 }
 
 CXChildVisitResult visitor(CXCursor c, CXCursor parent, CXClientData clientData){
@@ -80,11 +106,7 @@ CXChildVisitResult visitor(CXCursor c, CXCursor parent, CXClientData clientData)
 
   switch (kind) {
   case CXCursor_StructDecl:
-    // cout << "StructDecl: " << clang_getCursorSpelling(c) << endl;
-    cout << clang_getCursorSpelling(c) << " : struct {" << endl;
-    data->is_inside_brackets = true;
-    return CXChildVisit_Recurse;
-    break;
+    return structVisitor(c, data);
 
   case CXCursor_FieldDecl:
     cout << "  " << clang_getCursorSpelling(c) << " : " << translate_type(clang_getCursorType(c)) << ";" << endl;
