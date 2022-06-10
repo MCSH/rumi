@@ -109,5 +109,15 @@ int main(int argc, char **argv) {
   pass.run(*(cc.llc->module));
   dest.flush();
 
+  // Call linker to create the executable
+  if(cc.callLinker){
+    std::string command = "gcc -o " + cc.execFile + " " + cc.outFile;
+
+    for(auto s: cc.linkerArgs){
+      command += " " + s;
+    }
+    std::system(command.c_str());
+  }
+
   return 0;
 }

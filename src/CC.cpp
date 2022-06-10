@@ -48,13 +48,21 @@ CompileContext::CompileContext(int argc, char **argv){
     std::string arg = std::string(argv[i]);
     if (arg == "-v") {
       this->verbosity++;
-    } else if(arg == "-o"){
+    } else if(arg == "-O"){
       // TODO make sure this is safe
       this->outFile = std::string(argv[i+1]);
       i++;
+    } else if(arg == "-o"){
+      // TODO make sure this is safe
+      this->execFile = std::string(argv[i+1]);
+      i++;
+    } else if(arg == "--no_linker"){
+      this->callLinker = false;
     } else if(arg == "-r"){
       this->removeMeta = true;
-    } else {
+    } else if(arg.substr(arg.size()-2) == ".c"){
+      this->linkerArgs.push_back(arg);
+    }else {
       this->sources.push_back(new Source(arg));
       // std::cout << argv[i] << std::endl;
     }
@@ -165,6 +173,10 @@ void *getCallback(CC *cc, char *ckey){
     cc->debug(NONE) << "Compiler key " << key << " not found." << std::endl;
     exit(1);
   }
+}
+
+void linkCallback(CC *cc, char *arg){
+  cc->linkerArgs.push_back(CSTRTOSTR(arg));
 }
 
 void CompilerSetFMeta(CC *cc, char *key){
@@ -2203,6 +2215,7 @@ void *CompileContext::getCompileObj(void *e) {
   REGISTER_CALLBACK("Compiler$exit", "Compiler$exit_replace", &exitCallback);
   REGISTER_CALLBACK("Compiler$set", "Compiler$set_replace", &setCallback);
   REGISTER_CALLBACK("Compiler$get", "Compiler$get_replace", &getCallback);
+  REGISTER_CALLBACK("Compiler$link", "Compiler$link_replace", &linkCallback);
   REGISTER_CALLBACK("Compiler$setFMeta", "Compiler$setFMeta_replace",
                     &CompilerSetFMeta);
   REGISTER_CALLBACK("Compiler$registerParser",

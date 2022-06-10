@@ -58,6 +58,10 @@ public:
   
   void *compileObj = 0;
   void *getCompileObj(void *ee);
+
+  bool callLinker = true;
+  std::string execFile = "a.out";
+  std::vector<std::string> linkerArgs;
 };
 
 using CC = CompileContext;

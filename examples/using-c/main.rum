@@ -1,0 +1,24 @@
+import compiler
+
+printf := (f: string, a: ...any)->unit;
+
+system := (cmnd: string) -> int;
+
+@compile
+compile_bridge := () -> int {
+  system("c2rumi bridge.c > bridge.rum");
+  return 0;
+}
+import bridge
+
+main := () -> int {
+   test();
+   return 0;
+}
+
+// @link "bridge.c" /// I expect the linker to link this with the current file.
+@compile
+link_bridge := (compiler : *Compiler) -> int {
+  compiler.link("bridge.c");
+  return 0;
+}
