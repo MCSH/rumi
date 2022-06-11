@@ -1,0 +1,107 @@
+import base;
+
+sstring_node: struct {
+  next: *sstring_node;
+  s: string;
+}
+sstring: struct{
+  first: *sstring_node;
+  last: *sstring_node;
+}
+new sstring := () -> unit{
+  using self;
+  first = 0;
+  last = 0;
+}
+
+sstring + string := (lhs: *sstring, rhs: string) -> sstring{
+  node : *sstring_node = malloc(sizeof sstring_node);
+  if(lhs.last) lhs.last.next = node;
+  lhs.last = node;
+  node.s = rhs;
+
+  node.next = 0;
+
+  if(!lhs.first){
+    lhs.first = node;
+  }
+
+  return *lhs;
+}
+
+sstring.toString := () -> string{
+  size := 1; // \0
+  node := self.first;
+  while(node){
+    size = size +  strlen(node.s);
+    node = node.next;
+  }
+  ans : *u8 = malloc(sizeof u8 * size);
+  counter := 0;
+
+  node = self.first;
+  while(node){
+    i := 0;
+    s : *u8 = node.s;
+    while(*(s+i)){
+      *(ans + counter) = *(s+i);
+      counter = counter + 1;
+      i = i + 1;
+    }
+    node = node.next;
+  }
+
+  *(ans + counter) = 0;
+  return ans;
+}
+
+inttostr := (i: int) -> string{
+  ans : *u8;
+  size := 1;
+  copy := i;
+  while(copy){
+    copy = copy / 10;
+    size = size + 1;
+  }
+  ans = malloc(sizeof u8 * size);
+  *(ans + size - 1) = 0;
+  size = size - 2; // delete 2!
+  while(i){
+    *(ans + size) = (i % 10) + 48; // 48 == '0'
+    i = i / 10;
+    size = size - 1;
+  }
+  return ans;
+}
+
+f64tostr := (f: f64, prec: int) -> string{
+  ans : *u8;
+  size := 1 + prec + 1;
+  copy := f -> int;
+  while(copy){
+    copy = copy / 10;
+    size = size + 1;
+  }
+  ans = malloc(sizeof u8 * size);
+  *(ans + size - 1) = 0;
+  size = size - 1; // delete 2!
+  rem := f % 1->f64;
+  scopy := size;
+  while(prec){
+    rem = rem * 10->f64;
+    rem = rem % 10->f64;
+    *(ans + scopy - prec) = ((rem % 10->f64) -> int) + 48;
+    prec = prec - 1;
+    size = size - 1;
+  }
+  size = size - 1;
+  *(ans + size) = 46; // .
+  size = size - 1;
+  i := f-> int;
+  while(i){
+    *(ans + size) = (i % 10) + 48; // 48 == '0'
+    i = i / 10;
+    size = size - 1;
+  }
+  return ans;
+}
