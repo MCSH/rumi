@@ -312,6 +312,13 @@ Compiler.getTypeParser := () -> *CP_TypeParser;
 CP_TypeParser.parse := (c: *Compiler, s: *Source, pos: u32) -> *CP_TypeParser_ParseResult;
 CP_TypeParser.parseAfter := (p:*ParseResult)-> *CP_TypeParser_ParseResult;
 
+CP_TypeDefParser: struct{}
+CP_TypeDefParser_ParseResult: struct{}
+Compiler.getTypeDefParser := () -> *CP_TypeDefParser;
+CP_TypeDefParser.parse := (c: *Compiler, s: *Source, pos: u32) -> *CP_TypeDefParser_ParseResult;
+CP_TypeDefParser.parseAfter := (p:*ParseResult)-> *CP_TypeDefParser_ParseResult;
+
+
 CP_ValueParser: struct{}
 CP_ValueParser_ParseResult: struct{}
 Compiler.getValueParser := () -> *CP_ValueParser;

@@ -187,6 +187,13 @@ Compiler.createNamedType := (id: string) -> *C_NamedType;
 C_NamedType.getId := () -> string;
 C_NamedType.setId := (id: string) -> unit;
 
+C_TypeDef: struct{}
+Compiler.createTypeDef := (id: string, t: *C_Type) -> *C_TypeDef;
+C_TypeDef.getId := () -> string;
+C_TypeDef.setId := (id: string) -> unit;
+C_TypeDef.getType := () -> *C_Type;
+C_TypeDef.setType := (t: *C_Type) -> unit;
+
 C_PackedAST: struct{}
 Compiler.createPackedAST := () -> *C_PackedAST;
 C_PackedAST.addAST := (a: *C_AST) -> unit;
@@ -221,9 +228,9 @@ C_Return.getExp := () -> *C_Expression;
 C_Return.setExp := (exp: *C_Expression) -> unit;
 
 C_Sizeof: struct{}
-Compiler.createSizeof := (type: *C_Type) -> *C_Sizeof;
+Compiler.createSizeof := (_type: *C_Type) -> *C_Sizeof;
 C_Sizeof.getType := () -> *C_Type;
-C_Sizeof.setType := (type: *C_Type) -> unit;
+C_Sizeof.setType := (_type: *C_Type) -> unit;
 
 C_CString: struct{}
 Compiler.createCString := () -> *C_CString;

@@ -47,6 +47,7 @@
 #include "ImportParser.h"
 #include "DirectiveParser.h"
 #include "TopParser.h"
+#include "TypeDefParser.h"
 #include "UsingParser.h"
 #include <iostream>
 #include "Symbols.h"
@@ -76,6 +77,7 @@ public:
 
 void Parser::init(CompileContext *cc){
   this->cc = cc;
+  this->registerTopRule(new TypeDefParser());
   this->registerTopRule(new DefineParser());
   this->registerTopRule(new StructParser());
   this->registerTopRule(new InterfaceParser());

@@ -781,6 +781,16 @@ void NamedTypeSetId(NamedType *n, char *id){
   n->id = CSTRTOSTR(id);
 }
 
+// TypeDef
+#include "ast/TypeDef.h"
+TypeDef *createTypeDef(CC *cc, char *id, Type *t){
+  return new TypeDef(CSTRTOSTR(id), t);
+}
+char *TypeDefGetId(TypeDef *t) { return STRTOCSTR(t->id); }
+Type *TypeDefGetType(TypeDef *t) { return t->type; }
+void TypeDefSetId(TypeDef *t, char *id) { t->id = CSTRTOSTR(id); }
+void TypeDefSetType(TypeDef *t, Type *t2) { t->type = t2; }
+
 // PackedAST
 #include "ast/PackedAST.h"
 PackedAST *createPackedAST(CC *cc){
@@ -2102,6 +2112,22 @@ ParseResult *CP_TypeParserParseAfter(TypeParser *p, ParseResult *pr) {
   return new ParseResult(a);
 }
 
+#include "parser/TypeDefParser.h"
+TypeDefParser *CompilerGetTypeDefParser(CC *cc) { return new TypeDefParser(); }
+ParseResult *CP_TypeDefParserParse(TypeDefParser *p, CC *cc, Source *s, int pos) {
+  auto ans = p->parse(cc, s, pos);
+  return ans ? new ParseResult(ans) : 0;
+}
+ParseResult *CP_TypeDefParserParseAfter(TypeDefParser *p, ParseResult *pr) {
+  if (!pr)
+    return 0;
+  auto ans = *pr >> *p;
+  if (!ans)
+    return 0;
+  Token *a = ((TupleToken *)ans.token)->t2;
+  return new ParseResult(a);
+}
+
 #include "parser/ValueParser.h"
 ValueParser *CompilerGetValueParser(CC *cc) { return new ValueParser(); }
 ParseResult *CP_ValueParserParse(ValueParser *p, CC *cc, Source *s, int pos) {
@@ -2522,6 +2548,18 @@ void *CompileContext::getCompileObj(void *e) {
                     &NamedTypeGetId);
   REGISTER_CALLBACK("C_NamedType$setId", "C_NamedType$setId_replace",
                     &NamedTypeSetId);
+
+  // TypeDef
+  REGISTER_CALLBACK("Compiler$createTypeDef", "Compiler$createTypeDef_replace",
+                    &createTypeDef);
+  REGISTER_CALLBACK("C_TypeDef$getId", "C_TypeDef$getId_replace",
+                    &TypeDefGetId);
+  REGISTER_CALLBACK("C_TypeDef$getType", "C_TypeDef$getType_replace",
+                    &TypeDefGetType);
+  REGISTER_CALLBACK("C_TypeDef$setId", "C_TypeDef$setId_replace",
+                    &TypeDefSetId);
+  REGISTER_CALLBACK("C_TypeDef$setType", "C_TypeDef$setType_replace",
+                    &TypeDefSetType);
 
   // PackedAST
   REGISTER_CALLBACK("Compiler$createPackedAST", "Compiler$createPackedAST_replace", &createPackedAST);
@@ -3196,6 +3234,15 @@ void *CompileContext::getCompileObj(void *e) {
   REGISTER_CALLBACK("CP_TypeParser$parseAfter",
                     "CP_TypeParser$parseAfter_replace",
                     &CP_TypeParserParseAfter);
+
+
+  REGISTER_CALLBACK("Compiler$getTypeDefParser", "Compiler$getTypeDefParser_replace",
+                    &CompilerGetTypeDefParser);
+  REGISTER_CALLBACK("CP_TypeDefParser$parse", "CP_TypeDefParser$parse_replace",
+                    &CP_TypeDefParserParse);
+  REGISTER_CALLBACK("CP_TypeDefParser$parseAfter",
+                    "CP_TypeDefParser$parseAfter_replace",
+                    &CP_TypeDefParserParseAfter);
 
   REGISTER_CALLBACK("Compiler$getValueParser",
                     "Compiler$getValueParser_replace", &CompilerGetValueParser);

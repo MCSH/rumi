@@ -1,0 +1,9 @@
+import base
+
+char : type = u8;
+
+main := () -> int {
+  c : char = 65;
+  printf("%c\n", c);
+  return 0;
+}
