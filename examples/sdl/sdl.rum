@@ -1,0 +1,31 @@
+import compiler
+
+@compile
+build := (c: *Compiler) -> int{
+  c.link("-lSDL2");
+  c.link("sdlbridge.c");
+  return 0;
+}
+
+SDL_Window: type = any;
+SDL_Surface: type = any;
+SDL_PixelFormat: type = any;
+SDL_Rect: type = any;
+
+SDL_Init := (flags: u32) -> int;
+SDL_Quit := () -> unit;
+SDL_GetError := () -> string;
+
+// SDL_CreateWindow := (title: string, x: int, y: int, w: int, h:int, flags: u32) -> *SDL_Window;
+SDL_CreateWindow := (title: string, x: u32, y: u32, w: u32, h: u32, flags: u32) -> *SDL_Window;
+
+SDL_GetWindowSurface := (window: *SDL_Window) -> *SDL_Surface;
+SDL_UpdateWindowSurface := (window: *SDL_Window) -> unit;
+SDL_DestroyWindow := (window: *SDL_Window) -> unit;
+
+SDL_Delay := (delay: int) -> unit;
+
+SDL_SurfaceGetFormat := (surface: *SDL_Surface) -> * SDL_PixelFormat;
+
+SDL_MapRGB := (pf: *SDL_PixelFormat, r: u8, g: u8, b: u8) -> u32;
+SDL_FillRect := (surface: *SDL_Surface, rect: *SDL_Rect, color: u32) -> int;

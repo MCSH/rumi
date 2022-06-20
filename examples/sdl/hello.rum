@@ -1,0 +1,38 @@
+import sdl
+import base
+
+main := () -> int{
+  SCREEN_WIDTH := 640;
+  SCREEN_HEIGHT := 480;
+
+  SDL_INIT_VIDEO : u32 = 32;
+  SDL_WINDOWPOS_UNDEFINED : u32 = 536805376;
+  SDL_WINDOW_SHOWN : u32 = 4;
+
+  screenSurface : *SDL_Surface = 0;
+  window : *SDL_Window = 0;
+
+  if(SDL_Init(SDL_INIT_VIDEO) < 0){
+    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+  } else {
+    window = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    if(!window){
+      printf("Window couldn't be created! SDL_Error: %s\n", SDL_GetError());
+    } else {
+      screenSurface = SDL_GetWindowSurface(window);
+
+      SDL_FillRect(screenSurface, 0, SDL_MapRGB(SDL_SurfaceGetFormat(screenSurface), 255, 255, 255));
+
+      // Update the surface
+      SDL_UpdateWindowSurface(window);
+
+      // Wait two seconds
+      SDL_Delay(2000);
+    }
+  }
+
+  SDL_DestroyWindow(window);
+  SDL_Quit();
+
+  return 0;
+}
