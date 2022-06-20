@@ -1,0 +1,73 @@
+import compiler
+import base
+
+// Link to gtk
+@compile
+build := (c: *Compiler) -> int{
+
+  c.link("bridge.c");
+
+  gtk_flags : string = malloc(sizeof u8 * 1000) -> *u8;
+  fp := popen("pkg-config --cflags --libs gtk4", "r");
+  if(!fp){
+    printf("Failed to run pkg-config --cflags --libs gtk4\n");
+    return 2;
+  }
+  fgets(gtk_flags, 1000, fp);
+  pclose(fp);
+
+  printf("Linking againsts:\n\t%s", gtk_flags);
+
+  c.link(gtk_flags);
+  return 0;
+}
+
+GtkApplication : type = any;
+GApplication : type = any;
+GtkWidget : type = any;
+GtkWindow : type = any;
+gulong : type = u64;
+
+GApplicationFlags : enum {
+  FLAGS_NONE = 0,
+  IS_SERVICE = 1,
+  IS_LAUNCHER = 2,
+  HANDLES_OPEN = 4,
+  HANDLES_COMMAND_LINE = 8,
+  SEND_ENVIRONMENT = 16,
+  NON_UNIQUE = 32,
+  CAN_OVERRIDE_APP_ID = 64,
+  ALLOW_REPLACEMENT = 128,
+  REPLACE = 256,
+}
+
+GCallback : type = any; // This doesn't mean all functions take nothing and return nothing, just means that GTK isn't as type safe as one would hope.
+
+gtk_application_new := (application_id: string, flags: GApplicationFlags) -> *GtkApplication;
+
+
+g_signal_connect_data := (instance: any, detailed_signal: string, handler: GCallback, data: any, destroy_data: any, connect_flags: any) -> gulong; // TODO
+
+g_signal_connect := (instance: any, detailed_signal: string, handler: GCallback, data: any) -> gulong{
+  return g_signal_connect_data(instance, detailed_signal, handler, data, 0, 0);
+}
+
+g_application_run := (app: *GApplication, argc: int, argv: *string) -> int;
+
+g_object_unref := (ptr: *any) -> unit;
+
+g_print := (format: string, rest: ...any) -> unit;
+
+gtk_application_to_gapplication := (app: *GtkApplication) -> *GApplication;
+
+gtk_application_window_new := (app: *GtkApplication) -> *GtkWidget;
+
+gtk_window_present := (window: *GtkWindow) -> unit;
+
+gtk_widget_to_window := (w: *GtkWidget) -> *GtkWindow;
+
+gtk_window_set_title := (w: *GtkWindow, title: string) -> unit;
+gtk_window_set_default_size := (w: *GtkWindow, w: u32, h: u32) -> unit;
+gtk_window_set_child := (window: *GtkWindow, child: *GtkWidget) -> unit;
+
+gtk_button_new_with_label := (label: string) -> *GtkWidget;

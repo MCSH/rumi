@@ -1,0 +1,28 @@
+import gtk
+
+print_hello := (widget: *GtkWidget, data: any) -> unit{
+  g_print("Hello Rumi!\n");
+}
+
+activate := (app: *GtkApplication, data: any) -> unit{
+  window := gtk_application_window_new(app);
+  win_win := gtk_widget_to_window(window);
+
+  gtk_window_set_title(win_win, "Hello, Rumi!");
+  gtk_window_set_default_size(win_win, 200, 200);
+
+  btn := gtk_button_new_with_label("Click me!");
+  g_signal_connect(btn, "clicked", &print_hello, 0);
+  gtk_window_set_child(win_win, btn);
+
+  gtk_window_present(win_win);
+}
+
+main := (argc: int, argv: *string) -> int{
+  app := gtk_application_new("org.gtk.example", 0);
+  g_signal_connect_data(app, "activate", &activate, 0, 0, 0);
+  status := g_application_run(gtk_application_to_gapplication(app), argc, argv);
+  printf("Status : %d\n", status);
+  g_object_unref(app);
+  return 0;
+}

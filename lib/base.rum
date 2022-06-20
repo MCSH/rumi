@@ -67,5 +67,9 @@ fopen := (s: string, mod: string) -> *int;
 fseek := (f: *int, offset: u64, whence: u32) -> int; // SEEK_END == 2, SEEK_SET == 0
 ftell := (f: *int) -> int;
 fread := (buf: string, size: int, nmemb: int, f: *int) -> int;
+fgets := (s: *int, size: int, f: *int) -> int;
+
+popen := (cmnd: string, type_: string) -> *int;
+pclose := (f: *int) -> int;
 
 exit := (status: int) -> unit;
