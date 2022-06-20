@@ -44,7 +44,7 @@ strlen := (s1: *u8) -> u64{
   return 0; // unreachable
 }
 
-strcat := (s1: *u8, s2: *u8) -> *u8{
+rum_strcat := (s1: *u8, s2: *u8) -> *u8{
   size := strlen(s1) + strlen(s2) + 1;
   ans : *u8 = malloc(size * sizeof u8);
   ptr := 0;
