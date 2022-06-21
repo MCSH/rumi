@@ -1,0 +1,69 @@
+import base
+import curl
+import compiler
+
+CRUMMS : struct { // Curl Rumi Memory Struct
+  memory: *u8;
+  size: u64;
+};
+
+crumWriteCallback := (contents: any, size: u64, nmemb: u64, userp: *CRUMMS) -> u64{
+  realsize := size * nmemb ;
+  ptr :*u8= realloc(userp.memory, userp.size + realsize + 1);
+  if(!ptr){
+    printf("Not enough memory\n");
+    return 0;
+  }
+  userp.memory = ptr;
+  memcpy(&(userp.memory[userp.size]), contents, realsize);
+  userp.size = userp.size + realsize ;
+  userp.memory[userp.size] = 0;
+
+  return realsize;
+}
+
+@compile
+loadcurl := (c: *Compiler) -> int{
+  // Load curl now so that we can use it during compile time
+  if(c.loadlib("/usr/lib/libcurl.so"))
+    return 2;
+
+  // Also link curl so that we can use it in the executable
+  c.link("-lcurl");
+  return 0;
+}
+
+@compile
+compileTimeTest := (c: *Compiler) -> int {
+
+  curl : *CURL = curl_easy_init();
+  chunk: CRUMMS ;
+  chunk.size = 0;
+  chunk.memory = malloc(1);
+  if(curl){
+    curl_easy_setopt(curl, CURLoption.CURLOPT_URL, "https://example.com");
+    curl_easy_setopt(curl, CURLoption.CURLOPT_FOLLOWLOCATION, 1);
+    curl_easy_setopt(curl, CURLoption.CURLOPT_WRITEFUNCTION, &crumWriteCallback);
+    curl_easy_setopt(curl, CURLoption.CURLOPT_WRITEDATA, &chunk);
+
+    res := curl_easy_perform(curl); // TODO: possible bug!!!
+    /*
+    * When calling the function
+curl_easy_perform := (handle: *CURL) -> CURLcode;
+      Rumi wasn't able to store the result in res.
+    */
+    if(res != CURLcode.CURLE_OK){
+      printf("curl failed: %s\n", curl_easy_strerror(res));
+    } else {
+      printf("%s\n", chunk.memory);
+    }
+
+    free(chunk.memory);
+    curl_easy_cleanup(curl);
+  }
+  return 0;
+}
+
+main := () -> int{
+  return 0;
+}

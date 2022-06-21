@@ -7,6 +7,7 @@
 #include <iostream>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/Support/DynamicLibrary.h>
 #include <vector>
 #include "parser/DynamicParseRule.h"
 
@@ -177,6 +178,10 @@ void *getCallback(CC *cc, char *ckey){
 
 void linkCallback(CC *cc, char *arg){
   cc->linkerArgs.push_back(CSTRTOSTR(arg));
+}
+
+bool loadlibCallback(CC *cc, char *arg){
+  return llvm::sys::DynamicLibrary::LoadLibraryPermanently(arg);
 }
 
 void CompilerSetFMeta(CC *cc, char *key){
@@ -2229,8 +2234,9 @@ void *CompileContext::getCompileObj(void *e) {
 
   llvm::ExecutionEngine *EE = (llvm::ExecutionEngine *)e;
 
-  if (compileObj)
+  if(compileObj)
     return compileObj;
+
 
   // TODO move these to a precompiled file and load it instead.
 
@@ -2242,6 +2248,7 @@ void *CompileContext::getCompileObj(void *e) {
   REGISTER_CALLBACK("Compiler$set", "Compiler$set_replace", &setCallback);
   REGISTER_CALLBACK("Compiler$get", "Compiler$get_replace", &getCallback);
   REGISTER_CALLBACK("Compiler$link", "Compiler$link_replace", &linkCallback);
+  REGISTER_CALLBACK("Compiler$loadlib", "Compiler$loadlib_replace", &loadlibCallback);
   REGISTER_CALLBACK("Compiler$setFMeta", "Compiler$setFMeta_replace",
                     &CompilerSetFMeta);
   REGISTER_CALLBACK("Compiler$registerParser",

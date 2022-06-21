@@ -1,4 +1,6 @@
 malloc := (i: int) -> *any;
+realloc := (ptr: *any, size: int) -> *any;
+memcpy := (dest: *any, src: *any, size: int) -> *any;
 free := (i: *any) -> unit;
 printf := (f: string, a: ...any)->unit;
 

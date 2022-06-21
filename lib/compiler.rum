@@ -4,6 +4,7 @@ Compiler.set := (s: string, v: any) -> unit;
 Compiler.get := (s: string) -> any;
 Compiler.setFMeta := (s: string) -> unit; // set a function as a meta
 Compiler.link := (s: string) -> unit; // add a linker argument to the compiler
+Compiler.loadlib := (s: string) -> bool; // Dynamically load a library during compiler time
 
 // compiler_parser TODO
 Source: struct{}
