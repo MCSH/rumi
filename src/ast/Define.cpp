@@ -6,6 +6,8 @@
 #include "Type.h"
 #include "VariableValue.h"
 #include "Cast.h"
+#include <llvm/IR/GlobalVariable.h>
+#include <llvm/Support/Casting.h>
 
 void Define::prepare(CC *cc){
   if(expression) expression->prepare(cc);
@@ -50,13 +52,41 @@ void Define::compile(CC *cc){
 }
 
 void Define::codegen(CC *cc){
-  auto named = cc->lookup(id);
-  named -> alloca = cc->llc->builder->CreateAlloca((llvm::Type*)type->typegen(cc), 0, id.c_str());
 
-  if(expression){
-    cc->llc->builder->CreateStore((llvm::Value*)expression->exprgen(cc), (llvm::Value*)named->alloca);
+  /// We are global if we do not have a parent in our block context.
+  bool isGlobal = false;
+  if(cc->block->parent == 0){
+    isGlobal = true;
+  }
+
+  auto named = cc->lookup(id);
+
+  if(isGlobal){
+    named->alloca = cc->llc->module->getOrInsertGlobal(id, (llvm::Type *)type->typegen(cc));
+
+    if(expression){
+      llvm::GlobalVariable *gv = cc->llc->module->getNamedGlobal(id);
+      llvm::Value *val = (llvm::Value *)expression->exprgen(cc);
+      llvm::Constant *init = llvm::dyn_cast<llvm::Constant>(val);
+      if(init){
+        gv->setInitializer(init);
+      } else {
+        graceFulExit(dbg, "Cannot initialize global variable with dynamic content\n");
+      }
+    }
+
+    
+    
   } else {
-    type->initgen(cc, new VariableValue(id));
+    named->alloca = cc->llc->builder->CreateAlloca(
+        (llvm::Type *)type->typegen(cc), 0, id.c_str());
+
+    if (expression) {
+      cc->llc->builder->CreateStore((llvm::Value *)expression->exprgen(cc),
+                                    (llvm::Value *)named->alloca);
+    } else {
+      type->initgen(cc, new VariableValue(id));
+    }
   }
 }
 

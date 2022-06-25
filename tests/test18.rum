@@ -1,0 +1,10 @@
+printf := (f: string, a: ...any)->unit;
+
+global_var: int = 1;
+global_var_2 := 2 + 4;
+
+main := () -> int{
+  printf("Global var = %d (should be 1)\n", global_var);
+  printf("Global var2 = %d (should be 6)\n", global_var_2);
+  return 0;
+}
