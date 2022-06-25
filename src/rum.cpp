@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
 
   // Call linker to create the executable
   if(cc.callLinker){
-    std::string command = "gcc -o " + cc.execFile + " " + cc.outFile;
+    std::string command = "clang -o " + cc.execFile + " " + cc.outFile;
 
     for(auto s: cc.linkerArgs){
       command += " " + s;
